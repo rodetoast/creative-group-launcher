@@ -1,0 +1,8 @@
+{
+  "server_enabled": true,
+  "port": 8765,
+  "lan_enabled": false,
+  "lan_host": "",
+  "lan_token": "",
+  "internet_enabled": false
+}
