@@ -1,0 +1,130 @@
+# SPENT03 — 기존 시험 Bootstrap의 owner 호환 GUI 업데이트
+
+2026-11-17. 개발 PC 준비물과 SPENT03 실기동 결과는 별개다. **현재 SPENT03 미실시.**
+
+## 게시 대상 및 신뢰
+
+- 시험 Release: https://github.com/toast-source/creative-group-trial-releases/releases/tag/trial-catalog-000011
+- 시작 전 API로 draft=false/prerelease=false/Latest=trial-catalog-000011인지 확인한다. 아직 Draft라면 시작하지 않는다.
+- 후보 GUI0.1.5 / `trial-launcher-s11-0.1.5`, catalog sequence11.
+- 기존 시험 채널 `toast-source/creative-group-trial-releases`, 최소순번5, key_id `aab2e791668a8130f01435810432e6d144386fd66d9af69eb1b6b979d4d416a9` 그대로다.
+- 운영 GUI0.1.4/Setup0.1.4.1/catalog7과 운영 키를 변경하지 않는다. 새 시험 키를 생성/신뢰하지 않는다.
+- GUI ZIP: `creative-group-launcher--trial-launcher-s11-0.1.5.zip`, 52638834바이트,
+  SHA256 `0de18d053875d5503d07bfb7182e6c69756f81c0791e97b94738165c839f7eb9`.
+- 새 EXE SHA256 `7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e`. Windows x64 GUI Subsystem2, 파일188개.
+- catalog SHA256 `9efb8f934bd11768997c1fecefde982391fe7c28cb836da83eb47262393f6d38`, signature SHA256 `6da87d5d5eff2ab0f18c609d4ec5a2dd2175f9e99fd76d0031f24d5151d13fc8`.
+- 소스 기준609cc73, 버전 반영 commit `945d8fc7997324e7f2d70bcdb1bc90b2cde9353c`. 후속 인계 문서 commit은 소스 버전을 바꾸지 않는다.
+
+이 공개 Latest는 다른 시험 클라이언트에서도 조회 가능하다. 사용자가 아는 범위에서 다른 직원/PC에
+시험 채널을 배포하지 않았다는 확인을 바탕으로 게시한다. SPENT03 전용 하드코딩/기기 인증을 추가하지 않았다.
+
+## 1. 대상과 시작 상태 확인·보존
+
+1. 현재 PC가 SPENT03인지 확인한다. 개발 PC에서 이 실행 시험을 대신 수행하지 않는다.
+2. 기존 **시험 채널** Bootstrap/launcher-home/current/data 위치를 좁은 범위에서 확인한다.
+   기존 BD13의 알려진 위치는 `C:/Dev/SPTest/BD13/Program`, Data는 같은 작업의 Data 폴더였지만 존재를 가정하지 않는다.
+3. 안정 시험 Bootstrap EXE의 검증된 해시는 `7f4184fd8a4e58d6ff254c74780b230120e90eddb6f7b15441981c87d4400ed1`다. 원본 시험 runtime/채널 파일을 변경하지 않는다.
+   운영 Bootstrap `c15f48…`의 production 정책에 시험키를 주입해 같은 시험이라고 만들지 않는다.
+   다른 Bootstrap이면 검증된 원본/출처·해시를 먼저 확인하고 결과에 정확히 구분한다.
+4. 시작 GUI는 실제0.1.4 / trial-launcher-s10-0.1.4,
+   EXE SHA256 `02bbc0531491694e1dc267fe0ab6fb320a2d75d4ece872841fdec822ad6a0137`,
+   원본 ZIP SHA256 `cf7d628c811e1ae537d9070c93d6ac55671c3d1fcd032f186a3b75a487124081`이어야 한다.
+5. 시험 GUI/Bootstrap이 동작 중이면 정상 종료하고 해당 PID 종료를 확인한 뒤 보존한다.
+   기존 runtime 파일, current/receipt/manifest/proof/trust, 설정·앱5개 설치 데이터와 합성 작업 파일의
+   상대경로·해시를 기록하고 필요한 로컬 백업을 만든다. 원본 자료를 삭제하지 않는다.
+   nonce/인증정보/설정 파일 본문은 공유 보고서에 출력하지 않는다.
+6. 실제 런처 AppData 전후 상태도 확인하되 시험은 지정된 격리 data-dir만 사용한다.
+   기존 외부 공용 작업 파일은 읽기 전용 비교만 하고 자동 변환/이동하지 않는다.
+
+## 2. 기존 시험 실행 파일이 제거된 경우에만 baseline 준비
+
+가능하면 기존0.1.4 시험 설치를 그대로 쓴다. 파일이 제거돼 새 격리 baseline이 필요한 경우 다음만 수행한다.
+Setup 설치/제거, 0.1.3→0.1.4 시험, 회사 앱 내부 기능 시험을 반복하지 않는다.
+
+- 기존 공개 `bootstrap-diagnostics-spent03-20261113` Release의
+  `SouthpawToolsLauncher-Bootstrap-Diagnostics-SPENT03-20261113.zip`을 GitHub에서 직접 받는다.
+  SHA256 `272155c35576cdeea6edf62dc9ed9de4d8e9346a9a8adfa68e125bcf5c2f3828` 검증.
+- 새 짧은 격리 Program/Data/Evidence를 선택한다(예 `C:/Dev/OC11/P`, `D`, `E`). 존재하는 경로를 덮어쓰지 않는다.
+  쓰기 거부/경로 오류이면 실제 증거를 남기고 ACL/보안 정책 변경이나 무조건 재시도로 우회하지 않는다.
+- 검증된 옛 ZIP의 **runtime만 원본 바이트 그대로** 새 Program에 준비한다. 옛 seed0.1.3을 실행하지 않는다.
+  새 복사본의 seed에는 기존 `trial-catalog-000010`의 catalog.json, catalog.sig.json 및 위0.1.4 GUI ZIP만
+  GitHub에서 받아 그대로 둔다. 기존 원격S10이나 원본 ZIP은 변경/재서명하지 않는다.
+- 재사용할 기존5개 앱 데이터가 있으면 **같은 시험 키의 proof인지** 확인해 새 Data 사본으로 보존한다.
+  운영 키로 설치된 데이터의 proof를 시험 키로 바꾸지 않는다. 기존 layout을 새 경로로 무작정 복사하지 않는다.
+  새 home은 old Bootstrap의 정상 signed-seed 초기화로 만든다. current/receipt/proof를 수동 위조하지 않는다.
+- 준비 뒤 Bootstrap 해시/런타임 파일/옛 채널 정책 불변을 확인한다. baseline 재구성 여부를 보고서에 표시한다.
+  검증 가능한 기존 시험 데이터가 없다면 앱5개 설치 상태 보존을 통과로 만들지 말고 해당 범위를 미검증으로 남긴다.
+
+이 단계의 gh 다운로드/로컬 seed 준비는 **업데이트 성공 시험이 아니다**. 다음 단계는 반드시 실제 GUI를 사용한다.
+
+## 3. 실제 업데이트 — GUI 조작
+
+1. 기존 Bootstrap을 `--data-dir <격리 Data>`로 실행한다. CreativeGroupLauncher.exe를 단독 더블클릭하지 않는다.
+2. 실제 Windows 화면에서 GUI0.1.4/current와 기존5개 앱 상태를 먼저 확보한다.
+   자동 조회가 seq11을 수락해도 아직 current는0.1.4인 것을 구분한다.
+3. GUI 업데이트 확인에서 실제 GitHub Latest11 및0.1.5 안내를 확인하고 **기존 업데이트 버튼**으로 승인한다.
+   `gh release download`+로컬 Installer만으로 이 단계를 대체하지 않는다.
+4. HTTPS 다운로드/검증, 기존GUI 종료20, 기존 Bootstrap worker/health·ready/confirmed,
+   새GUI0.1.5 실행을 로그와 PID/EXE 해시로 확인한다.
+5. current/receipt/manifest/모든 파일 해시와 보관된 원본 ZIP을 카탈로그11과 대조한다.
+   안정 Bootstrap과 그 채널 파일은 그대로여야 한다. 기존0.1.4 payload/회사5개 앱·설정·합성 데이터도 비교한다.
+6. 회사 앱5개 목록·설치 상태·프로그램 선택/정보/노트 등 런처 기본 화면을 확인한다.
+   회사 프로그램 EXE 내부 기능 시험은 하지 않는다. 실제 GUI 캡처는 필요한 핵심 지점만 남긴다.
+7. GUI 정상 종료0 및 잔여 대상 프로세스를 확인하고 **동일 Bootstrap**을 다시 실행해0.1.5 유지,
+   정상 GUI/로그/current를 확인한 뒤 정상 종료한다. 자동 재시도/강제 kill·state 삭제를 하지 않는다.
+8. journal/transaction phase, 사용자 데이터·설정·기존 앱 및 실제 AppData 보존 여부를 확인한다.
+   예상한 cache/로그/신규 런처 버전 외 변경은 별도로 설명한다.
+
+자연 실패가 생기면 기존 diagnostic operation/API/errno/winerror/traceback과 current/receipt/journal을 보존한다.
+old current/데이터 및 기존 복구 정책 결과를 확인하고 중단한다. 실행 잠금·probe-owner 삭제, 무조건 retry,
+서명 완화, 강제 pointer 전환·재설치를 하지 않는다. 의도적 시작 실패 주입을 하지 않았다면 그 항목은
+기존 회귀 재사용/이번 실기동 미실시로 구분하며 성공했다고 쓰지 않는다.
+
+## 4. 저장소 이전 이후에 대한 정확한 판정
+
+- Bootstrap이 최신 버전을 직접 조회·다운로드하는 구조가 아니다. GUI가 준비한 뒤 Bootstrap이 종료 확인·적용·시작 검증을 한다.
+- 호환 GUI0.1.5가 같은 옛 채널/키/trust를 유지하면 고정 ID API와 정확한 새 owner 자산 검증을 사용한다.
+  옛 Bootstrap의 owner 문자열이 남았다는 이유만으로 네트워크 준비를 막는 경로는 현재 분석에서 확인되지 않았다.
+  다만 이번 성공은 **저장소 이전 전** 조합 증거이고, 실제 이전 후 자산/CDN 정상 작동을 입증하지 않는다.
+- 호환 GUI를 받지 않은0.1.4, 다운로드 실패로 남은0.1.4, 시작 실패 후0.1.4로 rollback된 PC는
+  이전 후 기존 Provider의 redirect/owner 검사에 막힐 수 있다. Bootstrap 교체만으로 그 GUI 코드를 고치지 못한다.
+- 현재 Setup은 바뀐 관리 파일을 덮어쓰지 않고 existing current를 새 seed로 강제 교체하지 않는다.
+  검증되지 않은 “새 Setup 재설치로 해결”을 안내하지 않는다. 운영 데이터나 trust 초기화도 하지 않는다.
+- Transfer는 이 작업에서 실행하지 않는다. 최종 보고에 YES/NO와 근거를 쓰되,
+  SPENT03 업데이트 성공만으로 모든 구버전·실패/rollback 경로와 이전 후까지 보장했다고 판정하지 않는다.
+
+## 5. 결과 기록 및 인계
+
+원본 로그/백업은 SPENT03의 선택한 Evidence 폴더에 보존한다. Private 증거 도구를 쓸 경우 기존 guard·검토
+절차를 지키며 공개 시험 Release에 원본 로그·설정·nonce·사용자 자료를 올리지 않는다.
+
+다음만 보고한다: 실제호스트/시작Bootstrap SHA/시작0.1.4, seq10→11 확인,
+실제 GUI0.1.4→0.1.5 적용/EXE hash, 종료·동일 Bootstrap 재실행,
+current/receipt/journal·5앱/설정/합성 데이터/실제 AppData 보존,
+실패/미검증 및 Transfer YES/NO, 다음 작업 한 가지.
+
+개발 PC의 결과는 빌드/정적188파일 검사와 옛 source engine의 real ZIP 준비 검사뿐이다.
+개발 PC에서 SPENT03 실기동을 대신 수행하지 않았다. 제품/Bootstrap/Setup/이전 증거와 운영 Release는 보존한다.
+
+
+## 개발 PC 실제 완료 및 실행 경계 (2026-11-17)
+
+- 실제 시험 Release 공개: https://github.com/toast-source/creative-group-trial-releases/releases/tag/trial-catalog-000011 (ID448334904), 시험 Latest11 확인. 운영 Latest7과 기존S10의 ID/본문/자산 ID·크기·digest 보존.
+- 정확한8개 자산은 Draft에서 재다운로드해 해시·서명·188개 GUI 파일 manifest를 확인했다. 기존5개 회사 ZIP은 원본 그대로 첨부했고 새로 빌드/기능 시험하지 않았다.
+- 기존0.1.4 Provider **소스**로 실제 공개 HTTPS ZIP 다운로드와 seq10→11·서명·크기·SHA256 검증 완료.
+  실제 CDN은 HTTPS release-assets.githubusercontent.com, 응답302 경로를 확인했고 signed query는 기록하지 않았다.
+- 호환 Provider의 rodetoast 설정도 기존 고정 ID를 통해 현재 Toast 소유의 순번11을 읽으며 trust 상태를 초기화하지 않았다. 실제 배포 저장소는 이전하지 않았다.
+- 기존0.1.4 Bootstrap **소스 엔진**으로 실제 서명·ZIP을 prepared까지 준비하고 기존 current0.1.4/합성 데이터를 보존했다. frozen EXE 실행·전환 성공으로 표현하지 않는다.
+- 신규 GUI x64/Subsystem2/PE0.1.5/PYZ 모듈·DLL·정확한188파일·ZIP 구조 검사 완료. Bootstrap/Setup은 새로 빌드하지 않았다.
+- 실제 오류1건: Draft 생성 후 게시용 REST tag 조회가404였다. 실제 초안 ID448334904/자산0을 읽어 확인한 뒤 동일 초안으로 이어갔다. 중복 생성/기존 자산 덮어쓰기/무조건 재시도는 하지 않았다. 제품 오류나 WinError5가 아니다.
+- 실제 실행 호스트는 DESKTOP-1MK6D95. 연결된 Codex 프로젝트/최근 태스크 호스트는 local뿐이며 SPENT03 원격 실행/RDP 연결이 확인되지 않았다. 실제 SPENT03 GUI 업데이트/재실행/데이터 보존은 **미실시**.
+
+**시험 저장소 Transfer 시작: NO.** 이 문서의 실제 SPENT03 단계를 먼저 실행하고 결과를 보존해야 한다.
+다음 실제 작업 한 가지는 SPENT03의 Codex에서 이 인계서를 읽고, 기존 시험 Bootstrap+GUI0.1.4→0.1.5의 실제 GUI 업데이트를 수행하는 것이다.
+운영 Bootstrap/키를 시험용으로 변조하지 않고, 다른 Bootstrap 변형을 썼다면 해시와 결과를 구분한다.
+
+Bootstrap 교체가 필요하다는 실제 증거가 나오면 현재 Setup guard를 우회하지 않는다. 정상 종료·소유권/기존 manifest 확인·안정 파일 백업·검증된 새 안정 파일만 교체·시작 확인·실패 보존을 포함하는 별도 전환 설계가 후보일 뿐,
+현재 구현·SPENT03 검증·운영 승인된 자동 교체 절차는 아니다. home/data/trust 초기화로 해결하지 않는다.
+
+
+소스 보존 대조에서 Git blob(LF)과 기존 Windows git archive 출력(CRLF)의 raw hash 차이를 확인했다. 29개 모듈 모두 실제 build-source hash 일치, LF 정규화 내용 일치 및 같은 파일명으로 compile한 code object 바이트 일치를 확인했다. git config는 바꾸지 않았고 배포 ZIP/서명/버전도 다시 만들지 않았다. 정확한 raw export hash와 Git blob 내용 해시는 로컬 provenance 기록에 구분해 보존했다.

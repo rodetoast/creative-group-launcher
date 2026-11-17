@@ -48,3 +48,11 @@
 신규15 + 관련 기존127 =142 통과(실패/오류/skip0), 공개 카탈로그 old/new 설정4종 실제 HTTPS 읽기 성공. 전체 회귀·SPENT03 제품 EXE 실기동·Setup 교체는 미실시다.
 기존 Setup은 다른 Bootstrap 덮어쓰기와 기존 current의 새 seed 강제 전환을 지원하지 않으므로 재설치만으로 이전된다고 안내하지 않는다.
 운영/시험/증거 저장소는 아직 이전하지 않으며 증거·관리자 쓰기 guard도 그대로다. GUI 후속 후보를 먼저 기존 채널에서 검증·배포하고 미전환/rollback 설치본과 설치 전환을 해결하기 전 원격 Transfer를 실행하지 않는다.
+
+
+## 0.1.5 시험 빌드·S11 현황 (2026-11-17)
+
+제품 소스 __version__0.1.5는 owner 호환성 시험용 후속 버전이다. 실제 운영은 여전히 GUI0.1.4/Setup0.1.4.1/catalog7이다.
+[SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)를 읽고 현재 실제/미실시 범위를 구분한다. trial-catalog-000011만 공개했고 Bootstrap/Setup/회사 앱5개 원본은 변경하지 않았다.
+GUI ZIP SHA256 0de18d053875d5503d07bfb7182e6c69756f81c0791e97b94738165c839f7eb9, EXE SHA256 7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e.
+기존 Provider 실제 HTTPS와 옛 source engine의 prepared는 검증했으나 SPENT03 frozen Bootstrap→새 GUI 실제 적용·재실행은 아직 수행하지 못했다. Transfer NO. 여기서 실제 결과를 만들어 내거나 전체 회귀/제품 재빌드/운영 게시를 반복하지 않는다.

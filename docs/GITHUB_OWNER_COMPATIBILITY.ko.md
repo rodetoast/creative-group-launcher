@@ -108,3 +108,10 @@ NSIS는 `SetOverwrite off`를 사용한다. `managed_update.initialize()`도 기
   증거 저장소 Transfer도 불가하다. 임의 repo/계정 허용으로 해결하지 않는다.
 - 기존 immutable 0.1.4/과거 Setup에 이 수정이 들어 있다고 간주하면 안 된다. 제품 버전·Setup·키·순번을
   이번에 바꾸거나 가짜 성공 빌드를 만들지 않았다. 소스 브랜치 보존은 배포 승인이 아니다.
+
+
+## 후속 0.1.5 시험 빌드·S11 준비 (2026-11-17)
+
+사용자 승인으로 GUI만0.1.5로 빌드하고 toast-source 시험 채널 S11을 공개했다. 원본0.1.4/운영 Setup0.1.4.1/catalog7·Bootstrap은 변경하지 않았다.
+[실제 자산·SPENT03 인계](SPENT03_OWNER_COMPAT_TRIAL.ko.md)에 정확한 해시/소스·서명·준비/미실시 범위를 기록했다. 기존142개 회귀는 재사용하고 이번 패키징 검증만 수행했다.
+개발 PC에서 frozen GUI/Bootstrap을 실행하지 않았고 SPENT03 실제 업데이트도 미실시다. 다음 작업은 SPENT03 Codex에서 실제 GUI 검증이며 현재 Transfer 판정은NO다.
