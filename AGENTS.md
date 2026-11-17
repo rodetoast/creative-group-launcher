@@ -56,3 +56,8 @@
 [SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)를 읽고 현재 실제/미실시 범위를 구분한다. trial-catalog-000011만 공개했고 Bootstrap/Setup/회사 앱5개 원본은 변경하지 않았다.
 GUI ZIP SHA256 0de18d053875d5503d07bfb7182e6c69756f81c0791e97b94738165c839f7eb9, EXE SHA256 7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e.
 기존 Provider 실제 HTTPS와 옛 source engine의 prepared는 검증했으나 SPENT03 frozen Bootstrap→새 GUI 실제 적용·재실행은 아직 수행하지 못했다. Transfer NO. 여기서 실제 결과를 만들어 내거나 전체 회귀/제품 재빌드/운영 게시를 반복하지 않는다.
+
+
+## 시험 저장소 Transfer 후속 (2026-11-17)
+
+사용자 보고로 SPENT03 사전 GUI0.1.4→0.1.5 시험은 통과했고 별도 승인/수락 후 시험 저장소만 rodetoast로 실제 이전됐다. ID1452413703·Public·Release15/태그15·Latest11·모든 자산ID/digest 보존 및 최신8자산 실제재다운로드 SHA/서명 확인. 호환 source Provider의 old/new owner 조회·실제ZIP 다운로드도 통과했다. [이전 후 SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의 최신 절을 읽는다. 이전 후 Windows 구Bootstrap/GUI실기동은 아직 SPENT03에서 확인해야 하며 같은seq11로 신규 managed update 적용 성공을 주장하지 않는다. 운영/증거 저장소는 이전하지 않았고 운영7/Setup0.1.4.1·기존 guard는 그대로다. 과거 Transfer NO 문구는 당시 상태이며 시험 저장소 실제 이전 사실은 이 절이 최신이다.

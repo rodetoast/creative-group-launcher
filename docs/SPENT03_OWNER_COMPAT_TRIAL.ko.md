@@ -128,3 +128,22 @@ Bootstrap 교체가 필요하다는 실제 증거가 나오면 현재 Setup guar
 
 
 소스 보존 대조에서 Git blob(LF)과 기존 Windows git archive 출력(CRLF)의 raw hash 차이를 확인했다. 29개 모듈 모두 실제 build-source hash 일치, LF 정규화 내용 일치 및 같은 파일명으로 compile한 code object 바이트 일치를 확인했다. git config는 바꾸지 않았고 배포 ZIP/서명/버전도 다시 만들지 않았다. 정확한 raw export hash와 Git blob 내용 해시는 로컬 provenance 기록에 구분해 보존했다.
+
+
+## 시험 저장소 실제 이전 완료 및 SPENT03 이전 후 확인 (2026-11-17)
+
+사용자가 SPENT03의 기존 Bootstrap+GUI0.1.4→0.1.5 업데이트·정상종료·재실행·데이터 보존 성공을 보고하고 시험 저장소만 이전 승인했다. 이 결과는 사용자 보고이며 개발 PC가 Windows 시험을 대신 실행한 결과가 아니다.
+
+공식 Transfer 수락 후 저장소는 https://github.com/rodetoast/creative-group-trial-releases 이며 ID1452413703·Public을 유지한다. 이전 전후 Release15개·태그15개·branch/tag commit·모든 Release/asset ID·이름·크기·digest·draft/prerelease 상태가 일치한다. Latest는 trial-catalog-000011, sequence11이다. 최신8개 자산을 새 owner에서 실제 CDN HTTPS 재다운로드했고 전부 SHA256 일치, 기존 Ed25519 signature/key_id aab2e791668a8130f01435810432e6d144386fd66d9af69eb1b6b979d4d416a9 유효. signed bytes와 자산은 수정하지 않았다.
+
+기존 웹 URL은 새 owner로301, 기존 REST repo URL은 repositories/1452413703으로301 후200. 기존 catalog 자산 URL도 새 owner/CDN을 거쳐 동일 바이트를 반환한다. 리디렉션 존재는 구0.1.4 제품의 처리 성공을 뜻하지 않는다. 호환 소스 Provider는 기존 toast-source 설정과 새 rodetoast 설정 양쪽에서 seq11·서명을 검증했고, 기존 owner 설정으로 실제 새 owner의 GUI ZIP을 내려받아 SHA256을 검증했다. 이는 소스 transport 검증이며 SPENT03 Windows GUI/Bootstrap 이전 후 실기동은 아직 미검증이다.
+
+기존 보존 mirror의 origin만 rodetoast 주소로 갱신하고 ls-remote branch를 확인했다. 과거 backup/inventory는 역사 기록으로 보존한다. admin_github.py 및 publish_company_release.py의 기존 guard는 여전히 이전하지 않은 운영 저장소를 보호하므로 변경하지 않았다. 증거 guard도 유지한다. 신규 owner에서 별도의 trial 게시 자동화를 사용할 때는 정확한 trial ID/rodetoast 계정/권한을 제한해 검증해야 하며 기존 운영 guard를 전역 해제하지 않는다.
+
+운영 toast-source/creative-group-releases의 Latest production-catalog-000007 유지 확인. Setup0.1.4.1·운영/증거 저장소·서명/순번·Bootstrap·사용자 데이터는 변경하지 않았다. 게시·빌드·전체회귀·제품 실행 없음. 근거는 개발 PC 원본 프로젝트 .test-results/trial-repository-transfer-20261117/에 있다.
+
+### SPENT03 Codex에 전달할 프롬프트
+
+> 시험 저장소의 공식 Transfer가 완료됐다. 새 주소는 https://github.com/rodetoast/creative-group-trial-releases 이며 ID1452413703, Latest trial-catalog-000011/sequence11, GUI0.1.5다. 기존 C:/Dev/OC11/E/REPORT.ko.md와 시험 환경을 재사용하라. 기존 current.json·신뢰 상태·설정·회사5개 설치/합성자료·구 Bootstrap 해시를 먼저 읽기 전용 기준으로 보존하고, Bootstrap을 교체하거나 신뢰/순번을 초기화하지 마라. 기존 owner 설정을 먼저 유지한 채 구 Bootstrap으로 GUI0.1.5를 실제 실행하고 정상 새로고침으로 새 owner Release를 확인하라. 캐시 조회인지 실제 네트워크 조회인지 로그/응답으로 구분하라. 새 owner 자산 HTTPS 다운로드·SHA256·기존 Ed25519를 별도 격리 파일로 검증하되, 단순 HTTP/gh 다운로드를 GUI 관리형 업데이트 성공으로 표시하지 마라. GUI의 카탈로그 확인과 다운로드 동작은 각각 실제 결과와 근거를 기록하라. 필요하면 기존 정책으로 고정된 새 owner의 읽기 전용 Provider 검증을 별도로 수행하되 실제 GUI 결과와 구분하고 기존 설정을 임의로 덮어쓰지 마라. GUI 정상 종료 후 동일 구 Bootstrap을 재실행하고 실제 EXE/version/hash/current·신뢰상태·사용자자료 보존 및 owner/redirect 오류 유무를 확인하라. 같은 v0.1.5/sequence11이므로 새 버전의 실제 관리형 업데이트 적용은 이번에 검증할 수 없다고 명시하라. 이전에 설치한0.1.5의 재다운로드·강제 재설치·순번 초기화로 업데이트 성공을 만들지 마라. 미업데이트GUI0.1.4는 별도 미검증이며 알려진 redirect 비호환 가능성이 있다. 실패하면 원래 로그와 상태를 보존하고 연속 재시도·강제복구하지 마라. CLI를 우선하고 실제GUI 핵심 조작에만 Windows Use를 사용하며 끝나면 즉시 제어를 해제하라. 회사 앱 EXE 기능시험·제품빌드·새Release·운영변경은 하지 마라. 통과/실패/미검증과 실제GUI·단순HTTP·Provider 검증을 구분하여 기존 보고서에 결과를 남겨라.
+
+이전 후 구 Bootstrap의 실제Windows 성공은 SPENT03 결과를 받기 전까지 미확정이다. 미전환/실패·rollback으로0.1.4에 남은 클라이언트는 자동전환 보장 대상이 아니다. 운영/증거 저장소 Transfer 승인이 아니며 현재 운영 이전 차단은 유지한다.

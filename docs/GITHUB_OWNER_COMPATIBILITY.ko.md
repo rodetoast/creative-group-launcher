@@ -115,3 +115,8 @@ NSIS는 `SetOverwrite off`를 사용한다. `managed_update.initialize()`도 기
 사용자 승인으로 GUI만0.1.5로 빌드하고 toast-source 시험 채널 S11을 공개했다. 원본0.1.4/운영 Setup0.1.4.1/catalog7·Bootstrap은 변경하지 않았다.
 [실제 자산·SPENT03 인계](SPENT03_OWNER_COMPAT_TRIAL.ko.md)에 정확한 해시/소스·서명·준비/미실시 범위를 기록했다. 기존142개 회귀는 재사용하고 이번 패키징 검증만 수행했다.
 개발 PC에서 frozen GUI/Bootstrap을 실행하지 않았고 SPENT03 실제 업데이트도 미실시다. 다음 작업은 SPENT03 Codex에서 실제 GUI 검증이며 현재 Transfer 판정은NO다.
+
+
+## 시험 저장소 Transfer 후속 (2026-11-17)
+
+사용자 보고로 SPENT03 사전 GUI0.1.4→0.1.5 시험은 통과했고 별도 승인/수락 후 시험 저장소만 rodetoast로 실제 이전됐다. ID1452413703·Public·Release15/태그15·Latest11·모든 자산ID/digest 보존 및 최신8자산 실제재다운로드 SHA/서명 확인. 호환 source Provider의 old/new owner 조회·실제ZIP 다운로드도 통과했다. [이전 후 SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의 최신 절을 읽는다. 이전 후 Windows 구Bootstrap/GUI실기동은 아직 SPENT03에서 확인해야 하며 같은seq11로 신규 managed update 적용 성공을 주장하지 않는다. 운영/증거 저장소는 이전하지 않았고 운영7/Setup0.1.4.1·기존 guard는 그대로다. 과거 Transfer NO 문구는 당시 상태이며 시험 저장소 실제 이전 사실은 이 절이 최신이다.
