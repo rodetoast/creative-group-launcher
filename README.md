@@ -1,3 +1,16 @@
+# Southpaw 도구 런처 — 개발 소스 및 맥락 보존
+
+현재 소스 저장소는 **rodetoast/creative-group-launcher**입니다. [AGENTS.md](AGENTS.md)에서 현재 상태·기획/설계 기록·새 세션 시작 방법을 먼저 확인하세요.
+
+- 기본 `main`: 처음 비어 있던 원격에 검토한 개발 소스를 정상 push한 보존 기준입니다. 기존 Git 이력을 유지합니다.
+- 작업 재개 브랜치: `codex/migration-checkpoint-20261117` — 최신 개발 소스와 문서 보존용이며, 정식 배포 승인·새 회귀 완료를 의미하지 않습니다.
+- 실제 운영 제품: GUI0.1.4 / Setup0.1.4.1 / production-catalog-000007. [직원용 운영 Setup](https://github.com/toast-source/creative-group-releases/releases/tag/employee-setup-0.1.4.1)은 기존 채널을 유지합니다.
+- 소스 저장소 이전은 운영 카탈로그·서명·배포 주소 변경이 아닙니다. 아래 초기 README 내용은 개발 당시 기록으로 보존합니다.
+
+---
+
+## 기존 README (개발 이력)
+
 # Creative Group Launcher v0.1.0
 
 [Windows onedir 빌드와 Bootstrap 시험](docs/WINDOWS_PACKAGING_BOOTSTRAP.md)을 추가했습니다.
