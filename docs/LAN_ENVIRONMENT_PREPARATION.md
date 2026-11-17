@@ -1,5 +1,8 @@
 # 더미 전용 LAN 시험 환경 준비 결과 및 실행 절차
 
+현재 제품 방향은 Creative Group Launcher의 비용0원·회사 LAN 전용이다. 본문의 loopback 결과는 과거 검증 기록이며 실제 PC 간 시험 결과가 아니다.
+이번 실제 LAN 시험의 선행 조건·미실행 항목은 [CREATIVE_LAN_TRIAL_STATUS.md](CREATIVE_LAN_TRIAL_STATUS.md)를 따른다. 허용 범위와 시험 PC가 확인되기 전에는 이미 완료한 loopback을 반복하지 않고 listener를 닫아 둔다.
+
 > 이 문서는 해당 개발 단계의 기록입니다. 이후 로컬 체크포인트 승인·검사 결과는 [LOCAL_CHECKPOINT_REVIEW.md](LOCAL_CHECKPOINT_REVIEW.md)를 따릅니다. 과거 Git 상태·제한 및 초기 설계 내용은 현재 상태와 다를 수 있습니다.
 
 2026-11-03 KST. **준비와 loopback 검증 완료, 실제 다른 PC/LAN 연결은 미실행.** 실제 LAN listener는 별도 시험 승인 후에만 실행한다. unsigned HTTP·공유 토큰은 실사용 배포 안전성을 보증하지 않으며 실제 회사 프로그램 일반 배포는 계속 보류한다.

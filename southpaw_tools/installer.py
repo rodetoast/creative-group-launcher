@@ -6,22 +6,28 @@ import uuid
 import logging
 import re
 import json
+import hashlib
+import zipfile
 from pathlib import Path
 
-from .archive import check_cancel, extract_checked
+from .archive import check_cancel, checked_members, extract_checked, member_name
 from .catalog import AppRelease
-from .common import LauncherError, app_lock, atomic_json, digest, inside, plain_tree, read_json, relative_path, utc_now
+from .catalog_trust import CatalogVerifier, strict_json
+from .common import LauncherError, app_lock, atomic_json, atomic_temp_example, digest, identifier, inside, plain_tree, read_json, relative_path, utc_now
+from .windows_paths import WindowsPathError, windows_path_budget
 from .paths import AppPaths
 from .processes import Processes
 from .providers import Provider
 
 
 class Installer:
-    def __init__(self, paths: AppPaths, processes: Processes | None = None):
+    def __init__(self, paths: AppPaths, processes: Processes | None = None, *, plan_uninstall: bool = True):
         self.paths = paths
         self.processes = processes or Processes()
         self.warnings: list[str] = []
         self.download_verified = False
+        self.plan_uninstall = plan_uninstall
+        self.catalog_verifier = CatalogVerifier.bundled(paths.root / "catalog-trust.json")
 
     def installed(self, app_id: str) -> AppRelease | None:
         pointer = self.paths.app(app_id) / "active.json"
@@ -44,6 +50,105 @@ class Installer:
                         result.append(app)
         return result
 
+    def selection_pinned(self, app_id: str) -> bool:
+        pointer = inside(self.paths.app(app_id), "active.json")
+        return pointer.exists() and read_json(pointer).get("pinned") is True
+
+    def _retained_receipt(self, app_id: str, release_id: str):
+        root = self.paths.release(app_id, release_id)
+        receipt = read_json(inside(root, "receipt.json"))
+        app = AppRelease.parse(receipt.get("app", {}))
+        if (receipt.get("schema_version") != 1 or app.app_id != app_id
+                or app.release_id != release_id or not isinstance(receipt.get("files"), dict)):
+            raise LauncherError("보관 릴리스의 설치 기록이 일치하지 않습니다.")
+        proof = inside(root, "catalog-proof.json")
+        if not proof.is_file() or proof.stat().st_size > 6 * 1024 * 1024:
+            raise LauncherError("설치 시 검증된 카탈로그 증거가 없습니다.")
+        self.catalog_verifier.verify_installed_release(strict_json(proof.read_bytes(), 6 * 1024 * 1024), app)
+        if not inside(root, "original.zip").is_file():
+            raise LauncherError("설치 시 검증된 원본 ZIP이 없습니다.")
+        return app, receipt
+
+    def retained_versions(self, app_id: str) -> list[AppRelease]:
+        """List locally retained releases with provenance. Check payload on selection."""
+        releases = inside(self.paths.app(app_id), "releases")
+        result = []
+        if releases.is_dir():
+            for directory in sorted(releases.iterdir()):
+                try:
+                    app, _ = self._retained_receipt(app_id, directory.name)
+                    executable = inside(directory, f"payload/{app.executable_relative_path}")
+                    if executable.is_file():
+                        result.append(app)
+                except (LauncherError, OSError):
+                    continue
+        return result
+
+    def _verify_retained(self, app_id, release_id, cancel=None):
+        app, receipt = self._retained_receipt(app_id, release_id)
+        root = self.paths.release(app_id, release_id)
+        package = inside(root, "original.zip")
+        if package.stat().st_size != app.package_size or digest(package) != app.sha256:
+            raise LauncherError("보관 ZIP의 크기 또는 SHA-256이 일치하지 않습니다.")
+        expected = {}
+        try:
+            with zipfile.ZipFile(package) as archive:
+                for member in checked_members(archive):
+                    check_cancel(cancel)
+                    if not member.is_dir():
+                        with archive.open(member) as stream:
+                            expected[member_name(member)] = hashlib.file_digest(stream, "sha256").hexdigest()
+        except (zipfile.BadZipFile, OSError, RuntimeError) as exc:
+            raise LauncherError("보관 ZIP을 검증할 수 없습니다.") from exc
+        if expected != receipt["files"]:
+            raise LauncherError("설치 기록의 파일 해시가 원본 ZIP과 일치하지 않습니다.")
+        payload = inside(root, "payload")
+        exe, cwd = self.resolve_launch(app)
+        required = [inside(payload, name) for name in app.required_paths]
+        allowed_data = [inside(cwd, name) for name in app.preserve_paths]
+        data_suffixes = {".json", ".txt", ".log", ".png", ".ase", ".aseprite", ".psd"}
+        seen = set()
+        for path in plain_tree(payload):
+            check_cancel(cancel)
+            name = path.relative_to(payload).as_posix()
+            inside(payload, name)
+            if path.is_dir():
+                continue
+            seen.add(name)
+            if path.is_file() and name in expected and digest(path) == expected[name]:
+                continue
+            if (path.is_file() and path != exe and not any(path.is_relative_to(p) for p in required)
+                    and path.suffix.lower() in data_suffixes
+                    and any(path.is_relative_to(p) for p in allowed_data)):
+                continue
+            raise LauncherError(f"보관 릴리스에 변경되거나 등록되지 않은 파일이 있습니다: {name}")
+        if expected.keys() - seen:
+            raise LauncherError("보관 릴리스에 설치 파일이 누락되었습니다.")
+        return app
+
+    def select_release(self, app_id: str, release_id: str, *, pinned: bool = True,
+                       expected_current: AppRelease, expected_release: AppRelease, cancel=None) -> AppRelease:
+        identifier(release_id, "release_id")
+        with app_lock(self.paths.lock(app_id)):
+            self.warnings.clear()
+            if self.is_running(app_id):
+                raise LauncherError("프로그램 실행 중에는 버전을 바꿀 수 없습니다.")
+            self._recover(app_id)
+            current = self.installed(app_id)
+            if current is None or current != expected_current:
+                raise LauncherError("활성 버전이 바뀌었습니다. 목록을 다시 확인하세요.")
+            app = self._verify_retained(app_id, release_id, cancel)
+            if app != expected_release:
+                raise LauncherError("선택한 릴리스 정보가 바뀌었습니다.")
+            check_cancel(cancel)
+            if self.is_running(app_id):
+                raise LauncherError("프로그램이 실행되어 버전 전환을 보류합니다.")
+            desired = {"schema_version": 1, "app": app.to_dict(), "activated_at": utc_now(), "pinned": pinned}
+            journal = self._new_journal(app, "select", uuid.uuid4().hex, desired_pointer=desired)
+            atomic_json(inside(self.paths.app(app_id), "active.json"), desired)
+            self._finish(journal)
+            return app
+
     def resolve_launch(self, app: AppRelease) -> tuple[Path, Path]:
         payload = inside(self.paths.release(app.app_id, app.release_id), "payload")
         exe = inside(payload, app.executable_relative_path)
@@ -63,6 +168,9 @@ class Installer:
 
     def is_running(self, app_id: str) -> bool:
         return self.processes.is_running(self.paths.app(app_id))
+
+    def _installation_running(self, app: AppRelease) -> bool:
+        return self.is_running(app.app_id)
 
     def pending_recovery(self, app_id: str) -> bool:
         journals = inside(self.paths.app(app_id), "transactions")
@@ -101,12 +209,20 @@ class Installer:
         app = AppRelease.parse(app.to_dict())
         if not app.published:
             raise LauncherError("배포 패키지 미확인")
-        with app_lock(self.paths.lock(app.app_id)):
+        # Network providers authenticate metadata before any install lock/journal/recovery mutation.
+        validate_release = getattr(provider, "validate_release", None)
+        if validate_release is not None:
+            validate_release(app)
+        limits = windows_path_budget(self.paths.root.resolve())
+        lock = self.paths.lock(app.app_id)
+        if limits:
+            limits.check(lock, "설치 잠금")
+        with app_lock(lock):
             self.warnings.clear()
             self.download_verified = False
             self._recover(app.app_id)
             old = self.installed(app.app_id)
-            if self.is_running(app.app_id):
+            if self._installation_running(app):
                 raise LauncherError("실행 중인 프로그램의 설치/업데이트는 보류합니다.")
             repair = False
             if old and not app.is_new_release(old):
@@ -125,6 +241,26 @@ class Installer:
             transaction_id = uuid.uuid4().hex
             stage = inside(self.paths.root, f"staging/{transaction_id}")
             package = inside(self.paths.downloads, f"{transaction_id}.zip")
+            app_root = self.paths.app(app.app_id)
+            quarantine = inside(app_root, f"recovery/{transaction_id}")
+            verifier = getattr(provider, "verifier", None)
+            metadata = ["receipt.json"]
+            if isinstance(verifier, CatalogVerifier):
+                metadata.extend(("catalog-proof.json", "original.zip"))
+            if limits:
+                limits.check(package, "다운로드")
+                self._check_control_paths(limits, app_root, transaction_id)
+                destinations = ((stage, "staging 추출"), (target, "최종 설치"),
+                                (quarantine / "aborted-stage", "중단된 추출 보관"),
+                                (quarantine / "aborted-release", "중단된 설치 보관"),
+                                (quarantine / "previous-release", "이전 설치 보관"))
+                for name in metadata:
+                    for base, phase in destinations:
+                        limits.check(base / name, phase)
+                    if name != "original.zip":
+                        limits.check(atomic_temp_example(stage / name), "설치 메타데이터 임시 파일")
+                if repair:
+                    self._check_tree_move(limits, target, quarantine / "previous-release", "이전 설치 보관")
             journal = self._new_journal(app, "install", transaction_id, repair=repair)
             try:
                 provider.download(app, package, progress, cancel)
@@ -132,19 +268,34 @@ class Installer:
                 if package.stat().st_size != app.package_size or digest(package) != app.sha256:
                     raise LauncherError("배포 패키지 크기 또는 SHA-256 불일치")
                 self.download_verified = True
+                migration = list(self._migration_files(old, app, cancel)) if old else []
+                if limits:
+                    self._check_install_payload(limits, app, package, target, quarantine,
+                                                destinations, migration, cancel)
                 self._phase(journal, "download_verified")
                 self._phase(journal, "preparing")
                 stage.mkdir(parents=True, exist_ok=False)
                 files = extract_checked(package, stage / "payload", app, cancel)
-                if old:
-                    self._migrate_known_data(old, app, stage / "payload", cancel)
+                for source, relative, suffix in migration:
+                    check_cancel(cancel)
+                    if source.resolve() != source or source.is_symlink():
+                        raise LauncherError("사용자 데이터의 링크/정션은 자동 이전하지 않습니다.")
+                    cwd = inside(stage / "payload", app.working_directory_relative_path, allow_dot=True)
+                    destination = inside(cwd, relative)
+                    output = inside(destination, suffix.as_posix()) if suffix else destination
+                    output.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(source, output)
                 atomic_json(stage / "receipt.json", {
                     "schema_version": 1, "app": app.to_dict(), "installed_at": utc_now(),
                     "files": files, "transaction_id": transaction_id,
                 })
+                if isinstance(verifier, CatalogVerifier):
+                    proof = verifier.installed_release_snapshot(app)
+                    atomic_json(stage / "catalog-proof.json", proof)
+                    shutil.copyfile(package, stage / "original.zip")
                 self._phase(journal, "ready")
                 check_cancel(cancel)
-                if self.is_running(app.app_id):
+                if self._installation_running(app):
                     raise LauncherError("프로그램이 실행되어 업데이트 전환을 보류합니다.")
                 target.parent.mkdir(parents=True, exist_ok=True)
                 self._phase(journal, "switching")
@@ -165,6 +316,9 @@ class Installer:
                 self._finish(journal)
                 return app
             except Exception as exc:
+                if isinstance(exc, WindowsPathError) and journal["phase"] == "downloading":
+                    self._finish(journal)
+                    raise
                 try:
                     committed = self._recover_install(journal)
                 except Exception as recovery:
@@ -182,11 +336,52 @@ class Installer:
             "schema_version": 1, "app": app.to_dict(), "activated_at": utc_now(),
         })
 
-    def _migrate_known_data(self, old: AppRelease, new: AppRelease, payload: Path,
-                            cancel: threading.Event | None):
+    @staticmethod
+    def _check_control_paths(limits, root, tx):
+        for file, phase in ((root / "active.json", "활성 버전 기록"),
+                            (root / "transactions" / f"{tx}.json", "작업 기록")):
+            limits.check(file, phase)
+            limits.check(atomic_temp_example(file), phase + " 임시 파일")
+        limits.check(root / "recovery-warnings.log", "복구 경고 기록")
+
+    @staticmethod
+    def _check_tree_move(limits, source, destination, phase):
+        if source.exists():
+            limits.check(destination, phase, directory=True)
+            for item in plain_tree(source):
+                limits.check(destination / item.relative_to(source), phase, directory=item.is_dir())
+
+    def _check_install_payload(self, limits, app, package, target, quarantine,
+                               destinations, migration, cancel):
+        app_root = self.paths.app(app.app_id)
+        cwd = target / "payload" / app.working_directory_relative_path
+        preserved = [cwd / name for name in app.preserve_paths]
+        with zipfile.ZipFile(package) as archive:
+            members = checked_members(archive)
+        needs_restore = False
+        for member in members:
+            check_cancel(cancel)
+            name = member_name(member)
+            for base, phase in destinations:
+                limits.check(base / "payload" / name, phase, directory=member.is_dir())
+            installed = target / "payload" / name
+            if (self.plan_uninstall and not member.is_dir()
+                    and not any(installed.is_relative_to(p) for p in preserved)):
+                limits.check(quarantine / "files" / installed.relative_to(app_root), "제거 전 복구 사본")
+                needs_restore = True
+        if needs_restore:
+            limits.check(quarantine / f"restore-{quarantine.name}", "제거 복원 임시 파일")
+        for _, relative, suffix in migration:
+            check_cancel(cancel)
+            name = Path(app.working_directory_relative_path) / relative
+            if suffix:
+                name /= suffix
+            for base, phase in destinations:
+                limits.check(base / "payload" / name, phase + " · 사용자 데이터")
+
+    def _migration_files(self, old: AppRelease, new: AppRelease, cancel):
         old_payload = inside(self.paths.release(old.app_id, old.release_id), "payload")
         old_cwd = inside(old_payload, old.working_directory_relative_path, allow_dot=True)
-        new_cwd = inside(payload, new.working_directory_relative_path, allow_dot=True)
         if not old_cwd.exists():
             return
         # Only explicitly declared mutable data migrates. Unknown edits remain in the
@@ -194,7 +389,6 @@ class Installer:
         allowed = set(old.preserve_paths) & set(new.preserve_paths)
         for relative in sorted(allowed):
             source = inside(old_cwd, relative)
-            destination = inside(new_cwd, relative)
             if not source.exists():
                 continue
             candidates = sorted(plain_tree(source)) if source.is_dir() else [source]
@@ -207,9 +401,7 @@ class Installer:
                 if candidate.suffix.lower() in {".exe", ".dll", ".py", ".pyw", ".bat", ".cmd", ".ps1", ".lua", ".jsx"}:
                     continue
                 suffix = candidate.relative_to(source) if source.is_dir() else None
-                output = inside(destination, suffix.as_posix()) if suffix else destination
-                output.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(candidate, output)
+                yield candidate, relative, suffix
 
     def _journal_path(self, journal: dict) -> Path:
         app = AppRelease.parse(journal["app"])
@@ -222,7 +414,8 @@ class Installer:
         pointer = self.paths.app(app.app_id) / "active.json"
         journal = {"schema_version": 1, "id": tx, "kind": kind,
                    "app": app.to_dict(), "previous_pointer": read_json(pointer) if pointer.exists() else None,
-                   "phase": "downloading" if kind == "install" else "preparing_removal", **extra}
+                   "phase": {"install": "downloading", "uninstall": "preparing_removal",
+                             "select": "selecting"}[kind], **extra}
         self._phase(journal, journal["phase"])
         return journal
 
@@ -279,6 +472,9 @@ class Installer:
     def _recover_install(self, journal):
         app = AppRelease.parse(journal["app"])
         target = self.paths.release(app.app_id, app.release_id)
+        limits = windows_path_budget(self.paths.root.resolve())
+        if limits:
+            self._check_control_paths(limits, self.paths.app(app.app_id), journal["id"])
         previous = journal.get("previous_pointer")
         old = AppRelease.parse(previous["app"]) if previous else None
         if old and old.app_id != app.app_id:
@@ -313,9 +509,16 @@ class Installer:
         if journal["phase"] not in {"failed", "activated"}:
             quarantine = self._quarantine(journal)
             previous_release = inside(quarantine, "previous-release")
+            stage = inside(self.paths.root, f"staging/{journal['id']}")
+            owned = target.exists() and self._owned_release(target, journal)
+            if limits:
+                if owned:
+                    self._check_tree_move(limits, target, quarantine / "aborted-release", "중단된 설치 보관")
+                self._check_tree_move(limits, previous_release, target, "이전 설치 복원")
+                self._check_tree_move(limits, stage, quarantine / "aborted-stage", "중단된 추출 보관")
             if target.exists():
                 # Never move a pre-existing normal release or unknown directory.
-                if self._owned_release(target, journal):
+                if owned:
                     quarantine.mkdir(parents=True, exist_ok=True)
                     target.rename(inside(quarantine, "aborted-release"))
                 elif not journal.get("repair"):
@@ -324,7 +527,6 @@ class Installer:
                 if target.exists():
                     raise LauncherError("복구 대상 폴더가 이미 있습니다. 백업을 보존합니다.")
                 previous_release.rename(target)
-            stage = inside(self.paths.root, f"staging/{journal['id']}")
             if stage.exists():
                 quarantine.mkdir(parents=True, exist_ok=True)
                 stage.rename(inside(quarantine, "aborted-stage"))
@@ -332,6 +534,28 @@ class Installer:
         self._phase(journal, "failed")
         self._finish(journal)
         return False
+
+    def _recover_selection(self, journal):
+        app = AppRelease.parse(journal["app"])
+        desired = journal.get("desired_pointer")
+        previous = journal.get("previous_pointer")
+        if (not isinstance(desired, dict) or desired.get("app") != app.to_dict()
+                or not isinstance(previous, dict)
+                or AppRelease.parse(previous.get("app", {})).app_id != app.app_id):
+            raise LauncherError("버전 전환 복구 기록이 일치하지 않습니다.")
+        pointer = inside(self.paths.app(app.app_id), "active.json")
+        current = read_json(pointer)
+        if current == desired:
+            try:
+                if self._verify_retained(app.app_id, app.release_id) != app:
+                    raise LauncherError("전환된 릴리스의 내용이 달라졌습니다.")
+            except LauncherError:
+                self.resolve_launch(AppRelease.parse(previous["app"]))
+                atomic_json(pointer, previous)
+                self._warn(app.app_id, "전환된 릴리스 검증 실패로 이전 활성 버전을 복원했습니다.")
+        elif current != previous:
+            raise LauncherError("활성 포인터가 전환 기록과 다릅니다. 파일을 보존합니다.")
+        self._finish(journal)
 
     def _recover(self, app_id):
         journals = inside(self.paths.app(app_id), "transactions")
@@ -349,6 +573,7 @@ class Installer:
             allowed = {
                 "install": {"downloading", "download_verified", "preparing", "ready", "switching", "activating", "activated", "failed", "recovery_required"},
                 "uninstall": {"preparing_removal", "removing", "uninstalled", "removal_restored", "recovery_required"},
+                "select": {"selecting"},
             }
             if (not isinstance(journal.get("kind"), str) or not isinstance(journal.get("phase"), str)
                     or journal["phase"] not in allowed.get(journal["kind"], set())):
@@ -367,6 +592,8 @@ class Installer:
                     self._finish(journal)
                 else:
                     self._restore_removal(journal)
+            elif journal["kind"] == "select":
+                self._recover_selection(journal)
             else:
                 raise LauncherError("지원하지 않는 복구 작업입니다.")
 
@@ -380,6 +607,9 @@ class Installer:
         root = self.paths.app(app.app_id)
         backup_root = inside(self._quarantine(journal), "files")
         if journal["phase"] != "preparing_removal":
+            limits = windows_path_budget(self.paths.root.resolve())
+            if limits:
+                self._check_removal_paths(limits, root, backup_root, journal["id"], journal["files"])
             for name, expected in journal.get("files", {}).items():
                 file = inside(root, name)
                 backup = inside(backup_root, name)
@@ -404,8 +634,21 @@ class Installer:
         self._phase(journal, "removal_restored")
         self._finish(journal)
 
+    def _check_removal_paths(self, limits, root, backup_root, tx, files):
+        self._check_control_paths(limits, root, tx)
+        if files:
+            limits.check(backup_root.parent / f"restore-{tx}", "제거 복원 임시 파일")
+        for name in files:
+            relative_path(name)
+            limits.check(root / name, "제거 복원 대상")
+            limits.check(backup_root / name, "제거 전 복구 사본")
+
     def uninstall(self, app_id: str) -> dict:
-        with app_lock(self.paths.lock(app_id)):
+        limits = windows_path_budget(self.paths.root.resolve())
+        lock = self.paths.lock(app_id)
+        if limits:
+            limits.check(lock, "제거 잠금")
+        with app_lock(lock):
             self.warnings.clear()
             self._recover(app_id)
             if self.is_running(app_id):
@@ -441,8 +684,11 @@ class Installer:
                         retained.append(str(file))
                         continue
                     managed[file.relative_to(root).as_posix()] = expected
-            journal = self._new_journal(active, "uninstall", uuid.uuid4().hex, files=managed)
-            backup_root = inside(self._quarantine(journal), "files")
+            tx = uuid.uuid4().hex
+            backup_root = inside(root, f"recovery/{tx}/files")
+            if limits:
+                self._check_removal_paths(limits, root, backup_root, tx, managed)
+            journal = self._new_journal(active, "uninstall", tx, files=managed)
             try:
                 # All backups are verified before any original file is deleted.
                 for name, expected in managed.items():

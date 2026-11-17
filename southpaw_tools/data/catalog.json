@@ -69,7 +69,7 @@
       "app_id": "tag-master",
       "display_name": "AsepriteTagMaster",
       "category": "태그 관리",
-      "description": "Aseprite 태그 이름과 반복 속성을 검수하고, 리포트를 확인한 뒤 일괄 수정합니다.",
+      "description": "Aseprite 태그 이름과 반복 속성을 검수하고 일괄 수정합니다. 현재 승인 ZIP 미확인으로 설치할 수 없습니다.",
       "version": "0.4.0",
       "release_id": "0.4.0-team-7263f8d",
       "release_channel": "approved",
@@ -88,10 +88,10 @@
         "settings.json",
         "aseprite_tag_master_error.log"
       ],
-      "release_notes": "팀 승인 기준: AsepriteTagMaster 0.4.0\n\n이 카탈로그는 승인된 완성 빌드만 사용합니다. 이후 개발 소스는 포함하지 않습니다.\n설치에는 개발자 PC의 배포 서버 연결이 필요합니다. 설치 후에는 오프라인 실행이 가능합니다.",
+      "release_notes": "팀 승인 기준: AsepriteTagMaster 0.4.0\n\n해당 버전의 승인된 완성 ZIP이 아직 확인되지 않아 설치할 수 없습니다. 개발 중인 소스나 임의 빌드를 대신 배포하지 않습니다.\n승인 ZIP과 신뢰할 수 있는 배포 정보가 준비되면 설치를 제공할 수 있습니다. 기존 정상 설치본은 인터넷 연결 없이 사용할 수 있습니다.",
       "published": false,
       "published_at": null,
-      "availability_reason": "배포 패키지 미확인 — 지정 버전의 승인 ZIP이 필요합니다.",
+      "availability_reason": "승인 ZIP 미확인 — 승인된 완성 ZIP이 준비될 때까지 설치할 수 없습니다.",
       "package_type": "onefile",
       "build_id": "7263f8d6107be76363d329c6962cd46dd15d4068",
       "icon": ""

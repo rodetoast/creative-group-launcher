@@ -10,6 +10,8 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
+from .bootstrap_diagnostics import call, operation, secondary
+
 
 class LauncherError(Exception):
     """An actionable error safe to present in the launcher."""
@@ -25,31 +27,55 @@ def utc_now() -> str:
 
 def digest(path: Path) -> str:
     h = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+    with call("file_open", path.open, "rb", target=path, api="Path.open") as stream:
+        for chunk in iter(lambda: call("file_read", stream.read, 1024 * 1024, target=path, api="file.read"), b""):
             h.update(chunk)
     return h.hexdigest()
 
 
 def atomic_json(path: Path, value: object) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp = tempfile.mkstemp(prefix=".pending-", suffix=".json", dir=path.parent)
+    raw = (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    atomic_bytes(path, raw)
+
+
+ATOMIC_TEMP_PREFIX = ".pending-"
+ATOMIC_TEMP_SUFFIX = ".json"
+
+
+def atomic_temp_example(path: Path) -> Path:
+    # CPython mkstemp inserts an eight-character candidate name.
+    return path.with_name(ATOMIC_TEMP_PREFIX + "0" * 8 + ATOMIC_TEMP_SUFFIX)
+
+
+def atomic_bytes(path: Path, raw: bytes) -> None:
+    call('atomic_parent_mkdir', path.parent.mkdir, parents=True, exist_ok=True, target=path.parent, api='Path.mkdir')
+    fd, temp = call('atomic_temp_create', tempfile.mkstemp, prefix=ATOMIC_TEMP_PREFIX,
+                    suffix=ATOMIC_TEMP_SUFFIX, dir=path.parent, target=path, api='tempfile.mkstemp')
+    original = None
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
-            json.dump(value, stream, ensure_ascii=False, indent=2)
-            stream.write("\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temp, path)
+        with operation('atomic_temp_stream', target=temp, api='file context manager'):
+            with os.fdopen(fd, "wb") as stream:
+                call('atomic_temp_write', stream.write, raw, target=temp, api='file.write')
+                call('atomic_temp_flush', stream.flush, target=temp, api='file.flush')
+                call('atomic_temp_fsync', os.fsync, stream.fileno(), target=temp, api='os.fsync')
+        call('atomic_replace', os.replace, temp, path, target=path, api='os.replace')
+    except Exception as exc:
+        original = exc
+        raise
     finally:
-        Path(temp).unlink(missing_ok=True)
+        try:
+            call('atomic_temp_cleanup', Path(temp).unlink, missing_ok=True, target=temp, api='Path.unlink')
+        except Exception as cleanup_error:
+            if original is None:
+                raise
+            secondary(original, cleanup_error, 'atomic_temp_cleanup')
 
 
 def read_json(path: Path) -> dict:
     try:
-        if path.stat().st_size > 4 * 1024 * 1024:
+        if call("json_stat", path.stat, target=path, api="Path.stat").st_size > 4 * 1024 * 1024:
             raise LauncherError("설정 파일이 너무 큽니다.")
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(call("json_read", path.read_text, encoding="utf-8", target=path, api="Path.read_text"))
         if not isinstance(value, dict):
             raise ValueError("object required")
         return value
@@ -127,33 +153,46 @@ def remove_transaction(root: Path, path: Path) -> None:
 @contextmanager
 def app_lock(path: Path):
     """OS-held lock: a crashed client cannot leave a permanent busy marker."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    stream = path.open("a+b")
+    call('lock_parent_mkdir', path.parent.mkdir, parents=True, exist_ok=True, target=path.parent, api='Path.mkdir')
+    stream = call('lock_open', path.open, "a+b", target=path, api='Path.open')
     locked = False
+    original = None
     try:
-        stream.seek(0, 2)
-        if stream.tell() == 0:
-            stream.write(b"0")
-            stream.flush()
-        stream.seek(0)
+        with operation('lock_initialize', target=path, api='file.seek/write/flush'):
+            stream.seek(0, 2)
+            if stream.tell() == 0:
+                stream.write(b"0")
+                stream.flush()
+            stream.seek(0)
         try:
             if os.name == "nt":
                 import msvcrt
-                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                call('lock_acquire', msvcrt.locking, stream.fileno(), msvcrt.LK_NBLCK, 1,
+                     target=path, api='msvcrt.locking')
             else:
                 import fcntl
-                fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                call('lock_acquire', fcntl.flock, stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB,
+                     target=path, api='fcntl.flock')
             locked = True
         except OSError as exc:
             raise LauncherError("다른 런처에서 이 프로그램을 관리 중입니다.") from exc
         yield
+    except Exception as exc:
+        original = exc
+        raise
     finally:
-        if locked:
-            stream.seek(0)
-            if os.name == "nt":
-                import msvcrt
-                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
-            else:
-                import fcntl
-                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
-        stream.close()
+        try:
+            if locked:
+                with operation('lock_release', target=path, api='file.seek/OS unlock'):
+                    stream.seek(0)
+                    if os.name == "nt":
+                        import msvcrt
+                        msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        import fcntl
+                        fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+            call('lock_close', stream.close, target=path, api='file.close')
+        except Exception as cleanup_error:
+            if original is None:
+                raise
+            secondary(original, cleanup_error, 'lock_cleanup')

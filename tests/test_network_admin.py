@@ -17,7 +17,7 @@ from southpaw_tools.installer import Installer
 from southpaw_tools.paths import AppPaths
 from southpaw_tools.providers import HttpProvider, InternetProvider
 from southpaw_tools.server import Distribution, ServerController, make_handler
-from tests.support import FakeProcesses, package, repository, temporary
+from tests.support import FakeProcesses, package, repository, temporary, TestSigner
 
 
 class NetworkAdminTests(unittest.TestCase):
@@ -28,13 +28,16 @@ class NetworkAdminTests(unittest.TestCase):
         self.source, self.app = package(self.root / "source")
         self.repo = self.root / "repo"
         repository(self.repo, self.source, self.app)
+        self.signer = TestSigner(self.root)
+        self.signer.publish(self.repo, [self.app], 1)
+        self.verifier = self.signer.verifier(self.root / "trust/catalog-trust.json")
         self.controller = ServerController(self.repo, {"server_enabled": True, "port": 0,
                                                      "lan_enabled": False, "internet_enabled": False})
         self.controller.start()
         self.addCleanup(self.controller.stop)
         port = self.controller.servers[0].server_address[1]
         self.url = f"http://127.0.0.1:{port}"
-        self.provider = HttpProvider(self.url)
+        self.provider = HttpProvider(self.url, verifier=self.verifier)
 
     def test_health_catalog_version_notes_and_read_only_routes(self):
         health = self.provider.health()
@@ -82,8 +85,16 @@ class NetworkAdminTests(unittest.TestCase):
         engine = Installer(AppPaths(self.root / "client"), FakeProcesses())
         engine.install(self.app, self.provider)
         source, new = package(self.root / "source", "r2")
+        raw, signature = self.signer.pair([new], 2)
         class Truncated(BaseHTTPRequestHandler):
             def do_GET(inner):
+                if inner.path in {"/api/catalog", "/api/catalog.sig"}:
+                    body = raw if inner.path == "/api/catalog" else json.dumps(signature).encode()
+                    inner.send_response(200)
+                    inner.send_header("Content-Length", str(len(body)))
+                    inner.end_headers()
+                    inner.wfile.write(body)
+                    return
                 inner.send_response(200)
                 inner.send_header("Content-Length", str(new.package_size))
                 inner.end_headers()
@@ -95,7 +106,7 @@ class NetworkAdminTests(unittest.TestCase):
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
-            bad_provider = HttpProvider(f"http://127.0.0.1:{server.server_port}")
+            bad_provider = HttpProvider(f"http://127.0.0.1:{server.server_port}", verifier=self.verifier)
             with self.assertRaises(LauncherError):
                 engine.install(new, bad_provider)
             self.assertEqual(engine.installed("dummy"), self.app)
@@ -195,7 +206,8 @@ class NetworkAdminTests(unittest.TestCase):
         atomic_json(self.repo / "catalog.json", catalog_document([unpublished]))
         (self.repo / "packages" / self.app.package_name).unlink()
         kwargs = dict(version="1.0.0", release_id="release-1", executable="Dummy.exe",
-                      expected_sha256=self.app.sha256, expected_exe_sha256=self.app.executable_sha256)
+                      expected_sha256=self.app.sha256, expected_exe_sha256=self.app.executable_sha256,
+                      signing_key=self.signer.path, sequence=2)
         with self.assertRaises(LauncherError):
             publish(self.repo, "dummy", self.source, approved=False, **kwargs)
         app = publish(self.repo, "dummy", self.source, approved=True, **kwargs)
@@ -211,7 +223,8 @@ class NetworkAdminTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 publish(self.repo, "dummy", self.source, version="1.0.0", release_id="new-release",
                         executable="Dummy.exe", expected_sha256=self.app.sha256,
-                        expected_exe_sha256=self.app.executable_sha256, approved=True)
+                        expected_exe_sha256=self.app.executable_sha256, approved=True,
+                        signing_key=self.signer.path, sequence=2)
         self.assertEqual((self.repo / "catalog.json").read_bytes(), before)
         self.assertFalse((self.repo / "packages/dummy--new-release.zip").exists())
 

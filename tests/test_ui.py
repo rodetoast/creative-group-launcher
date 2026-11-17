@@ -72,7 +72,7 @@ class UiTests(unittest.TestCase):
         APPLICATION.processEvents()
         self.assertEqual(window.title.text(), "AsepriteTagMaster")
         self.assertFalse(window.primary.isEnabled())
-        self.assertIn("패키지 미확인", window.message.text())
+        self.assertIn("승인 ZIP 미확인", window.message.text())
         for width, height in ((980, 700), (1240, 820), (1600, 1000)):
             window.resize(width, height)
             APPLICATION.processEvents()
@@ -83,6 +83,22 @@ class UiTests(unittest.TestCase):
         self.assertTrue(QFontDatabase.families())
         self.assertTrue(QRawFont.fromFont(window.title.font()).supportsCharacter(ord("A")))
         self.assertTrue(QRawFont.fromFont(window.title.font()).supportsCharacter(ord("설")))
+
+    def test_minimum_window_keeps_info_text_visible_with_wrapped_github_error(self):
+        window = self.window()
+        window.config = {'transport':'github','github_repository':'toast-source/creative-group-releases'}
+        window.list.setCurrentRow(2)
+        window.catalog_error = '알 수 없는 카탈로그 서명 키 — 운영 신뢰키 승인이 필요합니다.'
+        window.server_state = '서명 검증 실패'
+        window.render()
+        window.resize(980,700)
+        APPLICATION.processEvents()
+        from PySide6.QtWidgets import QLabel
+        card = window.info['설치 상태'].parentWidget()
+        for label in card.findChildren(QLabel):
+            self.assertGreaterEqual(label.height(),label.minimumSizeHint().height(),label.text())
+        self.assertTrue(window.centralWidget().rect().contains(
+            window.primary.mapTo(window.centralWidget(),window.primary.rect().bottomRight())))
 
     def test_ui_install_update_running_and_offline_launch_with_dummy(self):
         source, app = package(self.root / "packages")
@@ -122,6 +138,7 @@ class UiTests(unittest.TestCase):
         catalog = self.root / "catalog.json"
         atomic_json(catalog, catalog_document([app]))
         window = self.window(catalog)
+        window.config = {'transport':'lan'}  # Keep this explicit legacy Provider regression.
         with patch("southpaw_tools.ui.HttpProvider.health", side_effect=LauncherError("offline fixture")):
             window.refresh()
             self.wait_task(window)

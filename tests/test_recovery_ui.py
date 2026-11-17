@@ -14,7 +14,11 @@ from tests.support import LocalProvider, package
 class RecoveryUiTests(unittest.TestCase):
     setUp = helpers.UiTests.setUp
     close_windows = helpers.UiTests.close_windows
-    window = helpers.UiTests.window
+    def window(self, catalog=None):
+        window = helpers.UiTests.window(self,catalog)
+        window.config = {'transport':'lan'}  # These fixtures exercise the preserved LAN path.
+        window._connection_status()
+        return window
     wait_task = helpers.UiTests.wait_task
 
     def installed_window(self, remote=None):

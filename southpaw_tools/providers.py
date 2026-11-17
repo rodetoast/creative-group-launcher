@@ -14,6 +14,8 @@ from typing import Callable, Protocol
 from .archive import check_cancel
 from .catalog import AppRelease, parse_catalog
 from .common import LauncherError
+from .catalog_trust import CatalogVerifier, MAX_CATALOG, MAX_SIGNATURE
+from .paths import AppPaths
 
 
 class Provider(Protocol):
@@ -40,14 +42,13 @@ def private_address(address: str) -> bool:
 
 
 class HttpProvider:
-    """Trusted local/dummy LAN transport, not publisher authentication.
+    """Pinned signed catalogs over HTTP; transport identity/confidentiality is absent.
 
-    Catalogs are unsigned and HTTP does not authenticate the server. Matching
-    SHA-256 values detect corruption, not a coordinated catalog/package change.
-    General team distribution remains blocked pending the security design in
-    docs/CATALOG_TRUST_DESIGN.md; no signing keys belong in this provider.
+    Only bundled or explicitly injected local test keys are used. No private keys,
+    unsigned compatibility mode or network key enrollment belong in this provider.
     """
-    def __init__(self, base_url: str, token: str = "", *, lan_enabled: bool = False):
+    def __init__(self, base_url: str, token: str = "", *, lan_enabled: bool = False,
+                 verifier: CatalogVerifier | None = None):
         url = urllib.parse.urlsplit(base_url)
         if (url.scheme != "http" or not url.hostname or url.path not in {"", "/"}
                 or url.query or url.fragment or url.username or url.password):
@@ -67,6 +68,7 @@ class HttpProvider:
         self.base_url = f"http://{'[' + host + ']' if ':' in host else host}:{port}"
         self.token = token
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+        self.verifier = verifier or CatalogVerifier.bundled(AppPaths.default().root / "catalog-trust.json")
 
     def _open(self, path: str):
         request = urllib.request.Request(self.base_url + path, headers={
@@ -97,10 +99,24 @@ class HttpProvider:
         return result
 
     def catalog(self) -> list[AppRelease]:
-        return parse_catalog(self._json("/api/catalog"))
+        # Verify the bytes delivered by the server, never a reserialized dict.
+        def receive(path, limit):
+            with self._open(path) as response:
+                raw = response.read(limit + 1)
+            if len(raw) > limit:
+                raise LauncherError("카탈로그 또는 서명 크기 초과")
+            return raw
+        return self.verifier.accept(receive("/api/catalog", MAX_CATALOG),
+                                    receive("/api/catalog.sig", MAX_SIGNATURE))
+
+    def validate_release(self, app: AppRelease):
+        current = next((a for a in self.catalog() if a.app_id == app.app_id), None)
+        if current is None or current != app or not current.published:
+            raise LauncherError("선택한 배포본이 현재 서명 카탈로그와 일치하지 않습니다.")
 
     def download(self, app: AppRelease, target: Path, progress=lambda done, total: None,
                  cancel: threading.Event | None = None) -> None:
+        self.validate_release(app)
         if not app.published:
             raise LauncherError("배포 패키지 미확인")
         done, h, started = 0, hashlib.sha256(), time.monotonic()

@@ -15,6 +15,9 @@ import shutil
 from southpaw_tools.admin import publish
 from southpaw_tools.catalog import catalog_document, load_catalog
 from southpaw_tools.common import LauncherError, atomic_json, digest, inside, plain_tree, read_json
+from southpaw_tools.catalog_trust import CATALOG_ID, b64, key_id
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives import serialization
 from southpaw_tools.server import main as server_main
 
 PROJECT = Path(__file__).resolve().parents[1]
@@ -58,7 +61,8 @@ def publish_fixture(root: Path, build: str):
                    version=app.version, release_id=app.release_id,
                    executable=app.executable_relative_path, expected_sha256=app.sha256,
                    expected_exe_sha256=app.executable_sha256, approved=True,
-                   notes=app.release_notes, cwd=".")
+                   notes=app.release_notes, cwd=".", signing_key=root / "test-only-signing.pem",
+                   sequence=read_json(root / "repository/catalog.json").get("sequence", 0) + 1)
 
 
 def prepare(root: Path):
@@ -70,7 +74,16 @@ def prepare(root: Path):
     repo.mkdir()
     seed = replace(sources["r1"][1], published=False)
     atomic_json(repo / "catalog.json", catalog_document([seed]))
-    atomic_json(root / "lab.json", {"purpose": MARKER, "unsigned_http": True})
+    atomic_json(root / "lab.json", {"purpose": MARKER, "transport": "HTTP", "test_key_only": True})
+    # Only new dummy environments receive a test key; never modify a historic lab.
+    private = Ed25519PrivateKey.generate()
+    with (root / "test-only-signing.pem").open("xb") as stream:
+        stream.write(private.private_bytes(serialization.Encoding.PEM,
+                     serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+    public = private.public_key().public_bytes_raw()
+    test_policy = {"schema_version": 1, "catalog_id": CATALOG_ID, "minimum_sequence": 1,
+                   "keys": {key_id(public): b64(public)}}
+    atomic_json(root / "TEST_ONLY_TRUST.json", test_policy)
     for build, (source, app) in sources.items():
         shutil.copyfile(source, root / "inputs" / f"{build}.zip")
         (root / "inputs" / f"{build}.md").write_text(app.release_notes, encoding="utf-8")
@@ -84,6 +97,8 @@ def prepare(root: Path):
     bundle.mkdir()
     shutil.copytree(PROJECT / "southpaw_tools", bundle / "southpaw_tools",
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "assets"))
+    atomic_json(bundle / "southpaw_tools/data/trusted_catalog_keys.json", test_policy)
+    (bundle / "TEST_ONLY.txt").write_text("Dummy test key only. Never use for staff deployment.\n", encoding="utf-8")
     document = read_json(repo / "catalog.json")
     atomic_json(bundle / "southpaw_tools/data/catalog.json", document)
     atomic_json(bundle / "audit-catalog.json", document)
@@ -141,7 +156,9 @@ def validate(root: Path):
             raise LauncherError("시험 client에 패키지/사용자 설정을 포함할 수 없습니다.")
         if token and token.encode() in file.read_bytes():
             raise LauncherError("시험 client에 비밀 토큰이 있습니다.")
-    return {"dummy_only": True, "current_release": app.release_id, "unsigned_http": True}
+    return {"dummy_only": True, "current_release": app.release_id, "transport": "HTTP",
+            "catalog_signed": (root / "repository/catalog.sig.json").is_file(),
+            "server_authenticated": False}
 
 
 def main():

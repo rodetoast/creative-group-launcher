@@ -25,5 +25,6 @@ dist/
 **/settings.local.json
 **/settings.json
 **/catalog-cache.json
+**/catalog-trust.json
 **/active.json
 **/receipt.json

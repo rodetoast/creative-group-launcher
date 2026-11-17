@@ -1,4 +1,26 @@
-# Southpaw Tools Launcher v0.1.0
+# Creative Group Launcher v0.1.0
+
+[Windows onedir 빌드와 Bootstrap 시험](docs/WINDOWS_PACKAGING_BOOTSTRAP.md)을 추가했습니다.
+제품 EXE는 미실행이며, 신규 native 시험 통과와 별개로 전체 회귀는 journal WinError 5로 미통과입니다.
+
+런처 자체 업데이트의 [격리 더미 기반과 복구 검증](docs/SELF_UPDATE_FOUNDATION.md)을 추가했습니다.
+실제 런처 자동 업데이트는 활성화하지 않았으며 EXE 패키징·운영 키·직원 배포는 별도 검토 사항입니다.
+
+로컬 관리자 배포 GUI를 추가했습니다. `python -B -m southpaw_tools.admin_gui`로 실행합니다.
+**운영 게시는 잠겨 있으며**, 격리 더미 저장소에서만 게시 시험을 허용합니다.
+[관리자 GUI 사용·검증 보고서](docs/ADMIN_GUI_IMPLEMENTATION.md)를 확인하세요.
+
+2026-11-05: Ed25519 카탈로그 서명과 순번 검증을 구현했습니다.
+[서명 구현·키 관리·검증 보고서](docs/CATALOG_SIGNING_IMPLEMENTATION.md)를 먼저 확인하세요.
+**운영 공개키는 미채택이므로 기본 네트워크 설치·업데이트는 차단됩니다.**
+게시 CLI에는 `--signing-key`와 `--sequence`가 필요하며 unsigned 자동 호환은 없습니다.
+이전 시험 기록과 아래의 unsigned 시점 설명은 보존합니다. TLS·SAC 코드서명은 이번 범위에서 제외합니다.
+
+현재 방향은 **추가 서비스 비용0원·회사 내부 LAN 전용**입니다. 기존 Southpaw Tools Launcher 코드와 데이터 경로를 그대로 사용합니다.
+인터넷 배포는 현재 개발 범위에서 제외하며 유료 서비스/VPN/Cloudflare/OAuth/SSO/DRM/복잡한 PC별 인증을 요구하지 않습니다.
+직원 런처와 관리자 로컬 게시를 분리하고 안전한 업데이트·팀원 PC 보호를 우선합니다. 후속으로 Ed25519 카탈로그 서명을 구현합니다.
+회사 담당자의 시험 범위와 별도 시험 PC가 확인되지 않으면 LAN 서버를 시작하지 않습니다.
+현재 실제 시험 상태와 필요한 최소 조치는 [CREATIVE_LAN_TRIAL_STATUS.md](docs/CREATIVE_LAN_TRIAL_STATUS.md)에 있습니다.
 
 Southpaw Games 내부 팀원이 승인된 Windows 제작 도구를 설치·실행·업데이트·제거하는 첫 개발본입니다.
 
@@ -78,7 +100,8 @@ apps/<app_id>/transactions/ 작업 단계별 복구 기록; 정리 실패 시 �
 apps/<app_id>/recovery/     제거 백업·중단 설치·복구 전 payload 보존; 자동 일괄 삭제하지 않음
 apps/<app_id>/recovery-warnings.log  복구/정리 경고
 settings.json              서버 연결 설정; LAN 토큰은 이 사용자 파일에 저장
-catalog-cache.json         마지막 정상 카탈로그
+catalog-cache.json         이전 unsigned 캐시; 신뢰 목록으로 사용하지 않음
+catalog-trust.json         서명된 카탈로그 캐시와 최고 검증 순번
 ```
 
 현재 프로그램들은 서로 다른 설정 정책을 사용합니다. 기존 프로그램 코드를 변경하지 않으므로

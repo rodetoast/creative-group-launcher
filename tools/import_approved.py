@@ -87,6 +87,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--approve", action="store_true", help="Explicit approval for these exact baseline packages")
     parser.add_argument("--seed-only", action="store_true")
+    parser.add_argument("--signing-key", type=Path)
+    parser.add_argument("--sequence", type=int)
     args = parser.parse_args(argv)
     data = ROOT / "southpaw_tools/data/catalog.json"
     dist = ROOT / "distribution"
@@ -99,6 +101,9 @@ def main(argv=None):
         return 0
     if not args.approve:
         parser.error("--approve required")
+    if args.signing_key is None or args.sequence is None:
+        parser.error("--signing-key and --sequence required; unsigned publishing is disabled")
+    sequence = args.sequence
     report = []
     for spec in SPECS:
         source = DESKTOP / spec["source"]
@@ -124,7 +129,9 @@ def main(argv=None):
         else:
             app = publish(dist, spec["app_id"], source, version=spec["version"], release_id=spec["release_id"],
                           executable=spec["executable"], expected_sha256=spec["sha"],
-                          expected_exe_sha256=spec["exe_sha"], approved=True, build_id=spec["build_id"], notes=notes)
+                          expected_exe_sha256=spec["exe_sha"], approved=True, build_id=spec["build_id"], notes=notes,
+                          signing_key=args.signing_key, sequence=sequence)
+            sequence += 1
         report.append({"app_id": app.app_id, "source": str(source), "result": "verified-copy",
                        "package": app.package_name, "zip_sha256": app.sha256,
                        "exe_sha256": app.executable_sha256, "size": app.package_size,

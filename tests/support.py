@@ -73,3 +73,34 @@ def repository(root, source, app):
     (root / "packages").mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, root / "packages" / app.package_name)
     atomic_json(root / "catalog.json", catalog_document([app]))
+
+
+class TestSigner:
+    """Ephemeral test-only key, outside the served repository and never bundled."""
+    __test__ = False
+
+    def __init__(self, root):
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives import serialization
+        from southpaw_tools.catalog_trust import b64, key_id, CATALOG_ID
+        self.private = Ed25519PrivateKey.generate()
+        self.path = root / "test-only-signing.pem"
+        self.path.write_bytes(self.private.private_bytes(serialization.Encoding.PEM,
+                              serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+        public = self.private.public_key().public_bytes_raw()
+        self.policy = {"schema_version":1, "catalog_id":CATALOG_ID, "minimum_sequence":1,
+                       "keys":{key_id(public):b64(public)}}
+
+    def pair(self, apps, sequence):
+        from southpaw_tools.catalog_trust import catalog_bytes, sign
+        return (raw := catalog_bytes(apps, sequence)), sign(raw, self.private)
+
+    def publish(self, root, apps, sequence):
+        from southpaw_tools.common import atomic_bytes
+        raw, signature = self.pair(apps, sequence)
+        atomic_json(root / "catalog.sig.json", signature)
+        atomic_bytes(root / "catalog.json", raw)
+
+    def verifier(self, state):
+        from southpaw_tools.catalog_trust import CatalogVerifier
+        return CatalogVerifier(self.policy, state)

@@ -7,19 +7,31 @@ import tempfile
 import uuid
 from dataclasses import replace
 from pathlib import Path
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from .archive import extract_checked
 from .catalog import AppRelease, catalog_document, load_catalog
-from .common import LauncherError, app_lock, atomic_json, digest, utc_now
+from .common import LauncherError, app_lock, atomic_bytes, atomic_json, digest, utc_now
+from .catalog_trust import catalog_bytes, load_private, sign, strict_json
 
 
 def publish(root: Path, app_id: str, package: Path, *, version: str, release_id: str,
             executable: str, expected_sha256: str, expected_exe_sha256: str,
             approved: bool, build_id: str = "", notes: str | None = None,
-            cwd: str | None = None, required_paths: list[str] | None = None) -> AppRelease:
+            cwd: str | None = None, required_paths: list[str] | None = None,
+            signing_key: Path | Ed25519PrivateKey | None = None, sequence: int | None = None) -> AppRelease:
     if not approved:
         raise LauncherError("명시적인 게시 승인이 필요합니다. --approve를 지정하세요.")
+    if signing_key is None or (isinstance(signing_key, Path) and
+                               signing_key.resolve().is_relative_to(root.resolve())):
+        raise LauncherError("공개 저장소 밖의 개인키와 --sequence가 필요합니다. unsigned 게시는 금지합니다.")
+    private = signing_key if isinstance(signing_key, Ed25519PrivateKey) else load_private(signing_key)
     with app_lock(root / ".publish.lock"):
+        previous_document = strict_json((root / "catalog.json").read_bytes())
+        old_sequence = previous_document.get("sequence", 0)
+        if (type(sequence) is not int or type(old_sequence) is not int
+                or sequence <= old_sequence):
+            raise LauncherError("새 서명 순번은 기존 순번보다 커야 합니다.")
         apps = load_catalog(root / "catalog.json")
         previous = next((app for app in apps if app.app_id == app_id), None)
         if previous is None:
@@ -45,7 +57,9 @@ def publish(root: Path, app_id: str, package: Path, *, version: str, release_id:
             copied = stage / "approved.zip"
             shutil.copyfile(package, copied)
             extract_checked(copied, stage / "audit", app)
-            # Immutable package first, catalog pointer last. No partial ZIP is public.
+            raw = catalog_bytes([app if item.app_id == app_id else item for item in apps], sequence)
+            signature = sign(raw, private)
+            # Immutable package first. A mixed signature/catalog pair fails closed.
             packages = root / "packages"
             packages.mkdir(parents=True, exist_ok=True)
             target = packages / app.package_name
@@ -53,9 +67,8 @@ def publish(root: Path, app_id: str, package: Path, *, version: str, release_id:
                 raise LauncherError("동일한 게시 파일이 이미 존재합니다.")
             copied.rename(target)
             try:
-                atomic_json(root / "catalog.json", catalog_document([
-                    app if item.app_id == app_id else item for item in apps
-                ]))
+                atomic_json(root / "catalog.sig.json", signature)
+                atomic_bytes(root / "catalog.json", raw)
             except Exception:
                 target.unlink(missing_ok=True)
                 raise
@@ -76,12 +89,16 @@ def main(argv=None):
     parser.add_argument("--build-id", default="")
     parser.add_argument("--notes-file", type=Path)
     parser.add_argument("--approve", action="store_true")
+    parser.add_argument("--signing-key", type=Path, required=True,
+                        help="Ed25519 PKCS8 PEM outside the public repository; never a network key")
+    parser.add_argument("--sequence", type=int, required=True)
     args = parser.parse_args(argv)
     try:
         app = publish(args.root, args.app_id, args.zip, version=args.version,
                       release_id=args.release_id, executable=args.exe,
                       expected_sha256=args.sha256, expected_exe_sha256=args.exe_sha256,
                       approved=args.approve, build_id=args.build_id, cwd=args.cwd,
+                      signing_key=args.signing_key, sequence=args.sequence,
                       notes=args.notes_file.read_text(encoding="utf-8") if args.notes_file else None)
         print(f"게시 완료: {app.display_name} / {app.release_id} / {app.sha256}")
         return 0

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "display_name_status": "user-approved",
+  "current_display_name": "Southpaw 도구 런처",
+  "app_id": "creative-group-launcher",
+  "shell_app_id": "SouthpawGames.ToolsLauncher",
+  "windows_ico": "southpaw_tools/assets/southpaw-launcher.ico",
+  "transparent_png": "southpaw_tools/assets/southpaw-launcher.png",
+  "final_icon_status": "user-provided",
+  "future_ico_sizes": [16, 24, 32, 48, 64, 128, 256]
+}

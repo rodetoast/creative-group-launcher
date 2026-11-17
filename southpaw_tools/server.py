@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .catalog import catalog_document, load_catalog
 from .common import LauncherError, digest, inside, read_json
+from .catalog_trust import MAX_CATALOG, MAX_SIGNATURE
 from .providers import private_address
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -58,6 +59,9 @@ def make_handler(distribution: Distribution, *, lan: bool, token: str, status: d
 
         def _json(self, value, code=200):
             body = json.dumps(value, ensure_ascii=False).encode("utf-8")
+            self._bytes(body, code)
+
+        def _bytes(self, body, code=200):
             self.send_response(code)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -97,7 +101,15 @@ def make_handler(distribution: Distribution, *, lan: bool, token: str, status: d
                 if path == "/api/health":
                     self._json({"service": "southpaw-tools", "api_version": 1, **status})
                 elif path == "/api/catalog":
-                    self._json(catalog_document(distribution.apps()))
+                    body = inside(distribution.root, "catalog.json").read_bytes()
+                    if len(body) > MAX_CATALOG:
+                        raise LauncherError("카탈로그 크기 초과")
+                    self._bytes(body)
+                elif path == "/api/catalog.sig":
+                    body = inside(distribution.root, "catalog.sig.json").read_bytes()
+                    if len(body) > MAX_SIGNATURE:
+                        raise LauncherError("서명 크기 초과")
+                    self._bytes(body)
                 elif path.startswith("/api/apps/"):
                     parts = path.split("/")
                     if len(parts) not in {4, 5} or (len(parts) == 5 and parts[4] != "notes"):

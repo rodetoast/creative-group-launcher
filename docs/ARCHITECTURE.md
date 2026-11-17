@@ -2,6 +2,15 @@
 
 > 이 문서는 해당 개발 단계의 기록입니다. 이후 로컬 체크포인트 승인·검사 결과는 [LOCAL_CHECKPOINT_REVIEW.md](LOCAL_CHECKPOINT_REVIEW.md)를 따릅니다. 과거 Git 상태·제한 및 초기 설계 내용은 현재 상태와 다를 수 있습니다.
 
+## 현재 확정 범위 — Creative Group Launcher
+
+추가 서비스 비용0원, 기존 Windows PC 기반 회사 LAN 전용이다. 현재 인터넷 배포 개발, 유료 서버/VPN/Cloudflare/OAuth/SSO/시디키 DRM/복잡한 기기 인증은 제외한다.
+기존 직원 런처·로컬 관리자 게시·읽기 전용 다운로드 API와 설치/업데이트/Journal 복구 엔진을 재사용한다.
+관리자 게시를 LAN API에 노출하지 않으며 임의 OS 명령 실행 endpoint를 추가하지 않는다. 서버는 일반 사용자 권한으로 운영한다.
+실제 LAN 시험에는 더미 전용 root/catalog/client/token을 사용하고, 회사 담당자의 허용 범위와 별도 Windows PC 준비를 먼저 확인한다.
+안전한 업데이트와 PC/작업 파일 보호를 우선하며 Ed25519 서명된 카탈로그는 후속 구현한다. 인터넷 거부 코드와 미구현 항목의 과거 설명은 기록으로 유지한다.
+현재 복구 정책은 [STABILITY_FIX_REPORT.md](STABILITY_FIX_REPORT.md), 실제 시험 상태는 [CREATIVE_LAN_TRIAL_STATUS.md](CREATIVE_LAN_TRIAL_STATUS.md)를 따른다.
+
 ## 경계
 
 ```text
