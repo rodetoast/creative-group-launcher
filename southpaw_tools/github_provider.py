@@ -15,6 +15,7 @@ from pathlib import Path
 from .archive import check_cancel
 from .catalog_trust import CatalogVerifier, MAX_CATALOG, MAX_SIGNATURE, strict_json
 from .common import LauncherError
+from .github_channels import latest_api_url, repository_aliases
 from .paths import AppPaths
 from .providers import HttpProvider, NoRedirect
 
@@ -38,8 +39,30 @@ class AssetRedirect(urllib.request.HTTPRedirectHandler):
     max_redirections = 4
     max_repeats = 2
 
+    def __init__(self, repository=None):
+        super().__init__()
+        self.repositories = repository_aliases(repository) if repository else ()
+
+    def _asset_prefix(self, repository):
+        return f"https://github.com/{repository}/releases/download/"
+
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         parts = https_url(newurl)
+        if self.repositories:
+            source = https_url(req.full_url)
+            source_asset = any(req.full_url.startswith(self._asset_prefix(repo))
+                               for repo in self.repositories)
+            if source_asset and source.query:
+                raise LauncherError("GitHub 자산 주소에 예상하지 않은 쿼리가 있습니다.")
+            source_cdn = (source.hostname in CDN_HOSTS and source.path.startswith(
+                ("/github-production-release-asset/", "/github-production-release-asset-2e65be/")))
+            if not (source_asset or source_cdn):
+                raise LauncherError("승인되지 않은 GitHub 자산 리다이렉트 출발점입니다.")
+            if len(self.repositories) == 2:
+                old, new = map(self._asset_prefix, self.repositories)
+                # One-way owner change, same channel/tag/asset, no added query.
+                if req.full_url.startswith(old) and newurl == new + req.full_url[len(old):]:
+                    return super().redirect_request(req, fp, code, msg, headers, newurl)
         if (parts.hostname not in CDN_HOSTS
                 or not parts.path.startswith(("/github-production-release-asset/",
                                                "/github-production-release-asset-2e65be/"))):
@@ -59,11 +82,11 @@ class GitHubReleasesProvider(HttpProvider):
                 or repository.split('/')[1] in {'.', '..'} or repository.endswith('.git')):
             raise LauncherError("GitHub 저장소는 OWNER/REPO 형식이어야 합니다.")
         self.repository = repository
-        self.api_url = f"https://api.github.com/repos/{repository}/releases/latest"
+        self.api_url = latest_api_url(repository)
         self.verifier = verifier or CatalogVerifier.bundled(
             AppPaths.default().root / "catalog-trust.json")
         self.api_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-        self.asset_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), AssetRedirect())
+        self.asset_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), AssetRedirect(repository))
         self._assets = {}
         self._release = None
         self._install_snapshot = None
@@ -172,9 +195,12 @@ class GitHubReleasesProvider(HttpProvider):
                         or asset.get('state') != 'uploaded' or type(asset.get('size')) is not int
                         or not 0 < asset['size'] < 2 * 1024**3):
                     raise LauncherError("GitHub 자산 이름·ID·크기·업로드 상태 오류")
-                expected = (f"https://github.com/{self.repository}/releases/download/"
-                            f"{urllib.parse.quote(release['tag_name'], safe='')}/{urllib.parse.quote(name, safe='')}")
-                if asset.get('browser_download_url') != expected:
+                expected = {
+                    f"https://github.com/{repo}/releases/download/"
+                    f"{urllib.parse.quote(release['tag_name'], safe='')}/{urllib.parse.quote(name, safe='')}"
+                    for repo in repository_aliases(self.repository)
+                }
+                if asset.get('browser_download_url') not in expected:
                     raise LauncherError("GitHub 자산이 지정 저장소·Release와 일치하지 않습니다.")
                 bound[name] = asset; ids.add(asset['id'])
             raw = self._bytes(bound['catalog.json'], MAX_CATALOG)

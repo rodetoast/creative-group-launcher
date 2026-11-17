@@ -6,6 +6,7 @@ import sys
 from .catalog_trust import CatalogVerifier, strict_json
 from .common import LauncherError, app_lock, atomic_json, digest, inside, read_json
 from .github_provider import GitHubReleasesProvider
+from .github_channels import managed_repository
 from .runtime_protocol import PURPOSE, response
 from .self_update import APP_ID, MANAGED_PURPOSE, SelfUpdater, version
 
@@ -14,8 +15,8 @@ def channel_policy():
     path = Path(__file__).parent / "data" / "managed-channel.json"
     channel = strict_json(path.read_bytes())
     if (set(channel) != {"repository", "policy"}
-            or channel["repository"] not in {"toast-source/creative-group-releases",
-                                             "toast-source/creative-group-trial-releases"}
+            or not isinstance(channel["repository"], str)
+            or not managed_repository(channel["repository"])
             or not channel["policy"]["keys"]):
         raise LauncherError("관리형 런처 채널 또는 고정 신뢰키가 없습니다.")
     return channel

@@ -12,6 +12,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QMessageBox
 
 from southpaw_tools.common import LauncherError, digest
+from southpaw_tools.github_channels import latest_api_url
 from southpaw_tools.paths import AppPaths
 from southpaw_tools.ui import MainWindow, GITHUB_AUTO_REFRESH_MS
 from tests import test_ui as ui_helpers
@@ -40,6 +41,7 @@ class GitHubUiTests(unittest.TestCase):
         old='example/creative-group-releases'; new='toast-source/creative-group-releases'
         routes={key.replace(old,new):(value.replace(old.encode(),new.encode()) if isinstance(value,bytes) else value)
                 for key,value in self.fixture.transport.routes.items() if old in key}
+        routes[latest_api_url(new)] = routes.pop(self.fixture.provider.api_url.replace(old,new))
         self.fixture.transport.routes.update(routes)
 
     def window(self, *, keys=True, auto_connect=False):
@@ -126,7 +128,7 @@ class GitHubUiTests(unittest.TestCase):
         window=self.window()
         for code in (403,429):
             with self.subTest(code=code):
-                endpoint='https://api.github.com/repos/toast-source/creative-group-releases/releases/latest'
+                endpoint=latest_api_url('toast-source/creative-group-releases')
                 self.fixture.transport.routes[endpoint]=urllib.error.HTTPError(endpoint,code,'',{'X-RateLimit-Remaining':'0'},None)
                 window._github_next_check=0;self.refresh(window)
                 self.assertIn('GitHub 호출 제한',window.server_status.text())

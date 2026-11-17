@@ -194,3 +194,9 @@ python -B -m tools.verify_distribution
 - 로컬 Git 체크포인트는 명시 승인과 검사 후에만 생성합니다. 원격 등록/push, 회사 계정 연결, 정식 배포, 런처 최종 EXE 빌드는 별도 범위입니다.
 
 설계: [ARCHITECTURE.md](docs/ARCHITECTURE.md) · 등록부: [PROJECT_REGISTRY.md](PROJECT_REGISTRY.md) · 계획: [ROADMAP.md](ROADMAP.md)
+
+
+## 진행 중인 GitHub owner 호환성 작업
+
+`codex/github-owner-compat-20261117`의 [구현·전환 경계](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)를 확인하세요.
+이 브랜치는 기존 원본/운영 배포를 유지한 최소 소스 수정이며, 실제 배포 저장소 이전이나 새 Setup 배포가 완료된 상태가 아닙니다.

@@ -1,4 +1,5 @@
 """Exercise the employee GUI approval callback through the managed updater."""
+import json
 import unittest
 import urllib.error
 from unittest.mock import patch
@@ -92,6 +93,20 @@ class ManagedUpdateGuiTests(unittest.TestCase):
         self.assertIn("실행 중인 프로그램", self.window.message.text())
         self.assertFalse(self.updater.engine.paths.release(self.fixture.r2.app_id, self.fixture.r2.release_id).exists())
         self.assert_preserved()
+
+    def test_legacy_channel_gui_callback_accepts_new_owner_assets_without_changing_channel(self):
+        release = json.loads(self.transport.routes[self.provider.api_url])
+        for asset in release['assets']:
+            old_url = asset['browser_download_url']
+            asset['browser_download_url'] = old_url.replace('toast-source/', 'rodetoast/')
+            self.transport.routes[asset['browser_download_url']] = self.transport.routes[old_url]
+        self.transport.routes[self.provider.api_url] = json.dumps(release).encode()
+        with self.updater._runtime_lock():
+            self.assertEqual([call.args for call in self.approve()], [(20,)])
+            request = read_json(self.session.file.parent / 'request.json')
+            self.assertEqual(self.updater.journal(request['transaction'])['phase'], 'requested')
+            self.assertEqual(self.session.channel, self.fixture.channel)
+            self.assert_preserved()
 
     def test_cancel_does_not_contact_server_or_create_update_request(self):
         with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):

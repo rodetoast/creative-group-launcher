@@ -38,3 +38,13 @@
 - `.test-results`, 기존 서명 제품/Setup/회사 ZIP·개인키·실행 데이터·사용자 설정은 소스 push 대상이 아니다. 별도 보존 결과와 실제 운영 Release를 참조하고, 개발용 빈 신뢰키를 운영 신뢰 정책으로 오인하지 않는다. 이 소스만으로 기존 서명 제품 바이트를 재현했다고 주장하지 않는다.
 - 운영/시험 배포 저장소와 증거 저장소는 이전하지 않았다. 직원용 GUI0.1.4/Setup0.1.4.1/catalog7, 회사 app_id, 서명과 신뢰 상태, Bootstrap/Installer 동작은 변경하지 않는다. `toast-source`의 다운로드/업데이트 주소·NoRedirect·owner allowlist·evidence guard를 일괄 치환하지 않는다.
 - 기존 README의 초기 단계 설명은 개발 이력이다. 현재 상태는 이 AGENTS 및 실제 서명 Release/검증 기록을 기준으로 구분한다. 과거 기획/설계 이유와 미해결 문제는 삭제하지 않는다.
+
+
+## 현재 owner 호환성 작업 (2026-11-17)
+
+작업 브랜치: `codex/github-owner-compat-20261117`, 격리 작업 경로 `C:/Dev/CGL-OwnerCompat-20261117`.
+[GITHUB_OWNER_COMPATIBILITY](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)에 실제 변경·검증·GUI/Bootstrap/Setup 경계와 Transfer 차단 조건을 기록했다.
+기존 보존 브랜치/main을 바꾸거나 원본 master의 dirty 코드를 교체하지 않는다. 소스 commit/push와 제품 빌드·운영 공개는 구분한다.
+신규15 + 관련 기존127 =142 통과(실패/오류/skip0), 공개 카탈로그 old/new 설정4종 실제 HTTPS 읽기 성공. 전체 회귀·SPENT03 제품 EXE 실기동·Setup 교체는 미실시다.
+기존 Setup은 다른 Bootstrap 덮어쓰기와 기존 current의 새 seed 강제 전환을 지원하지 않으므로 재설치만으로 이전된다고 안내하지 않는다.
+운영/시험/증거 저장소는 아직 이전하지 않으며 증거·관리자 쓰기 guard도 그대로다. GUI 후속 후보를 먼저 기존 채널에서 검증·배포하고 미전환/rollback 설치본과 설치 전환을 해결하기 전 원격 Transfer를 실행하지 않는다.
