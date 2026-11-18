@@ -95,3 +95,8 @@ SPENT03 공식운영Bootstrap/키/카탈로그8의GUI0.1.4→0.1.5 실제업데�
 ## 직원별 확인 생략·기존 채널 병행 (2026-11-18)
 
 사용자가직원별업데이트확인을생략하되구0.1.4접속유지를요구했다. B안(신규Rod기준운영repo준비+Toast전체호환채널기한없이유지)을선택했다. 원본운영Transfer/삭제/이름변경금지,기존0.1.4/0.1.5가옛repoID를계속쓴다는사실을유지한다. 신규repoID라우팅은미구현이며새repo생성/게시도하지않았다. 완전복제계획도구12합성시험/로컬서명8계획과증거guard58고유시험·Private개발브랜치보존을완료했다. [기존호환문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md) 최신절과 [SPENT03 통합인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md) 최신독립환경절을읽는다. sw204등록/바로가기충돌·Draft인증부재로RC1은미실시이며독립환경/공식웹로그인으로만시험한다. 직원별완료확인/메시지/접근은요청·실행하지않는다. 운영업데이트합격은재사용한다.
+
+
+## 신규Rod 운영자산 복제본 (2026-11-18)
+
+사용자승인으로 rodetoast/creative-group-releases Public(ID1462539740)과production-catalog-000008 복제Release(ID449720497)를생성했다. 정확한8자산을Draft/공개HTTPS재다운로드 SHA·운영서명/seq8로검증했다. Toast원본8Release/38자산·tag/commit·Latest8·Setup0.1.4.1은유지. 신규repo LatestAPI도8을반환하지만현재GUI0.1.5/Bootstrap은여전히Toast ID1447701732를사용한다. 실제독립신규채널/전사전환/과거전체이력이전완료가아니다. [기존호환문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md) 최신복제결과를읽는다. 구지원클라이언트보호를위해Toast전체채널을계속유지하며원본/증거Transfer·새Setup공개는하지않았다.

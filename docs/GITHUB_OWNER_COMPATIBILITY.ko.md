@@ -318,3 +318,37 @@ RC1 `8d8c5940e0f08adfcf9d073fe3c29971f96de3fb06396f41f11fa5b817f56453` 그대로
 실제남은차단은 (1) RC1용충돌없는독립Windows환경/공식Draft인증, (2) 신규Rod운영repo/최초완전복제승인과증거도구main적용·Rod Private권한/별도Transfer승인이다. 직원별확인대기는조건에서제외했다. 우선승인대상은 **Rod 신규Public 운영repo + 현재카탈로그8 동일8자산 최초게시**이며기존운영Transfer승인이아니다. Setup정식공개는RC1실검증후,증거Transfer는도구·권한확인후별도승인한다.
 
 기존7개소스·시험저장소이전/개발기록은유지했다. 운영Latest8/시험Latest11/Setup0.1.4.1/RC1·원본회사ZIP은변경없음. 새운영repo생성/Release게시/Transfer/제품빌드/전체142회귀/직원환경변경은이번에하지않았다.
+
+
+## rodetoast 카탈로그8 동일 자산 복제 완료 (2026-11-18)
+
+사용자가신규Public 운영복제repo생성과카탈로그8 동일8자산게시를명시승인했다. A(파일보존·다운로드/서명검증)를완료했으며 B(직원클라이언트의독립신규업데이트채널전환)는완료하지않았다.
+
+- 새repo https://github.com/rodetoast/creative-group-releases / ID **1462539740** / Public / rodetoast관리자권한확인. Release전용설명과최소README초기commit `0c6792ae4c92ac4264066b1f17800f0314abea9b`을생성했다. 제품소스저장소가아니다.
+- 복제Release https://github.com/rodetoast/creative-group-releases/releases/tag/production-catalog-000008 / ID **449720497**, tagproduction-catalog-000008 / 정식public,prerelease=False. 신규repo/release/asset ID는원본과다르다. 전송대상은아래정확한8개뿐이다.
+- 원본은 toast-source/creative-group-releases / ID1447701732, Release449405600. 원본Release8개/자산38개 metadata·ID/크기/digest·본문과전체tag/commit·Latest8을이전/이후대조해보존확인. Setup0.1.4.1은그대로다. 소유권Transfer/이름변경/삭제/원본쓰기요청은하지않았다.
+- Draft업로드후8개실제인증재다운로드 hash/서명/manifest검증→새repo복제Release공개→8개전체공개CDN HTTPS재다운로드 size/SHA256/Ed25519검증을완료했다. 기존후보를재빌드/재패키징/재서명하지않고개인키를사용/복사하지않았다. 기존12개합성검증을재사용했으며전체회귀/Windows시험을반복하지않았다.
+- 명시적으로 `--latest=false`로공개했지만신규repo에유일한일반Release가있어실제 `/releases/latest`는카탈로그8을200으로반환했다. 이API응답은직원런처의활성설정전환을의미하지않는다. Toast의실제활성Latest는계속카탈로그8이다.
+
+| 복제 자산 | bytes | SHA256 |
+|---|---:|---|
+| ase-viewer--0.5.8.4-team-3bf37dd.zip | 22085231 | `2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2` |
+| catalog.json | 9432 | `dd65ae96167c31a7f63014ce6deb7152488804161f19f90b957966e7ccdb288a` |
+| catalog.sig.json | 245 | `9420492936a83554e3d2429481ca8dd21254914d510c5e23b7e8c37bc4da7c1c` |
+| creative-group-launcher--production-launcher-0.1.5.zip | 52638826 | `493b9830479d4fc0150b230cc1b8afeae045166091290f89f38333177ce9b963` |
+| pivot-fixer--0.3.3-team-80b84c9.zip | 20709116 | `214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361` |
+| ps2ase--0.3.6-team-6e84645.zip | 66252089 | `1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9` |
+| tag-master--0.4.0-team-7263f8d.zip | 38813495 | `80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299` |
+| tilenamer--0.1.6-rc3-8ba7a1e.zip | 54046715 | `aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4` |
+
+운영키id `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`,sequence8/기존catalog_id유지. 카탈로그의HTTP URL필드는실제로 **0개**였다. release_id/package_name/app_id/버전/해시는원본그대로이며repoID나owner로재해석하지않았다. 복제GUI ZIP내부managed-channel.json은여전히 `toast-source/creative-group-releases`다. 현재GUI0.1.5의고정API ID는1447701732다. source의Rod owner alias도Transfer대상같은ID를가리키는기존정책이라신규별도ID1462539740를자동선택하지않는다. 서명/순번보호나Bootstrap채널을바꾸지않았다. 이번업로드성공을새Rod채널실제업데이트/관리형적용성공이라고보고하지않는다.
+
+### 보존·통합 현황과 다음 승인
+
+Rod에실제로추가된것은README와이번카탈로그8의8자산뿐이다. 과거 `catalog-000001、catalog-000002、catalog-000003、production-catalog-000004、employee-bootstrap-0.1.1、production-catalog-000007、employee-setup-0.1.4.1`의7개Release/30개자산과원본Git/태그이력·직원Setup은원본에보존돼있고신규repo에전부복제된것이아니다. 같은tag이름이라도신규Git태그는새repo의README commit을가리키며원본Git이력과동일하다고하지않는다. GitHub자동제공Source archives는승인8자산에포함되지않고제품설치ZIP으로사용하지않았다.
+
+구0.1.4가나중에돌아올수있는동안Toast주소/계정/전체호환자산을기한없이유지하는B안제약은변함없다. 직원별업데이트확인을다시요구하지않는다. 새Setup정식공개·기존직원설치/자료변경·운영/증거Transfer는실행하지않았다. 증거Private/guard도유지했다.
+
+현재복제본은Rod에서실제로보존/관리할수있지만독립클라이언트채널은미전환이다. 후속으로신규실제ID의고정binding/구Bootstrap정책·sequence/실제HTTPS관리형업데이트전환검증을준비할수있다. 신규운영카탈로그/Setup 공개,원격Transfer,지원중단은별도승인이다. 과거Release/Setup자산의추가원격복제를할경우에도이번8자산승인과구분해정확한목록/해시로승인받는다. 기존0.1.4접속을끊는Transfer는대안으로강행하지않는다.
+
+개발PC근거: `.test-results/rodetoast-catalog8-replica-20261118/`의replication-state.json,identity-bound-copy-plan.json,catalog-reference-semantics.json,draft-redownload,public-redownload. 원본master와미커밋코드는보존했다.
