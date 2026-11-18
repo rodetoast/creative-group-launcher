@@ -15,7 +15,7 @@ from pathlib import Path
 from .archive import check_cancel
 from .catalog_trust import CatalogVerifier, MAX_CATALOG, MAX_SIGNATURE, strict_json
 from .common import LauncherError
-from .github_channels import latest_api_url, repository_aliases
+from .github_channels import latest_api_url, repository_aliases, CANONICAL_CATALOG_ID
 from .paths import AppPaths
 from .providers import HttpProvider, NoRedirect
 
@@ -39,9 +39,9 @@ class AssetRedirect(urllib.request.HTTPRedirectHandler):
     max_redirections = 4
     max_repeats = 2
 
-    def __init__(self, repository=None):
+    def __init__(self, repository=None, *, repository_id=None):
         super().__init__()
-        self.repositories = repository_aliases(repository) if repository else ()
+        self.repositories = repository_aliases(repository, repository_id) if repository else ()
 
     def _asset_prefix(self, repository):
         return f"https://github.com/{repository}/releases/download/"
@@ -76,17 +76,21 @@ class GitHubReleasesProvider(HttpProvider):
     Inherits only the existing engine-boundary validate_release check. HTTP transport,
     catalog lookup and download are specialized for HTTPS GitHub assets.
     """
-    def __init__(self, repository: str, *, verifier: CatalogVerifier | None = None):
+    def __init__(self, repository: str, *, verifier: CatalogVerifier | None = None, repository_id=None):
         if (not isinstance(repository, str)
                 or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9_.-]{1,100}", repository)
                 or repository.split('/')[1] in {'.', '..'} or repository.endswith('.git')):
             raise LauncherError("GitHub 저장소는 OWNER/REPO 형식이어야 합니다.")
         self.repository = repository
-        self.api_url = latest_api_url(repository)
+        self.repository_id = repository_id
+        self.api_url = latest_api_url(repository, repository_id)
         self.verifier = verifier or CatalogVerifier.bundled(
             AppPaths.default().root / "catalog-trust.json")
+        new_policy = self.verifier.policy.get("catalog_id") == CANONICAL_CATALOG_ID
+        if (repository_id is not None) != new_policy or (new_policy and self.verifier.policy.get("minimum_sequence", 0) < 9):
+            raise LauncherError("신규 저장소와 전용 서명 카탈로그 정책이 일치하지 않습니다.")
         self.api_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-        self.asset_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), AssetRedirect(repository))
+        self.asset_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), AssetRedirect(repository, repository_id=repository_id))
         self._assets = {}
         self._release = None
         self._install_snapshot = None
@@ -198,7 +202,7 @@ class GitHubReleasesProvider(HttpProvider):
                 expected = {
                     f"https://github.com/{repo}/releases/download/"
                     f"{urllib.parse.quote(release['tag_name'], safe='')}/{urllib.parse.quote(name, safe='')}"
-                    for repo in repository_aliases(self.repository)
+                    for repo in repository_aliases(self.repository, self.repository_id)
                 }
                 if asset.get('browser_download_url') not in expected:
                     raise LauncherError("GitHub 자산이 지정 저장소·Release와 일치하지 않습니다.")

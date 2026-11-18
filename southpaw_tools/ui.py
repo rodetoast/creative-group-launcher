@@ -706,6 +706,12 @@ class MainWindow(QMainWindow):
             self.cancel_button.setEnabled(False)
             self.message.setText("현재 전송 종료 후 취소합니다. 기존 설치는 유지됩니다.")
 
+    def _github_provider(self):
+        repository = self.config.get("github_repository", "")
+        binding = (self.managed_session.channel.get("repository_id")
+                   if self.managed_session and repository == self.managed_session.channel["repository"] else None)
+        return GitHubReleasesProvider(repository, verifier=self.catalog_verifier, repository_id=binding)
+
     def refresh(self):
         if self.task:
             return
@@ -728,7 +734,7 @@ class MainWindow(QMainWindow):
             return
         try:
             if github:
-                provider = GitHubReleasesProvider(self.config.get("github_repository", ""), verifier=self.catalog_verifier)
+                provider = self._github_provider()
                 self._github_next_check = time.monotonic() + GITHUB_MIN_REFRESH
             else:
                 provider = HttpProvider(self.config.get("server_url", "http://127.0.0.1:8765"),

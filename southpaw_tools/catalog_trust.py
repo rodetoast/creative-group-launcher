@@ -15,6 +15,8 @@ from .catalog import parse_catalog
 from .common import LauncherError, app_lock, atomic_json
 
 CATALOG_ID = "creative-group-launcher"
+from .github_channels import CANONICAL_CATALOG_ID
+CATALOG_IDS = (CATALOG_ID, CANONICAL_CATALOG_ID)
 DOMAIN = b"CreativeGroupLauncher catalog v1\x00"
 MAX_CATALOG = 4 * 1024 * 1024
 MAX_SIGNATURE = 4096
@@ -59,10 +61,12 @@ def key_id(public: bytes) -> str:
     return hashlib.sha256(public).hexdigest()
 
 
-def catalog_bytes(apps, sequence: int) -> bytes:
+def catalog_bytes(apps, sequence: int, *, catalog_id=CATALOG_ID) -> bytes:
+    if catalog_id not in CATALOG_IDS:
+        raise LauncherError("승인되지 않은 카탈로그 식별자입니다.")
     if type(sequence) is not int or not 1 <= sequence <= 2**63 - 1:
         raise LauncherError("카탈로그 순번은 양의 63비트 정수여야 합니다.")
-    document = {"schema_version": 1, "catalog_id": CATALOG_ID, "sequence": sequence,
+    document = {"schema_version": 1, "catalog_id": catalog_id, "sequence": sequence,
                 "apps": [app.to_dict() for app in apps]}
     raw = (json.dumps(document, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
     parse_catalog(strict_json(raw))
@@ -92,7 +96,7 @@ class CatalogVerifier:
         self.state_path = state_path
         if (set(self.policy) != {"schema_version", "catalog_id", "minimum_sequence", "keys"}
                 or type(self.policy["schema_version"]) is not int
-                or self.policy["schema_version"] != 1 or self.policy["catalog_id"] != CATALOG_ID
+                or self.policy["schema_version"] != 1 or self.policy["catalog_id"] not in CATALOG_IDS
                 or type(self.policy["minimum_sequence"]) is not int
                 or not 1 <= self.policy["minimum_sequence"] <= 2**63 - 1
                 or not isinstance(self.policy["keys"], dict)):

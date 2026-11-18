@@ -100,3 +100,12 @@ SPENT03 공식운영Bootstrap/키/카탈로그8의GUI0.1.4→0.1.5 실제업데�
 ## 신규Rod 운영자산 복제본 (2026-11-18)
 
 사용자승인으로 rodetoast/creative-group-releases Public(ID1462539740)과production-catalog-000008 복제Release(ID449720497)를생성했다. 정확한8자산을Draft/공개HTTPS재다운로드 SHA·운영서명/seq8로검증했다. Toast원본8Release/38자산·tag/commit·Latest8·Setup0.1.4.1은유지. 신규repo LatestAPI도8을반환하지만현재GUI0.1.5/Bootstrap은여전히Toast ID1447701732를사용한다. 실제독립신규채널/전사전환/과거전체이력이전완료가아니다. [기존호환문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md) 최신복제결과를읽는다. 구지원클라이언트보호를위해Toast전체채널을계속유지하며원본/증거Transfer·새Setup공개는하지않았다.
+
+
+## 신규직원 Rod 채널 구현 기준 (2026-11-18)
+
+별도브랜치 codex/rodetoast-channel-20261118에서GUI0.1.6 신규후보를준비한다. 기존0.1.5/Bootstrap/Setup/Toast채널은변경하지않는다. 새채널은명시적 repository_id1462539740 + rodetoast/creative-group-releases + 전용서명catalog_id creative-group-launcher-rodetoast-1462539740 + 최소seq9를함께요구한다. 기존Ed25519키/서명domain/schema/ZIP SHA/고수위/rollback보호는유지하며namespace가서로다르면같은키의유효서명도거부한다. 기존catalog8복제는새채널로채택하지않는다.
+
+초기GUI0.1.6·새고정채널Bootstrap·Setup0.1.6.0 로컬후보를만든다. 신규기본루트는프로그램 %USERPROFILE%/CGL-Rodetoast, 데이터 %LOCALAPPDATA%/SouthpawGames/ToolsLauncherRodetoast이며기존ToolsLauncher와분리한다. 일반직원제품명/app_id/AppUserModelID/바로가기/등록키는유지해기존설치와겹치면자동전환/덮어쓰지않고차단한다. 초기Setup은기존채널홈/신뢰자료/비어있지않은미소유데이터를자동흡수하지않는다. 구Setup0.1.5.0 RC1은Toastseed용이력으로보존한다.
+
+신규GUI·Bootstrap은서로같은새채널정책을탑재해야하므로기존ToastBootstrap을새Setup에그대로재사용하지않는다. 기존직원Bootstrap교체를시도하는것이아니다. GUI/새Setup의실제Windows시험은독립환경에서SPENT03이수행하며현재sw204설치를변경하지않는다. 새로운운영카탈로그/GUI/Setup의정식공개는별도승인전실행하지않는다.

@@ -6,7 +6,8 @@ import sys
 from .catalog_trust import CatalogVerifier, strict_json
 from .common import LauncherError, app_lock, atomic_json, digest, inside, read_json
 from .github_provider import GitHubReleasesProvider
-from .github_channels import managed_repository
+from .github_channels import managed_repository, canonical_channel, CANONICAL_CATALOG_ID
+from .paths import AppPaths
 from .runtime_protocol import PURPOSE, response
 from .self_update import APP_ID, MANAGED_PURPOSE, SelfUpdater, version
 
@@ -14,12 +15,23 @@ from .self_update import APP_ID, MANAGED_PURPOSE, SelfUpdater, version
 def channel_policy():
     path = Path(__file__).parent / "data" / "managed-channel.json"
     channel = strict_json(path.read_bytes())
-    if (set(channel) != {"repository", "policy"}
+    if (set(channel) not in ({"repository", "policy"}, {"repository", "repository_id", "policy"})
             or not isinstance(channel["repository"], str)
-            or not managed_repository(channel["repository"])
+            or not managed_repository(channel["repository"], channel.get("repository_id"))
             or not channel["policy"]["keys"]):
         raise LauncherError("관리형 런처 채널 또는 고정 신뢰키가 없습니다.")
+    if "repository_id" in channel and (not canonical_channel(channel)
+            or channel["policy"].get("catalog_id") != CANONICAL_CATALOG_ID
+            or channel["policy"].get("minimum_sequence", 0) < 9):
+        raise LauncherError("신규 채널 ID·카탈로그·최소 순번9가 일치하지 않습니다.")
+    if channel["policy"].get("catalog_id") == CANONICAL_CATALOG_ID and not canonical_channel(channel):
+        raise LauncherError("신규 카탈로그는 고정된 신규 저장소에서만 사용할 수 있습니다.")
     return channel
+
+
+def default_data_root(channel):
+    root = AppPaths.default().root
+    return root.with_name("ToolsLauncherRodetoast") if canonical_channel(channel) else root
 
 
 def initialize(home, data_root, seed, channel):
@@ -100,7 +112,8 @@ class ManagedSession:
                 and app.is_new_release(self.current))
 
     def prepare(self, expected, cancel):
-        provider = GitHubReleasesProvider(self.channel["repository"], verifier=self.updater.verifier)
+        provider = GitHubReleasesProvider(self.channel["repository"], verifier=self.updater.verifier,
+                                           repository_id=self.channel.get("repository_id"))
         return self.updater.prepare(provider, cancel=cancel, expected=expected)
 
     def handoff(self, transaction):

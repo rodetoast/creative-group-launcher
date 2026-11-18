@@ -352,3 +352,12 @@ Rod에실제로추가된것은README와이번카탈로그8의8자산뿐이다. �
 현재복제본은Rod에서실제로보존/관리할수있지만독립클라이언트채널은미전환이다. 후속으로신규실제ID의고정binding/구Bootstrap정책·sequence/실제HTTPS관리형업데이트전환검증을준비할수있다. 신규운영카탈로그/Setup 공개,원격Transfer,지원중단은별도승인이다. 과거Release/Setup자산의추가원격복제를할경우에도이번8자산승인과구분해정확한목록/해시로승인받는다. 기존0.1.4접속을끊는Transfer는대안으로강행하지않는다.
 
 개발PC근거: `.test-results/rodetoast-catalog8-replica-20261118/`의replication-state.json,identity-bound-copy-plan.json,catalog-reference-semantics.json,draft-redownload,public-redownload. 원본master와미커밋코드는보존했다.
+
+
+## 신규직원 Rod 채널 구현 기준 (2026-11-18)
+
+별도브랜치 codex/rodetoast-channel-20261118에서GUI0.1.6 신규후보를준비한다. 기존0.1.5/Bootstrap/Setup/Toast채널은변경하지않는다. 새채널은명시적 repository_id1462539740 + rodetoast/creative-group-releases + 전용서명catalog_id creative-group-launcher-rodetoast-1462539740 + 최소seq9를함께요구한다. 기존Ed25519키/서명domain/schema/ZIP SHA/고수위/rollback보호는유지하며namespace가서로다르면같은키의유효서명도거부한다. 기존catalog8복제는새채널로채택하지않는다.
+
+초기GUI0.1.6·새고정채널Bootstrap·Setup0.1.6.0 로컬후보를만든다. 신규기본루트는프로그램 %USERPROFILE%/CGL-Rodetoast, 데이터 %LOCALAPPDATA%/SouthpawGames/ToolsLauncherRodetoast이며기존ToolsLauncher와분리한다. 일반직원제품명/app_id/AppUserModelID/바로가기/등록키는유지해기존설치와겹치면자동전환/덮어쓰지않고차단한다. 초기Setup은기존채널홈/신뢰자료/비어있지않은미소유데이터를자동흡수하지않는다. 구Setup0.1.5.0 RC1은Toastseed용이력으로보존한다.
+
+신규GUI·Bootstrap은서로같은새채널정책을탑재해야하므로기존ToastBootstrap을새Setup에그대로재사용하지않는다. 기존직원Bootstrap교체를시도하는것이아니다. GUI/새Setup의실제Windows시험은독립환경에서SPENT03이수행하며현재sw204설치를변경하지않는다. 새로운운영카탈로그/GUI/Setup의정식공개는별도승인전실행하지않는다.

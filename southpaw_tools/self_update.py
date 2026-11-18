@@ -97,6 +97,7 @@ class SelfUpdater:
         expected = GitHubReleasesProvider if self.channel else HttpProvider
         if (not isinstance(provider, expected)
                 or self.channel and provider.repository != self.channel["repository"]
+                or self.channel and getattr(provider, "repository_id", None) != self.channel.get("repository_id")
                 or provider.verifier.policy != self.policy
                 or provider.verifier.state_path.resolve() != self.verifier.state_path.resolve()):
             raise LauncherError("동일한 고정 서명 정책과 격리 신뢰 상태를 사용하는 HttpProvider가 필요합니다.")

@@ -13,6 +13,7 @@ from southpaw_tools.catalog_trust import CatalogVerifier
 from southpaw_tools.common import LauncherError, digest
 from tools.build_windows import build_environment
 from southpaw_tools.branding import DISPLAY_NAME
+from southpaw_tools.github_channels import canonical_channel
 
 PROJECT = Path(__file__).resolve().parents[1]
 OFFICIAL_SHA = "605afa20380a80e4fb5646b7b714a424b0ab9257c81076edacd8aea4b942365d"
@@ -53,7 +54,18 @@ def compile_setup(root, compiler, *, test_registration=False, registration_suffi
         "MUTEX_NAME": "SouthpawToolsLauncherSetupCheck"+registration_suffix if test_registration else "SouthpawToolsLauncherSetup",
     }
     (output / "config.nsh").write_text("".join(f'!define {key} "{nsis(value)}"\n' for key, value in config.items()), encoding="utf-8-sig")
-    shutil.copyfile(PROJECT / "packaging/windows/setup.nsi", output / "setup.nsi")
+    template = PROJECT / "packaging/windows/setup.nsi"
+    if canonical_channel(manifest.get("channel", {})):
+        text = template.read_text(encoding="utf-8")
+        old_install = 'InstallDir "$PROFILE\\CGL"'
+        old_data = 'StrCpy $DataRoot "$LOCALAPPDATA\\SouthpawGames\\ToolsLauncher"'
+        if text.count(old_install) != 1 or text.count(old_data) != 1:
+            raise LauncherError("신규 채널 Setup 경로 치환 기준이 변경됐습니다.")
+        text = text.replace(old_install, 'InstallDir "$PROFILE\\CGL-Rodetoast"')
+        text = text.replace(old_data, 'StrCpy $DataRoot "$LOCALAPPDATA\\SouthpawGames\\ToolsLauncherRodetoast"')
+        (output / "setup.nsi").write_text(text, encoding="utf-8")
+    else:
+        shutil.copyfile(template, output / "setup.nsi")
     manifest = json.loads((root / "setup-manifest.json").read_bytes())
     lines = []
     directories = set()

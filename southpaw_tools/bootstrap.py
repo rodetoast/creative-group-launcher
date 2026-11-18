@@ -345,7 +345,8 @@ def main(argv=None):
         channel = None
         managed = args.managed or args.home is None
         if managed:
-            from .managed_update import channel_policy, initialize
+            from .managed_update import channel_policy, initialize, default_data_root
+            from .github_channels import canonical_channel
             from .paths import AppPaths
             if not getattr(sys, 'frozen', False) or args.scenario != 'ok':
                 raise LauncherError('관리형 업데이트에는 승인된 패키징 Bootstrap이 필요합니다.')
@@ -366,9 +367,11 @@ def main(argv=None):
                     elif channel['repository'].endswith('-trial-releases'):
                         raise LauncherError('시험 채널 첫 실행에는 별도 --data-dir가 필요합니다.')
                     else:
-                        data = AppPaths.default().root
+                        data = default_data_root(channel)
                 if channel['repository'].endswith('-trial-releases') and data.resolve() == AppPaths.default().root.resolve():
                     raise LauncherError('시험 채널에는 운영 사용자 데이터 경로를 사용할 수 없습니다.')
+                if canonical_channel(channel) and data.resolve() == AppPaths.default().root.resolve():
+                    raise LauncherError("신규 채널은 기존 직원 데이터 경로를 사용할 수 없습니다.")
                 initialize(home, data, folder / 'seed', channel)
         if args.role=='worker':
             result=WindowsUpdater(args.home, channel=channel).apply(args.transaction,probe_result=args.scenario,

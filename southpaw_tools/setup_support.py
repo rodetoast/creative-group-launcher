@@ -8,6 +8,7 @@ from .common import LauncherError, atomic_json, atomic_temp_example, digest, ins
 from .catalog import AppRelease
 from .installer import Installer
 from .paths import AppPaths
+from .github_channels import canonical_channel
 from .self_update import APP_ID, MANAGED_PURPOSE
 from .windows_paths import windows_path_budget
 from .windows_process import identity
@@ -47,6 +48,19 @@ def check(root, data, manifest, *, uninstall=False, inspect_processes=True):
     if (root.resolve() != root or data.resolve() != data or root == root.parent
             or root.is_relative_to(data) or data.is_relative_to(root)):
         raise LauncherError("설치 폴더와 사용자 데이터 폴더를 별도로 지정해 주세요.")
+    channel = manifest.get("channel", {})
+    if canonical_channel(channel):
+        if data == AppPaths.default().root.resolve():
+            raise LauncherError("신규 채널은 기존 직원 데이터 경로를 사용할 수 없습니다.")
+        if not inside(root, STATE).exists() and data.exists() and any(data.iterdir()):
+            raise LauncherError("신규 채널 첫 설치에는 비어 있는 새 사용자 데이터 폴더가 필요합니다.")
+        old_home = inside(root, "launcher-home")
+        if inside(old_home, "current.json").exists():
+            from .self_update import SelfUpdater
+            SelfUpdater(old_home, channel=channel).current()  # Read-only: reject a legacy namespace/home.
+        if (data / "catalog-trust.json").exists():
+            from .catalog_trust import CatalogVerifier
+            CatalogVerifier(channel["policy"], data / "catalog-trust.json").cached()
     state_path = inside(root, STATE)
     state = read_json(state_path) if state_path.exists() else None
     if state and (state.get("product") != PRODUCT or state.get("data_root") != str(data)):
