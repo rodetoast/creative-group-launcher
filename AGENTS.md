@@ -61,3 +61,8 @@ GUI ZIP SHA256 0de18d053875d5503d07bfb7182e6c69756f81c0791e97b94738165c839f7eb9,
 ## 시험 저장소 Transfer 후속 (2026-11-17)
 
 사용자 보고로 SPENT03 사전 GUI0.1.4→0.1.5 시험은 통과했고 별도 승인/수락 후 시험 저장소만 rodetoast로 실제 이전됐다. ID1452413703·Public·Release15/태그15·Latest11·모든 자산ID/digest 보존 및 최신8자산 실제재다운로드 SHA/서명 확인. 호환 source Provider의 old/new owner 조회·실제ZIP 다운로드도 통과했다. [이전 후 SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의 최신 절을 읽는다. 이전 후 Windows 구Bootstrap/GUI실기동은 아직 SPENT03에서 확인해야 하며 같은seq11로 신규 managed update 적용 성공을 주장하지 않는다. 운영/증거 저장소는 이전하지 않았고 운영7/Setup0.1.4.1·기존 guard는 그대로다. 과거 Transfer NO 문구는 당시 상태이며 시험 저장소 실제 이전 사실은 이 절이 최신이다.
+
+
+## 운영 전환 후보 (2026-11-18)
+
+공식Setup 설치직원이 있다고 사용자확인. 제품코드변경 없이 운영GUI0.1.5/production-catalog-000008 로컬서명후보를 준비했다. [기존호환문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 운영전환 절을 읽는다. 원격게시/운영Transfer/Bootstrap·Setup교체는 아직 실행하지 않았다. 구Bootstrap 자체는 네트워크검색주체가 아니며 기존GUI의선행업데이트가필요하다. 직원미전환/rollback0.1.4는이전전처리하고 신규설치용호환Setup/링크도필요하다. SPENT03 이전후조회/재실행통과는사용자보고, 별도ZIP60초timeout은미완료. 시험8자산 개발PC검증과구분한다.

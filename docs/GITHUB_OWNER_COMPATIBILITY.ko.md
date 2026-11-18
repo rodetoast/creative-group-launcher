@@ -120,3 +120,43 @@ NSIS는 `SetOverwrite off`를 사용한다. `managed_update.initialize()`도 기
 ## 시험 저장소 Transfer 후속 (2026-11-17)
 
 사용자 보고로 SPENT03 사전 GUI0.1.4→0.1.5 시험은 통과했고 별도 승인/수락 후 시험 저장소만 rodetoast로 실제 이전됐다. ID1452413703·Public·Release15/태그15·Latest11·모든 자산ID/digest 보존 및 최신8자산 실제재다운로드 SHA/서명 확인. 호환 source Provider의 old/new owner 조회·실제ZIP 다운로드도 통과했다. [이전 후 SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의 최신 절을 읽는다. 이전 후 Windows 구Bootstrap/GUI실기동은 아직 SPENT03에서 확인해야 하며 같은seq11로 신규 managed update 적용 성공을 주장하지 않는다. 운영/증거 저장소는 이전하지 않았고 운영7/Setup0.1.4.1·기존 guard는 그대로다. 과거 Transfer NO 문구는 당시 상태이며 시험 저장소 실제 이전 사실은 이 절이 최신이다.
+
+
+## 운영 이전 최종 전환 준비 — 직원 설치 있음 (2026-11-18)
+
+사용자는 공식 Setup0.1.4.1을 실제 설치한 직원이 있다고 확인했다. 따라서 설치0명 경로가 아닌 기존설치 보호 경로를 채택한다. 사용자는 SPENT03에서 이전 후 구Bootstrap+GUI0.1.5 실행/온라인카탈로그/종료·재실행/데이터보존 성공을 보고했다. SPENT03 별도GUI ZIP60초 timeout은 미완료이며, 개발PC에서 완료한 시험8자산/호환Provider 실제HTTPS 다운로드 검증과 구분한다. 이전 후 신규버전의 전체 관리형 업데이트 적용은 아직 검증하지 않았다.
+
+### 실제 로컬 운영 후보
+
+- 폴더: 개발PC 원본 프로젝트 `.test-results/production-owner-transition-20261118/`.
+- 소스 commit `9cd9e2c6dcc380e332f3ce01f58af456a4a4ce06`, GUI0.1.5/production-launcher-0.1.5. 제품코드 수정 없이 기존 검증소스를 LF정규 아카이브로 추출하고 운영채널 설정만 별도빌드 사본에 주입했다.29개 제품모듈 hash가 Git blob과 정확히 같다.
+- 운영 GUI ZIP `creative-group-launcher--production-launcher-0.1.5.zip`, SHA256 `493b9830479d4fc0150b230cc1b8afeae045166091290f89f38333177ce9b963`. EXE SHA256 `7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e`. EXE는 시험0.1.5와 같고 데이터리소스(채널/키/번들카탈로그)가 운영용으로 다르므로 시험ZIP을 그대로 게시하지 않았다.188파일/manifest/필수DLL/PE x64·GUI subsystem/ZIP안전 검사 통과.
+- 기존 운영카탈로그7을 번들에 유지하고 기존toast-source/creative-group-releases·최소4·운영key_id `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`를 유지했다. 시험키/시험seq11은 포함하지 않았다.
+- 실제 운영Latest7 재확인 후 새후보 production-catalog-000008/sequence8을 생성하고 기존운영DPAPI키로 로컬서명했다. 개인키 출력/복사/신규키 생성 없음.5개 회사ZIP·버전·release_id·메타데이터는7과 동일하다.8자산 정확한 목록/size/SHA는 `publish-plan.json`.
+- 기존 직원Bootstrap/Setup은 빌드/교체하지 않았다. 기존운영8자산과 Setup0.1.4.1의 원본SHA가 유지됐다. 원격Release/Latest/Transfer는 실행하지 않았다.
+- 기존 공식0.1.4.1 빌드소스의 엔진으로 서명오류 차단, 실제ZIP을 prepared까지 스테이징, 구WindowsUpdater 후보검증, old current/receipt/release/합성자료 불변을 확인했다. fixture HTTP이며 실제운영HTTPS 적용이나 제품EXE 실행 결과는 아니다. 운영신뢰7→8허용/8→7차단·신뢰상태보존도 확인했다. 기존142개/전체회귀는 반복하지 않았다. 이번 검사 중WinError5는 없었으나 기존근본원인 해결을 뜻하지 않는다.
+
+### GUI/Bootstrap/Setup 판정
+
+0.1.4 GUI는 저장소가toast-source에 있는 동안 운영키로 서명된0.1.5/8을 기존HTTPS 경로로 받을 수 있다. Bootstrap은 최신검색/다운로드 주체가 아니다. 새GUI의 ManagedSession.prepare→GitHubReleasesProvider→SelfUpdater.prepare가 다운로드하며, 안정Bootstrap은 서명증거/보관ZIP/manifest를 로컬검증하고 worker/health/ready/confirmed로 전환한다. GUI의 채널문자열을toast-source로 유지하여 구Bootstrap 정책과 일치시킨다. 새Provider만 고정repoID/정확한old-new owner쌍으로 실제신규owner자산을 허용한다.
+
+따라서 현재 확인된Setup0.1.4.1 설치본의 owner전환만을 위해 Bootstrap을 교체할 필요는 코드상 확인되지 않았다. 시험구Bootstrap Windows실행과 운영구소스 후보검증이 근거이며, 운영키/운영제품Bootstrap의0.1.4→이새후보 실제Windows 적용과 이전후신규버전적용은 아직 미검증이다. 지원되지 않는 Bootstrap교체/강제pointer변경을 제안하지 않는다.
+
+기존설치의GUI전환에는 새Setup이 필수는 아니다. 다만 이전후신규설치/재설치는 구GUI0.1.4를seed로하는공식Setup0.1.4.1에 의존하면 안 된다. 일반직원용 호환GUI seed의 후속Setup과 정확한설치링크를 이전 전에 별도검증/승인하여 준비해야 한다. 기존Setup은 다른Bootstrap 덮어쓰기와 existing current의 새seed 강제전환을 지원하지 않으므로 기존PC에 재설치만 하면 해결된다고 안내하지 않는다. 신규PC용Setup과 기존PC의GUI업데이트를 구분한다.
+
+### 실제 기존직원이 있을 때의 순서
+
+1. 이번 로컬후보의 정확한8자산 해시로 운영호환Release 게시 승인을 받는다. 승인전게시 금지. 게시직전Latest7/ownerID1447701732/태그충돌을 재확인한다.
+2. **toast-source 소유를 유지한 상태**에서8자산 Draft 생성/업로드/재다운로드검증 후 카탈로그8을 공개·Latest 지정한다. 기존7/Setup/Release는 보존한다. 실패하면 원격상태보고; 같은8 덮어쓰기나7로신뢰후퇴 금지.
+3. 기존공식Setup계열의 대표PC에서 운영키로 서명된본후보의 실제GUI 업데이트·Bootstrap종료/기동·ready/confirmed·정상종료·동일Bootstrap재실행을 한차례확인한다. 이미통과한시험채널시험이나회사앱기능을 반복하지 않는다. 실패시Toast운영경로를그대로두고중단한다.
+4. 실제설치직원에게GUI업데이트를 안내하고 각대상current0.1.5/실제EXEhash/정상재실행 및 committed·pending문제없음을 담당자가확인한다. 단순카탈로그8조회나ZIP다운로드만으로전환완료라하지않는다. 회사앱/사용자자료는보존하고직원에게전체시험을시키지않는다. 누락·오프라인·다운로드실패·rollback0.1.4 PC가있으면Transfer보류: Toast주소가있을때복구/재업데이트한다.
+5. 호환GUI seed를사용하는신규설치/재설치용후속Setup·담당자지원경로를준비한다. 기존옛설치링크의배포를중단하고새링크를확정한다. 구Setup/기록은삭제하지않는다. 새Setup인플레이스복구성공을가정하지않는다.
+6. 기존설치전환확인·신규설치경로·지원준비후 **별도의운영Transfer승인**을받는다. 이전후ID/Public/모든Release/8자산SHA/서명/Latest8을확인하고대표운영PC의조회·실제다운로드·정상재실행을확인한다. 아직새버전이없으면신규managed update적용은미검증으로남긴다.
+
+미업데이트/롤백0.1.4는301만으로작동한다고보장할수없다. 이전후자동복구를발명하지않는다. 전환확인범위밖의옛복사본까지영구지원하는호환성은없다. 설치0명으로확인되는상황이라면직원별업데이트단계는생략가능하지만현재는해당하지않는다. 설치상태가불명이면한번확인하고확인전에는설치있음으로보수적으로취급한다.
+
+### 실제 남은 차단과 다음 승인 하나
+
+현재 운영Transfer는 **NO**. 차단은 기존직원미전환, 운영서명후보의대표Windows적용미검증, 이전후신규설치용호환Setup/링크미준비다. Bootstrap교체필수라는새근거는없으며, 단순60초ZIPtimeout 재시험/142회귀반복은이판정의전제조건이아니다. 향후rodetoast운영게시용관리자guard는정확한repoID·계정·권한을유지해별도검증하거나공식gh의정확한대상으로승인게시해야한다. 현재toast-source운영쓰기guard는해제하지않았다.
+
+**다음 승인 대상은 하나:** 운영소유권은Toast에유지하고이정확한production-catalog-000008 호환Release를게시해기존직원에게0.1.5업데이트를제공하는작업. Transfer/새Setup공개까지묶인승인이아니다. 후보Windows검증은승인된게시후담당자대표시험으로구분하고실패시확대를중단한다.
