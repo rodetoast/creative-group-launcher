@@ -232,3 +232,53 @@ Pixel Motion Studio와증거도구는기존로컬전용정책체크포인트에�
 새Setup0.1.5.0은기존직원GUI업데이트용이아닌향후신규설치용이다. 기존current나다른소유파일을강제로덮어쓰는기능은없다. 새Setup의SPENT03최초설치/바로가기/종료·재실행/제거·자료보존 검증을위한원격운송은새게시승인후GitHub non-Latest시험Release로만준비한다. 아직원격게시승인이없으므로지금공개하거나수동복사를요구하지않는다. 설치목록비노출및B14/catalog WinError5미해결은유지한다.
 
 운영Latest8/기존Setup0.1.4.1/기존Release·회사ZIP·서명정책·source原本은유지. 운영Transfer/새Setup공개/직원PC변경은사용자별도승인경계다. 같은목표안의통상구현·오류최소수정·후보검증은계속자율수행하고완료/타PC실행/실제결정필요시에만통합보고한다.
+
+
+## 운영 업데이트 통과 반영·RC1 Draft 인계·직원 전환 확인 (2026-11-18)
+
+사용자는 SPENT03에서 **공식 운영Bootstrap/운영키/카탈로그8의GUI0.1.4→0.1.5 실제GUI업데이트**가성공했다고보고했다. ZIP/EXE/manifest/receipt,committed거래,정상종료·동일Bootstrap재실행,합성자료보존을모두통과한것으로완료처리하고반복하지않는다. 이사실은사용자가전달한SPENT03결과이며개발PC가실행한시험이아니다. 과거시험채널/S11결과및별도ZIP60초timeout과구분한다.
+
+### 기존 Setup RC1 전달 완료 — 공개 게시 아님
+
+- 기존 Setup `SouthpawToolsLauncherSetup-0.1.5.0-RC1.exe` / bytes83404359 / SHA256 `8d8c5940e0f08adfcf9d073fe3c29971f96de3fb06396f41f11fa5b817f56453` 그대로. 재빌드·재패키징없음.
+- 운송저장소 rodetoast/creative-group-trial-releases, ID1452413703. 운송tag `employee-setup-0150-rc1-transport-20261118`, **Draft ID449518343**.
+- 실제Draft URL: https://github.com/rodetoast/creative-group-trial-releases/releases/tag/untagged-2e356c394839407bb519
+- 정확히RC1 EXE와 `SouthpawToolsLauncherSetup-0.1.5.0-RC1.exe.sha256` 두자산만업로드. GitHub인증재다운로드와API digest/크기/SHA일치확인. 정식공개/공개prerelease게시를하지않았고 Draft=True이다. 일반직원에게배포할링크가아니다. 원격로그인권한없이공개URL로받을수있다고안내하지않는다.
+- 시험Latest trial-catalog-000011 및 운영Latest production-catalog-000008의ID/태그불변확인. 운영Setup0.1.4.1/Bootstrap·회사5개원본·서명/순번정책변경없음.
+- 기존로컬파일검증(39payload·manifest·seed0.1.5/seq8초기화·보존)은재사용한다. **RC1 실제Windows설치/바로가기/제거는아직미검증**이다.
+
+### SPENT03 Codex가 이어서 수행할 범위
+
+**출발 상태:** 기존운영0.1.4→0.1.5업데이트검증은완료됐으므로다시하지않는다. 기존OC11/운영업데이트시험/보고서·설치·자료는보존하고이번에는별도의신규Setup시험만한다. 실제운영채널/키·GUI0.1.5seed·기존Bootstrap을사용한다.
+
+**GitHub에서직접받기:** 기존gh인증/도구를재사용한다. 해당Draft를볼수있는계정/저장소권한을읽기전용확인한다(토큰/비밀번호출력금지). 접근불가시권한문제로기록하고Draft를공개하거나다른자산으로대체하지않는다. `gh release view employee-setup-0150-rc1-transport-20261118 --repo rodetoast/creative-group-trial-releases --json databaseId,isDraft,assets`로ID449518343/Draft/두자산을확인한뒤새다운로드경로로 `gh release download employee-setup-0150-rc1-transport-20261118 --repo rodetoast/creative-group-trial-releases --dir <새다운로드폴더> --pattern SouthpawToolsLauncherSetup-0.1.5.0-RC1.exe --pattern SouthpawToolsLauncherSetup-0.1.5.0-RC1.exe.sha256` 를수행한다. EXE SHA `8d8c5940e0f08adfcf9d073fe3c29971f96de3fb06396f41f11fa5b817f56453`와크기를검증한다. 사람이파일을옮기거나명령을대신실행하게하지않는다.
+
+**설치 전 보호조건 — 폴더분리만으로충분하지않음:** 이RC1은정상직원등록/바로가기를쓰는동일제품설치본이다. 현재사용자의 `HKCU\Software\SouthpawGames\ToolsLauncherSetup` 및 `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\SouthpawToolsLauncher`(관련32/64보기)의존재/InstallLocation/DataRoot와시작메뉴·바탕화면의 `Southpaw 도구 런처.lnk` 존재/대상을읽기전용확인하라. 기존등록/바로가기가있거나기존런처가작동중이면**기존환경과충돌가능성으로설치를시작하지말고**해당관측과보존상태를보고하라. 기존키/바로가기삭제·값수정·기존Setup제거·기존프로세스강제종료로빈환경을만들지마라. 이미준비된별도빈Windows사용자/VM이있으면사용가능성을보고하되새계정/VM/권한을임의만들지마라.
+
+**새시험경로:** 보호조건이통과하면현재존재하지않는짧은루트(예 `C:/Dev/S15R1`가없을때그아래 P/D/E)를선택한다. P는설치프로그램, D는사용자데이터, E는증거로분리한다. 경로가이미있으면덮어쓰거나초기화하지말고다른짧은새이름을선택한다. 기존실제AppData런처경로의존재상태와이전시험자료기준을읽기전용보존한다. 승인된시험원본만사용한다.
+
+**실제설치시험:** RC1을일반권한으로실행하여 `/DATA=<D>` 및 마지막인자 `/D=<P>`로새경로를명시한다. 실제Setup화면에서설치·완료/종료코드를기록한다. RequestExecutionLevel user인제품이며관리자승격이나보안차단우회를하지않는다. SAC/Windows가차단하면화면/코드만보존한다. 설치전충돌검사없이/기존등록이있는상태에서실행하지마라.
+
+**최소사용자흐름:** 설치완료→실제GUI최초0.1.5기동→운영카탈로그8정상확인→정상종료→설치로생긴바탕화면/시작메뉴바로가기를각각실제클릭하여GUI재기동·정상종료. 과도한반복/이미통과한자체업데이트시험은하지않는다. Bootstrap `c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19` 및 GUI EXE `7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e`·manifest/receipt/current·seed서명/순번8을기존도구로확인한다. 회사5개목록과실행가능상태표시는볼수있지만회사EXE/개별기능을시험하거나5개를다시설치하지않는다. 프로그램명/아이콘·콘솔창유무는핵심화면만확인하고Windows설치목록비노출의추가원인조사는하지않는다.
+
+**제거와보존:** D에합성설정·작업파일을만들고해시를확보한다. GUI/Bootstrap정상종료후P의이번설치가생성한Uninstall.exe만실행한다. 설치관리파일/이번바로가기·등록제거,launcher-home/current/receipt·D의합성파일보존을파일/로그와함께확인한다. 회사프로그램데이터가실제로없는환경이면그보존을실증했다고쓰지말고이시험의합성자료범위로한정한다. 잔여관리형데이터를자동삭제하지마라. 제거후current만남았다고제품실행가능한상태라고표현하지마라.
+
+**판정/증거:** 설치·GUI0.1.5·두바로가기·정상종료/잔여프로세스·제거·합성자료보존을각각통과/실패/미검증으로E/REPORT.ko.md에정리하고,해시목록·Setup/Bootstrap로그·필요최소스크린샷을E아래보존한다. WinError5/timeout/guard실패는실제오류로남기고같은조건연속재시도·강제복구/신뢰초기화/기존환경정리를하지않는다. CLI우선,실제GUI조작에만Windows Use를쓰고끝나면즉시제어를해제한다. 민감정보/nonce/토큰/사용자파일본문은공유하지않는다. 기존증거정책이확정된경우검토된사본만공유하고원본은유지한다. 합격이어도Setup정식공개/운영Transfer/직원PC변경은시작하지마라.
+
+### 직원에게 전달할 짧은 문구 — 작성만 완료, 발송하지 않음
+
+> Southpaw 도구 런처를 열어 런처 자체 업데이트 안내에서 0.1.5 업데이트를 진행해 주세요. 완료되면 런처를 정상 종료하고 평소 바로가기로 다시 열어 주세요. 업데이트 안내가 없거나 오류가 나면 재설치하지 말고 담당자에게 알려 주세요. 적용 여부는 담당자가 확인하겠습니다.
+
+### 담당자 확인 — 실제 확인된 것만 체크
+
+직원전체에게동시에보내기보다담당자가대상을정해안내한다. 이름/PC/담당자/일자는사용자가정하며개인직원목록을공개Git에올리지않는다. 직원PC접근·원격변경·메시지발송은승인전실행하지않는다.
+
+- [ ] 실제실행된GUI가0.1.5다(관리형current/실제EXE해시/GUI상태를서로구분해확인). 카탈로그8을조회한것만으로적용완료라하지않는다.
+- [ ] 정상종료후기존바로가기/동일Bootstrap으로재실행된다.
+- [ ] 업데이트오류·미완료/복구대기·rollback0.1.4가없다. committed이력은정상완료이력이며삭제하지않는다.
+
+현재확정상태는**직원설치자가있음 / 직원별완료현황미수신 / 전체전환미확인**이다. SPENT03합격은직원전체완료의대체증거가아니다. 담당자검토에서미확인PC도완료로간주하지않는다. 미업데이트/실패/rollbackPC가하나라도남으면운영Transfer가능으로표시하지않고현재toast-source주소를유지한다. 직원에게해시검사·전체시험·재설치를요구하지않는다.
+
+### 남은 승인 경계와 작업 순서
+
+지금은Draft운송/인계까지만완료,RC1설치시험은SPENT03실행대기다. SPENT03통과→담당자의기존직원완료확인→검증된신규Setup정식설치링크확정→운영Transfer별도승인순서다. 다음실제승인은검증후의 **새Setup정식공개**, **운영creative-group-releases Transfer**, **증거저장소Transfer**를서로구분해야한다. 증거owner/login guard는아직미전환이므로증거Transfer는독립된차단이다. 직원직접변경이나키/신뢰정책변경은포괄승인으로간주하지않는다. 현재는그승인을요청하기보다SPENT03이이인계범위를자율완료하고결과를돌려줄수있게한다. 새기능/재빌드/회귀/회사앱시험은하지않았다.
