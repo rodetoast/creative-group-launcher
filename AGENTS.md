@@ -66,3 +66,8 @@ GUI ZIP SHA256 0de18d053875d5503d07bfb7182e6c69756f81c0791e97b94738165c839f7eb9,
 ## 운영 전환 후보 (2026-11-18)
 
 공식Setup 설치직원이 있다고 사용자확인. 제품코드변경 없이 운영GUI0.1.5/production-catalog-000008 로컬서명후보를 준비했다. [기존호환문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 운영전환 절을 읽는다. 원격게시/운영Transfer/Bootstrap·Setup교체는 아직 실행하지 않았다. 구Bootstrap 자체는 네트워크검색주체가 아니며 기존GUI의선행업데이트가필요하다. 직원미전환/rollback0.1.4는이전전처리하고 신규설치용호환Setup/링크도필요하다. SPENT03 이전후조회/재실행통과는사용자보고, 별도ZIP60초timeout은미완료. 시험8자산 개발PC검증과구분한다.
+
+
+## 운영 호환 Release8 공개 완료 (2026-11-18)
+
+사용자 승인으로 toast-source/creative-group-releases의 production-catalog-000008을 실제공개/Latest8로지정했다. GUI0.1.5 운영후보8자산을Draft/공개HTTPS재다운로드 SHA·운영서명·manifest 검증. catalog7/Setup0.1.4.1/Bootstrap/회사5개원본은유지. 운영Transfer/새Setup게시없음. [기존호환문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의최신게시결과와SPENT03운영대표검증프롬프트를읽는다. 현재SPENT03실제운영GUI업데이트와직원전환은미검증이므로완료로주장하지말고전체직원안내/Transfer를보류한다. 이전의운영Latest7 문구는당시이력이다.

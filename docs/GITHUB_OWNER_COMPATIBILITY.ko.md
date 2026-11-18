@@ -160,3 +160,40 @@ NSIS는 `SetOverwrite off`를 사용한다. `managed_update.initialize()`도 기
 현재 운영Transfer는 **NO**. 차단은 기존직원미전환, 운영서명후보의대표Windows적용미검증, 이전후신규설치용호환Setup/링크미준비다. Bootstrap교체필수라는새근거는없으며, 단순60초ZIPtimeout 재시험/142회귀반복은이판정의전제조건이아니다. 향후rodetoast운영게시용관리자guard는정확한repoID·계정·권한을유지해별도검증하거나공식gh의정확한대상으로승인게시해야한다. 현재toast-source운영쓰기guard는해제하지않았다.
 
 **다음 승인 대상은 하나:** 운영소유권은Toast에유지하고이정확한production-catalog-000008 호환Release를게시해기존직원에게0.1.5업데이트를제공하는작업. Transfer/새Setup공개까지묶인승인이아니다. 후보Windows검증은승인된게시후담당자대표시험으로구분하고실패시확대를중단한다.
+
+
+## 운영 호환 GUI0.1.5 실제 게시 완료 (2026-11-18)
+
+사용자가 정확한 기존후보의 운영게시를 승인하여 `production-catalog-000008`(Release ID449405600)를 toast-source/creative-group-releases(ID1447701732)에 실제게시했다. 저장소 Transfer/Setup배포/Bootstrap교체는 승인범위밖이며 실행하지 않았다.
+
+Release: https://github.com/toast-source/creative-group-releases/releases/tag/production-catalog-000008
+
+운영Latest는 **production-catalog-000008 / sequence8**, GUI0.1.5 / production-launcher-0.1.5다. 운영키 식별자는 `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`. 새서명/재빌드없이 승인후보바이트 그대로, 정확한8자산만 Draft에업로드했다. Draft8개 실제재다운로드 SHA/서명/manifest 검증 후 먼저non-Latest로공개하고, 공개CDN HTTPS에서8개를모두다시받아동일검증에통과한뒤Latest8로지정했다. 기존catalog7과employee-setup-0.1.4.1의Release metadata/asset ID·이름·크기·digest 동일성을확인했다. 회사5개ZIP·버전·release_id와시험rodetoast저장소는변경하지않았다.
+
+| 자산 | bytes | SHA256 |
+|---|---:|---|
+| ase-viewer--0.5.8.4-team-3bf37dd.zip | 22085231 | `2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2` |
+| catalog.json | 9432 | `dd65ae96167c31a7f63014ce6deb7152488804161f19f90b957966e7ccdb288a` |
+| catalog.sig.json | 245 | `9420492936a83554e3d2429481ca8dd21254914d510c5e23b7e8c37bc4da7c1c` |
+| creative-group-launcher--production-launcher-0.1.5.zip | 52638826 | `493b9830479d4fc0150b230cc1b8afeae045166091290f89f38333177ce9b963` |
+| pivot-fixer--0.3.3-team-80b84c9.zip | 20709116 | `214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361` |
+| ps2ase--0.3.6-team-6e84645.zip | 66252089 | `1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9` |
+| tag-master--0.4.0-team-7263f8d.zip | 38813495 | `80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299` |
+| tilenamer--0.1.6-rc3-8ba7a1e.zip | 54046715 | `aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4` |
+
+런처 EXE SHA256 `7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e` / manifest 포함188파일. 카탈로그·서명·ZIP바이트는승인계획과동일하다. GUI다운로드URL:
+https://github.com/toast-source/creative-group-releases/releases/download/production-catalog-000008/creative-group-launcher--production-launcher-0.1.5.zip
+
+기존공식0.1.4 source Provider로실제HTTPS /repos/toast-source/creative-group-releases/releases/latest를읽고운영키/신뢰순번7→8·GUI0.1.5제공을검증했다. 이결과는Windows제품실행/관리형업데이트실제적용이아니다. 개발PC에서제품EXE/회사EXE/새회귀/Setup설치를실행하지않았다. 게시중실패·재업로드·서명덮어쓰기·자동rollback은없었다. 근거는원본프로젝트 `.test-results/production-owner-transition-20261118/`의publication-state.json, draft-redownload, public-redownload, public-legacy-provider.json이다.
+
+### SPENT03 Codex 인계 프롬프트
+
+> 운영 호환 GUI0.1.5가 https://github.com/toast-source/creative-group-releases/releases/tag/production-catalog-000008 에게시됐고Latest8이다. 이문서의최신게시결과/8자산해시를기준으로, **격리된운영대표환경**에서기존운영Bootstrap+GUI0.1.4→0.1.5 실제GUI업데이트만한차례검증하라. 시험채널/시험키의기존OC11환경을운영환경으로위장하거나신뢰상태를덮어쓰지마라. 기존격리운영0.1.4환경이있으면보존후재사용하고, 없으면운영 employee-setup-0.1.4.1 Release에서 최초배포ZIP `SouthpawToolsLauncher-Employee-0.1.4-RC1-Windows-x64.zip`(SHA256 `57c3ff1f5add76d9c8e4011ca5ce89d3fea4d044b31b949fe9550241f2665338`)을GitHub에서직접받아새짧은격리프로그램경로에해제하고 별도새 --data-dir로최초실행하라. 기본AppData나기존업무설치를사용하지마라. 운영Bootstrap SHA256 `c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19`와초기GUI0.1.4 seed/proof를확인하라. Bootstrap교체/가짜버전/직접current편집/시험키주입금지. 초기운영ZIPURL은 https://github.com/toast-source/creative-group-releases/releases/download/employee-setup-0.1.4.1/SouthpawToolsLauncher-Employee-0.1.4-RC1-Windows-x64.zip 이다. 직원용Setup0.1.4.1은새로배포하거나재설치할필요없다.
+>
+> 실행전 기존격리상태를보존하고 GUI0.1.4 실제기동후업데이트승인전current/receipt/운영신뢰상태/Bootstrap해시/설정·합성작업파일 기준을확보하라. 운영카탈로그8 실제온라인조회·운영서명확인 후 GUI버튼으로0.1.5업데이트를승인하여실제HTTPS 다운로드→ZIP SHA `493b9830479d4fc0150b230cc1b8afeae045166091290f89f38333177ce9b963`→manifest/설치파일/EXE SHA `7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e`→Bootstrap정상종료/health/ready/confirmed/재시작을확인하라. 정상종료후동일Bootstrap으로재실행해current0.1.5·receipt·운영신뢰seq8·기존설정/합성작업자료·기존설치상태보존을확인하라. 기존5개회사앱이설치돼있으면읽기전용해시/상태만비교하고, 없는경우5개설치가보존됐다고만들거나불필요하게재설치하지마라. 회사앱내부기능시험은하지마라.
+>
+> 실제GUI·Bootstrap적용과단순HTTP/로컬Installer검증을구분하고WinError5·timeout·실패의원로그/중간상태를보존하라. 강제복구/신뢰순번초기화/무조건재시도하지마라. 실패하면직원전체안내와운영Transfer를중단한다. CLI를우선하고핵심GUI조작에만Windows Use를사용하고바로제어를해제하라. 시험채널기존검증/전체회귀/설치목록조사는반복하지마라. 결과는기존SPENT03증거규칙에따라통과·실패·미검증과자료경로를구분하여기록하라. 사람이파일을수동복사할필요없다.
+
+### 남은 차단
+
+SPENT03의**운영키/실제운영후보 Windows0.1.4→0.1.5 업데이트**는아직미검증이다. 직원대상확대안내는이대표검증통과후진행한다. 실제직원이있으며전직원설치본이전환됐다는증거는없다. 운영Transfer는계속보류하며미업데이트/rollback0.1.4 PC처리와이전후신규설치용호환Setup/링크준비도필요하다. 기존직원Setup0.1.4.1의새seed강제전환/복구를보장하지않는다. 과거WinError5근본원인은미확정이다.
