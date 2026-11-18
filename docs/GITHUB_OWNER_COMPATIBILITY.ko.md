@@ -197,3 +197,38 @@ https://github.com/toast-source/creative-group-releases/releases/download/produc
 ### 남은 차단
 
 SPENT03의**운영키/실제운영후보 Windows0.1.4→0.1.5 업데이트**는아직미검증이다. 직원대상확대안내는이대표검증통과후진행한다. 실제직원이있으며전직원설치본이전환됐다는증거는없다. 운영Transfer는계속보류하며미업데이트/rollback0.1.4 PC처리와이전후신규설치용호환Setup/링크준비도필요하다. 기존직원Setup0.1.4.1의새seed강제전환/복구를보장하지않는다. 과거WinError5근본원인은미확정이다.
+
+
+## 자율 진행 적용 및 신규직원 Setup0.1.5.0 로컬후보 (2026-11-18)
+
+사용자 지시에 따라 운영카탈로그8 게시/원격검증/인계는 기존결과를 재사용하고, SPENT03 결과를 기다리는동안 독립적으로 신규직원용 후속Setup을 준비했다. 승인되지 않은 원격게시/운영Transfer/직원환경변경은 실행하지 않았다. 정책은 기존AGENTS규칙을 보존하고 덧붙였으며, 원본제품코드/미커밋소스/HEAD/branch는 유지했다.
+
+### 실제 후보와 검증
+
+- Setup: `SouthpawToolsLauncherSetup-0.1.5.0-RC1.exe` / version0.1.5.0 / SHA256 `8d8c5940e0f08adfcf9d073fe3c29971f96de3fb06396f41f11fa5b817f56453`.
+- 초기배포ZIP: `SouthpawToolsLauncher-Employee-0.1.5-RC1-Windows-x64.zip` / SHA256 `203e9ae003e98eb76ec4c976c1a9f5f4eb53bc78906bd3f24fbd8566d29ef3c3`.
+- 원본프로젝트 `.test-results/employee-015-setup-candidate-20261118/candidate-files/`에EXE/ZIP/SHA256SUMS.txt/CANDIDATE_FILES.manifest.json 존재. 로컬후보이며 아직GitHub에없다.
+- 최초GUI0.1.5/production-launcher-0.1.5, 운영서명sequence8 seed. 기존공개GUI ZIP·카탈로그·서명은동일바이트로재사용했다. 시험키/seq11을포함하지않는다. Bootstrap은공식Setup0.1.4.1의기존진단포함바이트를재사용했으며 SHA256 `c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19` / 파일버전0.1.4. GUI와Bootstrap/Setup버전은독립적이다.
+- 제품GUI/Bootstrap은재빌드하지않았다. 변경된Setupmanifest를내장하는Guard만재빌드하고 기존NSIS템플릿 그대로 일반직원등록을컴파일했다. 내부app_id/AppUserModelID·기존등록키·바로가기이름·기본경로는유지했다. SPENT03/BD13 시험접미사없음. 회사5개ZIP은Setup에넣지않고기존카탈로그로받는다.
+- 로컬검증:payload39개 전체해시,Guard내장manifest일치,NSIS solid LZMA의bounded읽기에서실제payload/Guard바이트일치,직원ZIP안전검사,운영서명seq8,기존Bootstrap x64 GUI subsystem/진단모듈,실제격리파일기반GUI0.1.5 seedinitialize/old WindowsUpdater검증·두번째initialize current불변·합성자료보존 통과. 설치/제거/실제GUI/작업표시줄/운영이전후신규Setup네트워크실행은미검증이다. 전체회귀는반복하지않았다.
+- 최초NSIS CreateProcess가WinError623(DLL재배치오류)로컴파일진입전실패했다. 기존로그/에러기록을보존했다. 같은compiler의일반권한·샌드박스외부/깨끗한자식환경 /VERSION성공을확인한뒤구분된환경으로컴파일1회를수행해exit0이었다. DLL/시스템PATH/정책/ACL을바꾸지않았다. 샌드박스로더와상속환경중정확한차단주체는분리되지않았고근본원인해결로주장하지않는다. 과거제품WinError5와별개다.
+
+### 프로젝트별 지침 원격 반영
+
+아래6개 기존격리개발브랜치에AGENTS만commit/push하고원격commit/파일내용을확인했다. 원본작업트리는AGENTS의끝에규칙만추가했고기존본문/제품소스/미커밋변경은합치지않았다.
+- ase_viewer: `0d5a7d114c0bedb645c2f3cfaa57ca8c0e9aeee1` / `codex/migration-checkpoint-20261117` (AGENTS만, 원격ref/내용확인)
+- Ase-PS Bridge Pro: `fee0a4e07e2131f256a1d0dda08473c85f59015d` / `codex/migration-checkpoint-20261117` (AGENTS만, 원격ref/내용확인)
+- Pivot_Fixer: `8f02d60e98c609415821dd221a4611f2aa762807` / `codex/migration-checkpoint-20261117` (AGENTS만, 원격ref/내용확인)
+- AsepriteTagMaster: `08d15a900fc05f4c8fe45539114c15435b1c4ed1` / `codex/migration-checkpoint-20261117` (AGENTS만, 원격ref/내용확인)
+- Pixel Effect Maker: `ca7155277cd5c9c6651e2a4d1634584072633885` / `codex/migration-checkpoint-20261117` (AGENTS만, 원격ref/내용확인)
+- TileNamer: `71f4080994b7bb33015dd11ac23d51529514b368` / `codex/migration-checkpoint-20261117` (AGENTS만, 원격ref/내용확인)
+
+Pixel Motion Studio와증거도구는기존로컬전용정책체크포인트에만문서커밋했다. Pixel Motion 원격생성이나증거도구원격브랜치를임의로결정하지않았다. 해당로컬2개를원격보존완료라하지않는다. Pixel Effect 원본Git의소유권guard가동작하여Git상태조회가차단됐으나safe.directory/소유권/ACL설정은변경하지않았다. 대신원본HEAD/index/config/ref바이트불변을확인하면서AGENTS만추가했고,정상관리되는격리체크포인트에서만commit/push했다.
+
+### 인계와 다음 경계
+
+현재SPENT03이즉시수행할작업은앞절의 **기존운영Bootstrap+GUI0.1.4→공개카탈로그8의GUI0.1.5** 실제업데이트이다. 필요한공식초기ZIP/해시/버전/판정·보존조건은앞절에완비돼있고수동파일복사가필요없다. 이번Setup후보를그시험대신설치해출발버전을바꾸지않는다.
+
+새Setup0.1.5.0은기존직원GUI업데이트용이아닌향후신규설치용이다. 기존current나다른소유파일을강제로덮어쓰는기능은없다. 새Setup의SPENT03최초설치/바로가기/종료·재실행/제거·자료보존 검증을위한원격운송은새게시승인후GitHub non-Latest시험Release로만준비한다. 아직원격게시승인이없으므로지금공개하거나수동복사를요구하지않는다. 설치목록비노출및B14/catalog WinError5미해결은유지한다.
+
+운영Latest8/기존Setup0.1.4.1/기존Release·회사ZIP·서명정책·source原本은유지. 운영Transfer/새Setup공개/직원PC변경은사용자별도승인경계다. 같은목표안의통상구현·오류최소수정·후보검증은계속자율수행하고완료/타PC실행/실제결정필요시에만통합보고한다.
