@@ -100,3 +100,10 @@ SPENT03 공식운영Bootstrap/키/카탈로그8의GUI0.1.4→0.1.5 실제업데�
 ## 신규Rod 운영자산 복제본 (2026-11-18)
 
 사용자승인으로 rodetoast/creative-group-releases Public(ID1462539740)과production-catalog-000008 복제Release(ID449720497)를생성했다. 정확한8자산을Draft/공개HTTPS재다운로드 SHA·운영서명/seq8로검증했다. Toast원본8Release/38자산·tag/commit·Latest8·Setup0.1.4.1은유지. 신규repo LatestAPI도8을반환하지만현재GUI0.1.5/Bootstrap은여전히Toast ID1447701732를사용한다. 실제독립신규채널/전사전환/과거전체이력이전완료가아니다. [기존호환문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md) 최신복제결과를읽는다. 구지원클라이언트보호를위해Toast전체채널을계속유지하며원본/증거Transfer·새Setup공개는하지않았다.
+
+
+## 최신 개발 위치: 신규 Rod 채널 후보 (2026-11-18)
+
+후속사용자승인으로과거7Release/30자산을추가복제해양쪽8Release38자산을보존했다. main/production-catalog-000008의정확명칭2refs는충돌을강제교체하지않고archive/toast-source로보존했다. 원본Toast와Rod의Latest8은유지한다.
+실제후속코드/최종검증은별도 `C:/Dev/CGL-RodChannel-20261118`, branch `codex/rodetoast-channel-20261118`, record commit `59411553fbb79f203e424a78c289276a037601da`에있다. 이기존OwnerCompat폴더제품소스는0.1.5기준을유지하며새repoID명시기능을이미포함한다고가정하지않는다. 원본dirty master를checkout하지않는다.
+[통합결과](https://github.com/rodetoast/creative-group-launcher/blob/59411553fbb79f203e424a78c289276a037601da/docs/GITHUB_OWNER_COMPATIBILITY.ko.md)와 [신규RC2 단일SPENT03인계](https://github.com/rodetoast/creative-group-launcher/blob/59411553fbb79f203e424a78c289276a037601da/docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의최신절을읽는다. 로컬신규후보는GUI/Bootstrap0.1.6·Setup0.1.6.0 RC2/전용signed namespace9이며정식게시/실제Windows검증미완료다. 관련80개와파일/manifest/서명/경로예산검증통과. 과거1.5RC1은구채널용으로보존한다. 신규namespace9를Toast에재게시하거나기존직원을자동전환하지않고,구채널은계속유지한다.

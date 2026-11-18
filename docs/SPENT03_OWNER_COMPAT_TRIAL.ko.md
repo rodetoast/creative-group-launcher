@@ -161,3 +161,10 @@ Bootstrap 교체가 필요하다는 실제 증거가 나오면 현재 Setup guar
 6. 설치완료→실제GUI최초0.1.5→운영카탈로그8/회사5개목록조회→정상종료→바탕화면/시작메뉴바로가기각각실제클릭재기동→정상종료. 실제EXE SHA `7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e`, Bootstrap SHA `c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19`, seed서명/seq8/current/receipt/manifest를확인한다. 회사EXE/개별기능·전체회귀·설치목록추가조사는하지않는다. GUI조작과파일/로그를대조한다.
 7. D에합성설정/작업파일과기준해시를만들고 GUI/Bootstrap정상종료후이번P의Uninstall.exe를실제로실행한다. 이번관리파일/바로가기/등록제거와D/launcher-home/current/receipt/합성파일보존을확인한다. 호스트sw204기존등록/파일불변도비교한다. 회사데이터가없는환경에서회사전체데이터보존을주장하지않고,게스트폐기만으로제거성공을대신하지않는다.
 8. E/REPORT.ko.md에호스트/게스트독립성·다운로드해시·Setup종료코드·GUI/바로가기/프로세스·제거·보존을통과/실패/미검증으로기록한다. nonce/명령행전체/민감한자료는공유하지않는다. 실패시원로그/중간상태를보존하고연속재시도/강제복구/신뢰초기화를하지않는다. 최소GUI에만Windows Use를쓰고끝나면즉시제어를해제한다. 환경확보가안돼도과거합격시험을반복하지않는다. 결과를개발PC에돌려주면승인범위내수정/검증을이어서진행한다. 새Setup공개/Transfer/직원PC변경은하지않는다.
+
+
+## 최신 개발 위치: 신규 Rod 채널 후보 (2026-11-18)
+
+후속사용자승인으로과거7Release/30자산을추가복제해양쪽8Release38자산을보존했다. main/production-catalog-000008의정확명칭2refs는충돌을강제교체하지않고archive/toast-source로보존했다. 원본Toast와Rod의Latest8은유지한다.
+실제후속코드/최종검증은별도 `C:/Dev/CGL-RodChannel-20261118`, branch `codex/rodetoast-channel-20261118`, record commit `59411553fbb79f203e424a78c289276a037601da`에있다. 이기존OwnerCompat폴더제품소스는0.1.5기준을유지하며새repoID명시기능을이미포함한다고가정하지않는다. 원본dirty master를checkout하지않는다.
+[통합결과](https://github.com/rodetoast/creative-group-launcher/blob/59411553fbb79f203e424a78c289276a037601da/docs/GITHUB_OWNER_COMPATIBILITY.ko.md)와 [신규RC2 단일SPENT03인계](https://github.com/rodetoast/creative-group-launcher/blob/59411553fbb79f203e424a78c289276a037601da/docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의최신절을읽는다. 로컬신규후보는GUI/Bootstrap0.1.6·Setup0.1.6.0 RC2/전용signed namespace9이며정식게시/실제Windows검증미완료다. 관련80개와파일/manifest/서명/경로예산검증통과. 과거1.5RC1은구채널용으로보존한다. 신규namespace9를Toast에재게시하거나기존직원을자동전환하지않고,구채널은계속유지한다.

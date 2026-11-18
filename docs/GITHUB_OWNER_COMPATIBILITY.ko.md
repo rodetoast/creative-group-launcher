@@ -352,3 +352,10 @@ Rod에실제로추가된것은README와이번카탈로그8의8자산뿐이다. �
 현재복제본은Rod에서실제로보존/관리할수있지만독립클라이언트채널은미전환이다. 후속으로신규실제ID의고정binding/구Bootstrap정책·sequence/실제HTTPS관리형업데이트전환검증을준비할수있다. 신규운영카탈로그/Setup 공개,원격Transfer,지원중단은별도승인이다. 과거Release/Setup자산의추가원격복제를할경우에도이번8자산승인과구분해정확한목록/해시로승인받는다. 기존0.1.4접속을끊는Transfer는대안으로강행하지않는다.
 
 개발PC근거: `.test-results/rodetoast-catalog8-replica-20261118/`의replication-state.json,identity-bound-copy-plan.json,catalog-reference-semantics.json,draft-redownload,public-redownload. 원본master와미커밋코드는보존했다.
+
+
+## 최신 개발 위치: 신규 Rod 채널 후보 (2026-11-18)
+
+후속사용자승인으로과거7Release/30자산을추가복제해양쪽8Release38자산을보존했다. main/production-catalog-000008의정확명칭2refs는충돌을강제교체하지않고archive/toast-source로보존했다. 원본Toast와Rod의Latest8은유지한다.
+실제후속코드/최종검증은별도 `C:/Dev/CGL-RodChannel-20261118`, branch `codex/rodetoast-channel-20261118`, record commit `59411553fbb79f203e424a78c289276a037601da`에있다. 이기존OwnerCompat폴더제품소스는0.1.5기준을유지하며새repoID명시기능을이미포함한다고가정하지않는다. 원본dirty master를checkout하지않는다.
+[통합결과](https://github.com/rodetoast/creative-group-launcher/blob/59411553fbb79f203e424a78c289276a037601da/docs/GITHUB_OWNER_COMPATIBILITY.ko.md)와 [신규RC2 단일SPENT03인계](https://github.com/rodetoast/creative-group-launcher/blob/59411553fbb79f203e424a78c289276a037601da/docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의최신절을읽는다. 로컬신규후보는GUI/Bootstrap0.1.6·Setup0.1.6.0 RC2/전용signed namespace9이며정식게시/실제Windows검증미완료다. 관련80개와파일/manifest/서명/경로예산검증통과. 과거1.5RC1은구채널용으로보존한다. 신규namespace9를Toast에재게시하거나기존직원을자동전환하지않고,구채널은계속유지한다.
