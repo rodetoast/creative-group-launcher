@@ -85,4 +85,16 @@ class CanonicalChannelTests(unittest.TestCase):
         with patch('southpaw_tools.managed_update.strict_json',return_value=self.channel),patch.object(Path,'read_bytes',return_value=b'{}'):
             self.assertEqual(channel_policy(),self.channel)
 
+    def test_frozen_canonical_direct_launch_stops_before_any_gui_or_data_access(self):
+        from southpaw_tools.__main__ import main
+        with patch('sys.frozen',True,create=True),patch('southpaw_tools.managed_update.channel_policy',return_value=self.channel),patch('southpaw_tools.__main__.run_window') as window:
+            self.assertEqual(main([]),1);window.assert_not_called()
+            self.assertEqual(main(['--check']),1);window.assert_not_called()
+            self.assertEqual(main(['--check','--data-dir',str(AppPaths.default().root)]),1);window.assert_not_called()
+    def test_legacy_frozen_direct_launch_behavior_unchanged(self):
+        from southpaw_tools.__main__ import main
+        legacy={'repository':'toast-source/creative-group-releases','policy':self.signer.policy}
+        with patch('sys.frozen',True,create=True),patch('southpaw_tools.managed_update.channel_policy',return_value=legacy),patch('southpaw_tools.__main__.run_window',return_value=0) as window:
+            self.assertEqual(main([]),0);window.assert_called_once()
+
 if __name__=='__main__':unittest.main()

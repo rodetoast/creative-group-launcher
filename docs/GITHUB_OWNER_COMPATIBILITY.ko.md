@@ -361,3 +361,6 @@ Rod에실제로추가된것은README와이번카탈로그8의8자산뿐이다. �
 초기GUI0.1.6·새고정채널Bootstrap·Setup0.1.6.0 로컬후보를만든다. 신규기본루트는프로그램 %USERPROFILE%/CGL-Rodetoast, 데이터 %LOCALAPPDATA%/SouthpawGames/ToolsLauncherRodetoast이며기존ToolsLauncher와분리한다. 일반직원제품명/app_id/AppUserModelID/바로가기/등록키는유지해기존설치와겹치면자동전환/덮어쓰지않고차단한다. 초기Setup은기존채널홈/신뢰자료/비어있지않은미소유데이터를자동흡수하지않는다. 구Setup0.1.5.0 RC1은Toastseed용이력으로보존한다.
 
 신규GUI·Bootstrap은서로같은새채널정책을탑재해야하므로기존ToastBootstrap을새Setup에그대로재사용하지않는다. 기존직원Bootstrap교체를시도하는것이아니다. GUI/새Setup의실제Windows시험은독립환경에서SPENT03이수행하며현재sw204설치를변경하지않는다. 새로운운영카탈로그/GUI/Setup의정식공개는별도승인전실행하지않는다.
+
+
+패키징검증중신규GUI EXE의비관리형직접실행이기존AppData기본값에접근할수있는경로를찾았다. 신규frozen채널은Bootstrap세션으로만일반기동하고,독립된 --check 진단은명시적별도data-dir가있을때만허용하도록초기UI/데이터접근전에차단했다. 기존frozen legacy직접실행은유지한다. 관련2개추가시험통과. 이전미공개RC1을보존하고GUI/manifest/Setup만RC2로재제작한다. Bootstrap실행코드는변하지않았으므로기존신규채널Bootstrap1.6바이트를재사용하고출처commit을분리기록한다.

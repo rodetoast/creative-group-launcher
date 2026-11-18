@@ -35,6 +35,15 @@ def main(argv=None):
     from .common import LauncherError
     try:
         session = None
+        if getattr(sys, "frozen", False) and not args.session_file:
+            from .managed_update import channel_policy
+            from .github_channels import canonical_channel
+            from .paths import AppPaths
+            if canonical_channel(channel_policy()):
+                if not args.check or args.data_dir is None:
+                    raise LauncherError("신규 채널은 CGLBootstrap.exe 또는 설치 바로가기로 실행하세요.")
+                if args.data_dir.resolve() == AppPaths.default().root.resolve():
+                    raise LauncherError("신규 채널 진단에는 기존 직원 데이터 경로를 사용할 수 없습니다.")
         if args.session_file:
             from .managed_update import ManagedSession
             session = ManagedSession(args.session_file, __version__)
