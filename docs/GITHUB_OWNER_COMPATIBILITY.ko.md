@@ -364,3 +364,90 @@ Rod에실제로추가된것은README와이번카탈로그8의8자산뿐이다. �
 
 
 패키징검증중신규GUI EXE의비관리형직접실행이기존AppData기본값에접근할수있는경로를찾았다. 신규frozen채널은Bootstrap세션으로만일반기동하고,독립된 --check 진단은명시적별도data-dir가있을때만허용하도록초기UI/데이터접근전에차단했다. 기존frozen legacy직접실행은유지한다. 관련2개추가시험통과. 이전미공개RC1을보존하고GUI/manifest/Setup만RC2로재제작한다. Bootstrap실행코드는변하지않았으므로기존신규채널Bootstrap1.6바이트를재사용하고출처commit을분리기록한다.
+
+
+## 운영 이력 전체 보존 및 신규 Rod 채널 최종 로컬 후보 (2026-11-18)
+
+이번승인으로과거Release7개/30자산을추가복제했다. 기존카탈로그8의8자산은이전검증을재사용하고ID/body/digest불변을확인했다. **양쪽8개Release/38개자산 전체가보존됐고누락없음,신규Rod Latest는계속production-catalog-000008(ID449720497)**. Toast원본 ID1447701732/Latest8(ID449405600)/Setup0.1.4.1/GUI0.1.5/서명자산은읽기외변경하지않았다. 회사EXE/직원PC를실행·변경하지않았다.
+
+### 실제 역사 복제
+
+| tag | 원본Release ID | Rod Release ID | 자산수 |
+|---|---:|---:|---:|
+| catalog-000001 | 435976237 | 449777549 | 3 |
+| catalog-000002 | 435981675 | 449777678 | 3 |
+| catalog-000003 | 436091851 | 449777835 | 3 |
+| production-catalog-000004 | 441260740 | 449777998 | 8 |
+| employee-bootstrap-0.1.1 | 441261267 | 449778882 | 2 |
+| production-catalog-000007 | 448100573 | 449779459 | 8 |
+| employee-setup-0.1.4.1 | 448100822 | 449780278 | 3 |
+
+각추가자산은검증된로컬캐시또는원본HTTPS에서받아원본GitHub digest/size와대조한뒤업로드했고,Rod 공개HTTPS에서다시받아동일SHA를확인했다. 역사카탈로그1/2/3은기존시험공개키정책,4/7은기존운영공개키정책으로분리서명도검증했다. 서명/카탈로그를재작성·재서명하지않았다. 제목/body/정식·prerelease·draft상태는원본과같고,GitHub가새로부여한ID·작성계정/게시시각은달라질수있으며원본/신규시각을history-state.json에보존했다. 자동Source archives는설치자산으로사용하지않았다.
+
+| tag | 자산 | 동일 SHA256 | 원본 → 신규 asset ID |
+|---|---|---|---|
+| catalog-000001 | catalog.json | `a539a5a9aa9a03934c067ed4715b946513afdce4a0eb2e94f07d5de14f221501` | 715492650 → 762809486 |
+| catalog-000001 | catalog.sig.json | `3538cbec96d17383c6923086388dc861e1e138b49e8e807c22f9054c7f8d42a5` | 715492678 → 762809489 |
+| catalog-000001 | dummy--github-smoke-r1.zip | `30b90804d355d0d556b2766d8bd1d98a7f8edf2bd9ef6fc40b77bf31efebd931` | 715492704 → 762809490 |
+| catalog-000002 | catalog.json | `2511ee2b30b674419efe9dca55685bcd08c7e749308d5d8b424c47ae137fa95e` | 715503882 → 762809872 |
+| catalog-000002 | catalog.sig.json | `aea8f157f63f2605144f1c9f04d65e3644a890f111fbb0a67ac0015c7881b95c` | 715503912 → 762809867 |
+| catalog-000002 | dummy--github-smoke-r2.zip | `3fe8ebf9b303015243d863d94b4f5e39a450da4ca379afb70ebf7256c4fdee6c` | 715503950 → 762809869 |
+| catalog-000003 | catalog.json | `627698fc19642796bb7cb3c05e0047e3c839da3318d5ee48e74de8c117b16dc8` | 715867783 → 762810296 |
+| catalog-000003 | catalog.sig.json | `0eb3668cd5ae80a535aa5d18f60416be26f748146fc09e3ee660057273f1b5f2` | 715867815 → 762810315 |
+| catalog-000003 | dummy--github-smoke-r3.zip | `e9986fe6efa72163d413390bbcada9dc9b1fb89694f50b0996e26eede4f518fe` | 715867842 → 762810318 |
+| production-catalog-000004 | ase-viewer--0.5.8.4-team-3bf37dd.zip | `2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2` | 734210849 → 762810704 |
+| production-catalog-000004 | catalog.json | `9d690dfffd6355ade07dac5aeab6fef6a5087d5673a67e8d4cf0eac0d23caf92` | 734210848 → 762810703 |
+| production-catalog-000004 | catalog.sig.json | `5f57bfa48fb883f5081a6f026a69427fc7e80758e0b2ba910d2e7fe060fe877d` | 734210874 → 762810705 |
+| production-catalog-000004 | creative-group-launcher--production-launcher-0.1.1.zip | `59dbf396f866dfbabc2f0559bfb60573a3f2228a2d00a37890e4b87f5de5ab55` | 734210852 → 762810702 |
+| production-catalog-000004 | pivot-fixer--0.3.3-team-80b84c9.zip | `214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361` | 734210872 → 762810701 |
+| production-catalog-000004 | ps2ase--0.3.6-team-6e84645.zip | `1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9` | 734210902 → 762810738 |
+| production-catalog-000004 | tag-master--0.4.0-team-7263f8d.zip | `80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299` | 734210910 → 762810737 |
+| production-catalog-000004 | tilenamer--0.1.6-rc3-8ba7a1e.zip | `aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4` | 734211016 → 762810900 |
+| employee-bootstrap-0.1.1 | CGL-Employee-0.1.1-Windows-x64.zip | `605afa20380a80e4fb5646b7b714a424b0ab9257c81076edacd8aea4b942365d` | 734213162 → 762813432 |
+| employee-bootstrap-0.1.1 | SHA256SUMS.txt | `257662fd15e38d8990e1ec5bbdb1d49f33fb22e0d3ff4581701731198c9cd482` | 734213163 → 762813428 |
+| production-catalog-000007 | ase-viewer--0.5.8.4-team-3bf37dd.zip | `2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2` | 757540001 → 762814832 |
+| production-catalog-000007 | catalog.json | `33ff87e524fafe6dda7050644c86d5d671631e484033da44af0a546fda20a4d7` | 757539974 → 762814840 |
+| production-catalog-000007 | catalog.sig.json | `def866a78769f864c87ac6135add33b3db0e2681db19c362cef550d1acd8ce70` | 757539998 → 762814830 |
+| production-catalog-000007 | creative-group-launcher--production-launcher-0.1.4.zip | `6906e4eaf95ada2c4ceff9eec99c9205ec2305b1c8b2e9e46c13c980e479a4e3` | 757539975 → 762814841 |
+| production-catalog-000007 | pivot-fixer--0.3.3-team-80b84c9.zip | `214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361` | 757539994 → 762814829 |
+| production-catalog-000007 | ps2ase--0.3.6-team-6e84645.zip | `1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9` | 757540054 → 762814865 |
+| production-catalog-000007 | tag-master--0.4.0-team-7263f8d.zip | `80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299` | 757540044 → 762814872 |
+| production-catalog-000007 | tilenamer--0.1.6-rc3-8ba7a1e.zip | `aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4` | 757540219 → 762815022 |
+| employee-setup-0.1.4.1 | SHA256SUMS.txt | `64224d734c153c15722d12d40543bd9c2fc2c7b0ca53410af4f4b0ee4ee86576` | 757540527 → 762817013 |
+| employee-setup-0.1.4.1 | SouthpawToolsLauncher-Employee-0.1.4-RC1-Windows-x64.zip | `57c3ff1f5add76d9c8e4011ca5ce89d3fea4d044b31b949fe9550241f2665338` | 757540510 → 762817014 |
+| employee-setup-0.1.4.1 | SouthpawToolsLauncherSetup-0.1.4.1.exe | `d73f85b2f39d31444ad45f1cb0377b35a86d439a6574ac4e4e6b018a8ff0dac3` | 757540530 → 762817008 |
+
+### Git 이력·태그
+
+기존보존mirror를기반으로격리작업bare repo를만들어최신원본heads/tags를별도namespace로읽고정상push했다. 원본Git 객체·도달가능commit그래프는모두Rod에서참조가능하다. 같은이름이비어있거나동일한refs는정확한이름으로보존했다. **두이름충돌은강제덮어쓰기하지않고archive ref로보존했으며원래이름의정확한교체는보류**했다:
+- `refs/heads/main` → `refs/heads/archive/toast-source/main`, 원본SHA `cddb92efc0b0751796f00bfd8d7d4955f44d121a`; 기존Rod ref 유지.
+- `refs/tags/production-catalog-000008` → `refs/tags/archive/toast-source/production-catalog-000008`, 원본SHA `cddb92efc0b0751796f00bfd8d7d4955f44d121a`; 기존Rod ref 유지.
+
+따라서모든원본객체/역사는보존됐지만서로다른main을강제병합하거나기존카탈로그8의Git tag를바꾸지않았다. 과거7개Release태그는원본Git SHA를그대로가리킨다. 기존Rod main/카탈로그8태그/8개자산은그대로다. 초기Git403은Git캐시Toast와CLI Rod의인증불일치였으며명령단위로공식gh credential helper를지정해해결했다. 전역설정/기존인증/토큰출력변경없음. 초기실패기록도보존했다.
+
+### 신규 채널 로컬 최종 후보 — 운영 미공개
+
+- 새repoID1462539740, repository rodetoast/creative-group-releases를명시적으로고정한다. 기존owner alias의기본ID1447701732는바꾸지않고새필드 repository_id가있을때만신규ID를선택한다.
+- 새서명카탈로그ID `creative-group-launcher-rodetoast-1462539740`,최소/초기sequence9. 기존운영Ed25519 key_id `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`와서명domain/schema/SHA/고수위·rollback방어는유지한다. catalog_id 자체가서명본문에있어구채널과신규채널을분리한다. **실제운영서명끼리도old8→new정책과new9→old정책은식별자검사에서거부됨**을검증했다. 신규ID의실제API/자산URL을읽었을때현재복제8을정상적으로거부하고신뢰상태를생성하지않는것도확인했다. 이는신규9온라인설치성공이아니라올바른사전차단이다.
+- GUI0.1.6 / release_id rodetoast-launcher-0.1.6 / ZIP SHA `9cf77abbb2289043e1abe882f197f5063619063cc9fc2db7e7e1ddb673c1203d` / EXE SHA `2e17bbe8b78e513975e003726ac8d7297955c65e59e6c6a7a3a6721464476bc5`.
+- 신규고정채널Bootstrap0.1.6 SHA `152a02ce9f36f65df534da711a626474a9cc2116a5736adbfc601b33898a0a09`. 기존직원Bootstrap교체가아니라**새직원용초기배포구성**이다. 구Toast Bootstrap은재사용하지않았다. GUI직접실행보호패치뒤변경없는신규Bootstrap은같은바이트로RC2에재사용했다. GUI sourcecommit `0dc4fdc0b1cf7edccdf7e57d47a18f4019353fd9`,Bootstrap sourcecommit `abe04c2782749883240a24cdc7a0f84512061698`를각각검증했다.
+- Setup0.1.6.0 **RC2**: `SouthpawToolsLauncherSetup-Rodetoast-0.1.6.0-RC2.exe`, SHA `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`. 초기ZIP SHA `bf7cba1cdb23bbf9b25e721196009504502fb5ea372cd1bd5c64a68569e9ae66`. 실제파일/8자산/서명/승인계획은원본프로젝트 `.test-results/rodetoast-history-and-channel-20261118/final-candidate/`에있다. **앞서만든미공개1.6 RC1은보존하되배포대상아님**. 공개전의local9 후보교체는새검증루트로분리했고기존신뢰상태를초기화하지않았다. 공개후같은9를다른바이트로덮어쓰면안된다.
+- 새기본P `%USERPROFILE%/CGL-Rodetoast`,D `%LOCALAPPDATA%/SouthpawGames/ToolsLauncherRodetoast`. 기존직원Data/관리형home을새정책으로자동해석하지않고차단한다. 일반제품명/등록키/바로가기/app_id/AppUserModelID는유지하므로기존설치가있는같은Windows사용자에게동시자동전환설치하지않는다. frozen 신규GUI직접실행은UI/데이터접근전에차단하고Bootstrap세션기동을요구한다. 독립 --check는별도data-dir만허용한다.
+- 회사5개ZIP·버전·release_id·필수경로/메타데이터는기존8과동일하다. Setup0.1.5.0 RC1은Toast/구namespace8 seed용과거후보이고이번신규채널용이아니다. 해당바이너리/Draft/미실시Windows시험상태는보존했다.
+
+### 검증 범위
+
+직접관련고유**80개**통과(기존+신규66,ack/GUI12,직접실행보호추가2; 변경후신규채널16개재확인). 전체142/전체회귀는반복하지않았다. GUI테스트는Qt offscreen/모의프로세스이며제품EXE실기동이아니다. 실제파일로새namespace9 seed초기GUI1.6설치·WindowsUpdater파일검사·재초기화current/합성자료불변·구운영fixture홈거부를확인했다. GUI188파일/Bootstrap34파일의Git sourcehash·PE x64 GUI subsystem·public policy/ID·manifest,Setup실물LZMA내payload39개/Guard를대조했다.
+
+제공된개발사용자프로필기준예상기본P37/D74 UTF16길이의별도격리경로에서Setup과실제회사5 ZIP멤버의설치/복구/제거경로예산을검사해통과했다. 도구환경LOCALAPPDATA가리디렉션된별도162자관측과구분했으며실제사용자디렉터리를생성/변경하지않았다. zip파일구조안전검사는유지됐다. WinError5근본원인해결을주장하지않고,새Setup의실제Windows설치/GUI/제거·새namespace9온라인작동/실제자체업데이트는**미검증**이다.
+
+### 이후 게시·이중 운영
+
+정확한로컬 `final-candidate/publish-plan.json`의다음범위는승인이필요하다:
+1. 필요시시험저장소non-Latest prerelease로RC2 Setup/sha만운송(아직게시안함). 공개시험운송으로Draft인증문제를피할수있지만기존sw204등록은바꾸지않는다.
+2. 독립Windows Setup시험후Rod에 `rodetoast-catalog-000009`의정확한8자산을Draft/재다운로드검증→정식공개·Latest9. **Toast에는새namespace9를게시하지않는다.**
+3. SPENT03가공개된9의실온라인조회·새ID자산다운로드/신뢰상태를확인한뒤 `employee-setup-rodetoast-0.1.6.0`을non-Latest로정식공개해새직원링크를확정한다. 초기GUI1.6와catalog9목표1.6은같으므로신규버전업데이트시험성공이라고하지않는다. 실제미래1.6→상위버전은추후실제릴리스가있을때검증한다.
+
+역사카탈로그8은동일바이트복제였지만**미래운영은서로다른서명namespace/카탈로그/GUI배포묶음**이다. 이전동일N양쪽복제지침을신규namespace9활성게시에는적용하지않는다. 회사ZIP은공통원본을읽기전용재사용할수있어도Toast구namespace와Rod신규namespace를서로재게시하지않는다. 양쪽Latest/해시/원격다운로드/키교체·지원책임을각각관리해야하는부담이있다. 구0.1.4가돌아올수있는동안Toast계정/주소/전체호환Release/자산은기한없이유지하며직원별완료확인을요구하지않는다. 명시적구버전지원종료결정없이는다운로드수/시간경과로계정을없애거나Transfer하지않는다.
+
+운영/증거Transfer·새정식게시·직원PC설치·원본앱/Setup변경은이번에하지않았다. [SPENT03 최신단일인계](SPENT03_OWNER_COMPAT_TRIAL.ko.md)의신규RC2절을사용한다.

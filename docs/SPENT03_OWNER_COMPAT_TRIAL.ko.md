@@ -161,3 +161,15 @@ Bootstrap 교체가 필요하다는 실제 증거가 나오면 현재 Setup guar
 6. 설치완료→실제GUI최초0.1.5→운영카탈로그8/회사5개목록조회→정상종료→바탕화면/시작메뉴바로가기각각실제클릭재기동→정상종료. 실제EXE SHA `7a4a9187bd16bb4ea469cb80bd09214d4fc4b46efd6e26ccf5a4aa4e6415986e`, Bootstrap SHA `c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19`, seed서명/seq8/current/receipt/manifest를확인한다. 회사EXE/개별기능·전체회귀·설치목록추가조사는하지않는다. GUI조작과파일/로그를대조한다.
 7. D에합성설정/작업파일과기준해시를만들고 GUI/Bootstrap정상종료후이번P의Uninstall.exe를실제로실행한다. 이번관리파일/바로가기/등록제거와D/launcher-home/current/receipt/합성파일보존을확인한다. 호스트sw204기존등록/파일불변도비교한다. 회사데이터가없는환경에서회사전체데이터보존을주장하지않고,게스트폐기만으로제거성공을대신하지않는다.
 8. E/REPORT.ko.md에호스트/게스트독립성·다운로드해시·Setup종료코드·GUI/바로가기/프로세스·제거·보존을통과/실패/미검증으로기록한다. nonce/명령행전체/민감한자료는공유하지않는다. 실패시원로그/중간상태를보존하고연속재시도/강제복구/신뢰초기화를하지않는다. 최소GUI에만Windows Use를쓰고끝나면즉시제어를해제한다. 환경확보가안돼도과거합격시험을반복하지않는다. 결과를개발PC에돌려주면승인범위내수정/검증을이어서진행한다. 새Setup공개/Transfer/직원PC변경은하지않는다.
+
+
+## 최신 단일 인계 — 신규 Rod 채널 Setup0.1.6.0 RC2 (2026-11-18)
+
+운영Toast0.1.4→0.1.5 업데이트/재실행성공은완료이며반복하지않는다. 예전Setup0.1.5.0 RC1은구채널용이다. 이번대상은 **SouthpawToolsLauncherSetup-Rodetoast-0.1.6.0-RC2.exe**,SHA256 `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`. 아직원격운송/정식공개되지않았으므로예전Draft의1.5파일로대체하지말고운송승인후정확한URL/tag를추가받아GitHub에서직접다운로드한다. 수동파일복사/다른빌드/키주입/신뢰초기화금지.
+
+- source branch codex/rodetoast-channel-20261118,GUI0.1.6,신규Bootstrap0.1.6,Setup0.1.6.0,repoID1462539740,전용catalog_id `creative-group-launcher-rodetoast-1462539740`,최소/seed9. Bootstrap SHA `152a02ce9f36f65df534da711a626474a9cc2116a5736adbfc601b33898a0a09`,GUI EXE SHA `2e17bbe8b78e513975e003726ac8d7297955c65e59e6c6a7a3a6721464476bc5`. 앞서만든미공개1.6 RC1이나기존테스트신뢰루트를재사용하지말고새P/D/E를선택한다.
+- sw204기존설치/등록/바로가기/프로젝트/설정은변경하지않는다. 이미사용가능한Windows Sandbox/독립테스트VM/충돌없는기존시험사용자만확인한다. 없으면중단하고필요한최소환경승인을보고하며새계정/VM/기능활성화/정책변경/권한상승/기존제거를하지않는다. Sandbox라면검증된Setup폴더read-only와이번전용출력E폴더만매핑하고인증/실제AppData는공유하지않는다. 공개시험운송이면게스트에gh인증이필요없다. Draft운송을선택한경우에만공식브라우저인증을사용자에게요청하고토큰/비밀번호를추출하거나옮기지않는다.
+- 독립환경에도정상제품HKCU/바로가기충돌이없음을확인한다. /DATA=<새D>와맨마지막/D=<새P>로일반권한Setup을실제설치한다. 기본경로는CGL-Rodetoast/ToolsLauncherRodetoast다. 초기GUI1.6,이름/아이콘/콘솔없음,바탕화면/시작메뉴바로가기실제클릭,정상종료·동일Bootstrap재기동·잔여프로세스를확인한다. 실제파일/ZIP/manifest/current/receipt/전용namespace9의서명을확인한다. 회사EXE기능/전체회귀/과거업데이트시험은하지않는다.
+- 현재Rod Latest8은역사적구namespace복제이므로새클라이언트가이를서명namespace/min9에서거부하는것이맞다. seed9로GUI가시작돼도**온라인9는정식게시전미검증**이다. 이차이를원로그와함께기록하고복제8을채택시키거나cache/서명/순번을우회하지않는다. 온라인9게시승인후같은후보를정상새로고침하여새ID/전용namespace9조회·자산HTTPS검증을확인한다. 초기현재1.6=목표1.6이므로이를신규버전업데이트성공으로부르지않는다.
+- D의합성설정/작업파일해시를확보하고정상종료후이번P의Uninstall.exe를실제실행한다. 이번등록/바로가기/소유파일제거,launcher-home/current/receipt와D합성자료보존,호스트기존sw204자료불변을확인한다. 게스트폐기를제거시험성공으로대신하지말고종료전시험자료/로그를E에보존한다.
+- E/REPORT.ko.md에설치/GUI/바로가기/재기동/제거/자료보존/온라인9를각각통과·실패·미검증으로정리한다. CLI우선,필요GUI만Windows Use를쓰고끝나면즉시해제한다. 오류/Win5/timeout이면원로그·중간상태를보존하고연속재시도·강제복구·신뢰초기화를하지않는다. 로그에토큰/nonce/명령행전체/사용자자료본문을불필요하게넣지않는다. 실제직원PC/운영Toast/원격Release/Transfer를건드리지않는다.
