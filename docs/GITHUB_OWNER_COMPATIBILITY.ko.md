@@ -503,3 +503,9 @@ Bridge 자체 시작 실패에는 기존 Toast Bootstrap의 롤백을 사용한�
 | rodetoast-catalog-000010 (Rod, sequence 10) | GUI 0.1.7 | 1615294f0ebfdcee44753fa262bb09c53c80339e50e51145717f101048e59392 |
 
 로컬 .test-results/toast-rod-bridge-20261119/candidate-plan.json에 정확한 자산 목록과 해시가 있다. 양쪽 후보는 기존 승인된 회사 ZIP 5개를 재사용한다. 게시 승인 후 Rod 10을 먼저 공개하고 실제 서명·다운로드를 확인한 뒤 Toast Bridge 9를 적용한다. 직원 배포에 앞서 SPENT03에서 Windows 프로세스 인계를 확인한다.
+
+
+
+## Bridge 사전 Windows 검증 준비 (2026-11-19)
+
+[인증 전용 Draft](https://github.com/rodetoast/creative-group-trial-releases/releases/tag/untagged-017ca42db43ca66c9947) ID 451033277의 운송 묶음을 재다운로드하여 원본 후보와 대조했다. [SPENT03 단일 인계](SPENT03_OWNER_COMPAT_TRIAL.ko.md)에는 0.1.5 소스 GUI 버튼, 실제 Windows Bootstrap·Bridge·Rod 기동 및 복구를 구분한 절차가 있다. 개발 세션에 SPENT03 실행 호스트가 연결되어 있지 않아 실기동 결과는 대기 중이다. Rod 10과 Toast 9의 게시 승인 전까지 양쪽 운영 목록은 유지한다.

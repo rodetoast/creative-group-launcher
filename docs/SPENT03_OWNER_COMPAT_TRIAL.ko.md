@@ -195,3 +195,30 @@ Draft ID와 파일 크기·SHA-256이 일치하면 검증된 호스트 폴더의
 - 승인된 운영 게시 후에는 Rod 카탈로그10 및 GUI 0.1.7 SHA-256 1615294f0ebfdcee44753fa262bb09c53c80339e50e51145717f101048e59392의 실제 HTTPS 경로와 서명을 먼저 확인한다. Toast 카탈로그9의 Bridge SHA-256 274e8ebc4ebe7480848a3c6409a040ea487a3b9d416e64a09a567b61c9302b65을 기존 0.1.4/0.1.5 버튼으로 받아 업데이트를 한 번 승인한다.
 - 기존 바로가기에서 Toast Bootstrap→Bridge→Rod 0.1.7 화면까지 기동하는지 확인한다. 창 및 작업표시줄 바로가기를 실제로 사용해 재실행하고 Rod 카탈로그10을 조회하는지 검사한다. 설정, 회사 앱 5개의 active/receipt/proof 및 작업 파일을 전후 대조한다. 실제 후속 버전이 없는 경우 온라인 확인과 자동 시험에서 확인한 후속 적용을 구분한다.
 - 독립 환경에서 Rod 시작 실패 또는 중단 뒤 Bridge의 로컬 창을 사용할 수 있는지 확인한다. Rod 프로세스가 살아 있을 때 중복 창이 열리지 않아야 한다. 로그와 상태를 남기고 신뢰 초기화나 기존 설치 덮어쓰기로 시험을 진행하지 않는다.
+
+
+## SPENT03 단일 인계 — 기존 직원의 버튼 한 번 전환 시험 (2026-11-19)
+
+[인증 전용 Draft](https://github.com/rodetoast/creative-group-trial-releases/releases/tag/untagged-017ca42db43ca66c9947) ID 451033277에서 서명 후보를 받는다. 묶음 133,961,405바이트와 SHA-256 248f2d2f841807befec810bb9cdb601f837cd6acbdcd4030139e15636b760f92을 확인했다. 포함 파일은 두 채널 카탈로그·서명·런처 ZIP과 후보 계획이다. 회사 ZIP은 기존 승인 자산을 사용한다.
+
+```powershell
+gh release download toast-rod-bridge-spent03-20261119 --repo rodetoast/creative-group-trial-releases --pattern Southpaw-Toast-Rod-Bridge-SPENT03.zip --pattern Southpaw-Toast-Rod-Bridge-SPENT03.zip.sha256
+Get-FileHash -Algorithm SHA256 -LiteralPath ./Southpaw-Toast-Rod-Bridge-SPENT03.zip
+```
+
+### 한 번의 대표 시험
+
+1. 기존 sw204 설치, HKCU·바로가기, 원격 세션을 보존한다. 기존에 승인된 격리 Windows 환경에서만 짧은 새 C:/Dev/BRIDGE-* 아래 P(프로그램)와 D(시험 데이터)를 준비한다. 새 계정은 만들지 않는다. 기존에 확보한 공식 Toast 0.1.4.1 초기배포 ZIP에서 Bootstrap 파일을 시험용 P로 해제한다. 공식 Bootstrap SHA-256은 c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19이다. Toast production-catalog-000008의 카탈로그·서명·GUI 0.1.5 ZIP을 HTTPS로 받아 기존 initialize(P/launcher-home, D, seed, channel)로 시작 상태를 만든다. channel은 P의 _internal/southpaw_tools/data/managed-channel.json에서 읽는다. 기존 사용자 P/D나 기존 바로가기를 복사 대상으로 사용하지 않는다. 승인된 격리 앱 설치 기록이 있으면 D에 준비하고 앱 5개의 active/receipt/proof/작업 파일과 settings, 기존 시험 바로가기의 기준 해시를 기록한다. 앱 기록이 없으면 확보된 범위만 보고한다.
+2. 기존 Bootstrap으로 시험 P를 시작해 0.1.5를 확인하고 종료한다. 시험용 바로가기는 이 시작에 사용한 동일 P의 CGLBootstrap.exe와 D를 대상으로 둔다. 기존 Toast 0.1.5 소스 체크아웃은 9cd9e2c6dcc380e332f3ce01f58af456a4a4ce06을 사용한다. 검증 도구 Python에 기존 PySide6·cryptography가 있어야 한다.
+3. 아래 button 명령으로 0.1.5 소스 GUI를 열어 **업데이트 버튼에서 한 번 승인**한다. 격리된 프로세스에서 미공개 GitHub 응답만 fixture로 제공한다. 기존 키·Ed25519·순번·SHA 검증과 준비 트랜잭션을 사용한다. GUI 종료 코드 20 뒤 같은 공식 Windows Bootstrap의 worker가 Bridge를 적용한다. 출력의 성공과 트랜잭션 상태를 확인한다. 직접 포인터를 수정하지 않는다.
+4. 기존 시험 바로가기를 실행한다. 아직 Rod Latest9이므로 Bridge가 순번10 조건을 충족하지 못해 로컬 화면으로 돌아오는지 확인하고 정상 종료한다. 앱 상태와 작업 파일이 유지되는지 검사한다. 운영 게시 전 의도된 복구 확인이다.
+5. 아래 stage-rod 명령으로 **미공개 Rod 후보의 전달 단계만** 실제 서명 seed로 준비한다. 같은 시험 바로가기를 실행해 Windows의 기존 Bootstrap → Bridge EXE → Rod Bootstrap → Rod GUI 0.1.7 프로세스 인계를 확인한다. 정상 종료 후 같은 시험 바로가기로 한번 더 재실행해 작업표시줄/바로가기와 설정·앱 상태를 대조한다. Rod 창의 연결은 고정 ID 1462539740으로 조회하며, live Latest9는 이미 설치한 seed10보다 낮아 거부되어야 한다. 이를 온라인 Rod 10 성공으로 기록하지 않는다.
+
+```powershell
+python -B tools/bridge_windows_trial.py button --scope C:/Dev/BRIDGE-ONE --bundle <운송ZIP> --legacy-source <0.1.5-소스경로>
+python -B tools/bridge_windows_trial.py stage-rod --scope C:/Dev/BRIDGE-ONE --bundle <운송ZIP>
+```
+
+0.1.5 버튼은 배포 EXE가 아닌 동일 소스 GUI로 확인한다. Bridge/Rod 기동과 복구·재실행은 실제 Windows 제품 EXE로 확인한다. 카탈로그가 게시되기 전에는 이 두 결과를 연속 운영 다운로드 성공으로 합치지 않는다. 앱·설정·바로가기 보존, 실패 로그, 프로세스 흐름을 한 결과 문서에 남긴다. 실패 시 해당 원인과 원본 로그를 보존한다. 계정·실제 설치·네트워크 정책·서명 신뢰를 변경하지 않는다.
+
+후보 GUI ZIP SHA-256은 Toast Bridge 0.1.6 274e8ebc4ebe7480848a3c6409a040ea487a3b9d416e64a09a567b61c9302b65, Rod GUI 0.1.7 1615294f0ebfdcee44753fa262bb09c53c80339e50e51145717f101048e59392이다. Windows 확인 결과를 받은 뒤 운영 게시 승인을 요청한다. 순서는 Rod 카탈로그10과 GUI 0.1.7, Rod 실제 온라인 조회·다운로드 확인, Toast 카탈로그9와 Bridge 0.1.6이다. Rod 10 공개부터 기존 Rod 직원에게 업데이트가 노출된다.

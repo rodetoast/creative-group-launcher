@@ -134,3 +134,9 @@ Rod 저장소 ID 1462539740의 운영 Latest는 [카탈로그9](https://github.c
 ## 기존 직원의 Rod 전환 Bridge (2026-11-19)
 
 개발 브랜치는 codex/toast-rod-bridge다. [운영 인계](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)와 [SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의 최신 절을 사용한다. Toast Bridge와 Rod 0.1.7은 로컬 후보이며 Windows 실기동 검증 및 게시 승인이 남아 있다.
+
+
+
+## SPENT03 Bridge 시험 운송 (2026-11-19)
+
+서명 후보 운송 Draft 451033277과 시험 도구를 준비했다. [SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md) 최신 절에 실행 범위와 운영 게시 조건이 있다. 실제 Windows 결과는 대기 중이다.
