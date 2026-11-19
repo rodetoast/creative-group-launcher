@@ -119,3 +119,8 @@ SPENT03 공식운영Bootstrap/키/카탈로그8의GUI0.1.4→0.1.5 실제업데�
 ## RC2 Windows 시험 운송 (2026-11-19)
 
 기존 Setup 0.1.6.0 RC2와 해시 파일을 시험 저장소 Draft 450851743에서 인증 재다운로드로 검증했다. 시험·운영 Latest는 그대로다. docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md 최신 절에 다운로드와 독립 환경 시험 절차가 있다. SPENT03 실설치와 카탈로그9 온라인 시험은 대기 중이다.
+
+
+## Rod 운영 Latest9 (2026-11-19)
+
+Rod 저장소 ID 1462539740의 운영 Latest는 [카탈로그9](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000009)다. Release ID 450977319. RC2 seed와 동일한 기존 서명 자산을 게시했고 실제 HTTPS 다운로드 및 Qt offscreen GUI 소스의 온라인 갱신을 검증했다. SPENT03 RC2 설치 검증은 사용자 보고에 따라 완료 기록을 재사용한다. 신규 직원용 Setup 0.1.6.0은 정식 공개 승인 대기 중이다. Toast 운영 채널은 Latest8을 유지한다.

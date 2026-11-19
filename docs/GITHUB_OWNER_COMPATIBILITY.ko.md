@@ -451,3 +451,26 @@ Rod에실제로추가된것은README와이번카탈로그8의8자산뿐이다. �
 역사카탈로그8은동일바이트복제였지만**미래운영은서로다른서명namespace/카탈로그/GUI배포묶음**이다. 이전동일N양쪽복제지침을신규namespace9활성게시에는적용하지않는다. 회사ZIP은공통원본을읽기전용재사용할수있어도Toast구namespace와Rod신규namespace를서로재게시하지않는다. 양쪽Latest/해시/원격다운로드/키교체·지원책임을각각관리해야하는부담이있다. 구0.1.4가돌아올수있는동안Toast계정/주소/전체호환Release/자산은기한없이유지하며직원별완료확인을요구하지않는다. 명시적구버전지원종료결정없이는다운로드수/시간경과로계정을없애거나Transfer하지않는다.
 
 운영/증거Transfer·새정식게시·직원PC설치·원본앱/Setup변경은이번에하지않았다. [SPENT03 최신단일인계](SPENT03_OWNER_COMPAT_TRIAL.ko.md)의신규RC2절을사용한다.
+
+
+## Rod 운영 카탈로그9 게시와 온라인 검증 (2026-11-19)
+
+Rod 운영 저장소 ID **1462539740**의 Latest는 [rodetoast-catalog-000009](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000009)이며 Release ID는 **450977319**이다. 이전 Rod Release 8개와 자산 38개를 전후 대조했다. Toast 저장소 ID 1447701732 및 Latest8 (449405600), GUI 0.1.5 배포 경로를 유지했다.
+
+RC2에 들어 있던 seed 카탈로그·서명·GUI ZIP을 그대로 게시했다. 카탈로그 식별자는 `creative-group-launcher-rodetoast-1462539740`, 순번과 최소 순번은 9이며 Ed25519 키 ID는 `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`이다. Draft와 공개 HTTPS에서 9개 자산의 크기와 SHA-256을 대조했다. Bootstrap ZIP은 기존 검증 런타임만 묶은 별도 자산이며 Setup, seed 및 서명 카탈로그의 패키지 항목을 포함하지 않는다. 그 ZIP의 파일들은 원본 런타임 manifest와 일치한다.
+
+| 자산 | 바이트 | SHA-256 |
+|---|---:|---|
+| SouthpawToolsLauncher-Bootstrap-Rodetoast-0.1.6-Windows-x64.zip | 11,898,580 | `4ddd96d56c61e873208848bfaa642c6c1dc9632dceef9ff4d0c37081526f094b` |
+| ase-viewer--0.5.8.4-team-3bf37dd.zip | 22,085,231 | `2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2` |
+| catalog.json | 9,462 | `9877aae8e7b522902b55ebc2da633511ff566751f102c900d812bb80c00c56b3` |
+| catalog.sig.json | 245 | `4233c23beef7238dbb008ac48bf80bf374f89bcfd1b69239ab6e215df0b78634` |
+| creative-group-launcher--rodetoast-launcher-0.1.6.zip | 52,640,869 | `9cf77abbb2289043e1abe882f197f5063619063cc9fc2db7e7e1ddb673c1203d` |
+| pivot-fixer--0.3.3-team-80b84c9.zip | 20,709,116 | `214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361` |
+| ps2ase--0.3.6-team-6e84645.zip | 66,252,089 | `1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9` |
+| tag-master--0.4.0-team-7263f8d.zip | 38,813,495 | `80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299` |
+| tilenamer--0.1.6-rc3-8ba7a1e.zip | 54,046,715 | `aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4` |
+
+0.1.6 Provider에서 고정 ID API로 실제 카탈로그9를 읽었다. seed9가 설정된 신뢰 상태에서 동일 순번·동일 바이트를 정상 수용했고 신뢰 상태 바이트를 유지했다. GUI ZIP을 Provider로 다운로드하고 공개 원격 자산을 격리 폴더에 초기화한 뒤 기존 WindowsUpdater에서 manifest·receipt를 검증했다. GUI EXE SHA-256은 `2e17bbe8b78e513975e003726ac8d7297955c65e59e6c6a7a3a6721464476bc5`이다. 빌드에 사용한 0.1.6 GUI 소스를 Qt offscreen에서 실행하여 실제 온라인 갱신과 앱 5개 표시 상태를 확인했다. 같은 0.1.6이므로 보류된 새 런처 업데이트는 없었다. Windows 패키지 EXE의 온라인 화면 시험은 수행하지 않았다.
+
+사용자가 보고한 SPENT03의 RC2 설치·실행·바로가기·재실행·제거·합성 데이터 보존 성공과 sw204 보존, 임시 계정·프로필 정리 결과를 사용했다. 재시험이나 패키지 재빌드는 없었다. 신규 직원용 Setup 0.1.6.0은 기존 RC2 자산으로 공개 승인 대기 중이다. Setup SHA-256은 `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`이다.
