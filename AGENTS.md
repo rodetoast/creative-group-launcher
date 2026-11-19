@@ -114,3 +114,8 @@ SPENT03 공식운영Bootstrap/키/카탈로그8의GUI0.1.4→0.1.5 실제업데�
 ## 전체 역사 보존·신규채널 RC2 (2026-11-18)
 
 과거7Release/30자산을추가복제해Rod/Toast의8Release38자산을보존검증했고Latest8은유지했다. Git객체/원본역사는보존하되main·production-catalog-000008의원래이름2충돌은archive/toast-source refs에보존하고강제교체하지않았다. 신규직원후보는GUI0.1.6/Bootstrap0.1.6/Setup0.1.6.0 RC2,명시적repoID1462539740/전용signed catalog_id/최소9/새프로그램·데이터루트다. 기존직원자동채널전환없음. frozen신규GUI의비관리직접실행은기존Data접근전에거부한다. 관련고유80개/파일·서명·manifest·경로예산검증통과지만실제Windows설치/온라인9는미검증. [현재통합보고](docs/GITHUB_OWNER_COMPATIBILITY.ko.md) 최신절과 [단일SPENT03 RC2인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)를읽는다. 이번9/GUI/Setup의정식공개·원격운송·직원변경·Toast/증거Transfer는실행하지않았다. 기존구채널은기한없이유지하며과거8복제와달리앞으로두namespace운영카탈로그를서로혼용하지않는다.
+
+
+## RC2 Windows 시험 운송 (2026-11-19)
+
+기존 Setup 0.1.6.0 RC2와 해시 파일을 시험 저장소 Draft 450851743에서 인증 재다운로드로 검증했다. 시험·운영 Latest는 그대로다. docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md 최신 절에 다운로드와 독립 환경 시험 절차가 있다. SPENT03 실설치와 카탈로그9 온라인 시험은 대기 중이다.

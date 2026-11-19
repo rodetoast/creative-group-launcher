@@ -163,12 +163,24 @@ Bootstrap 교체가 필요하다는 실제 증거가 나오면 현재 Setup guar
 8. E/REPORT.ko.md에호스트/게스트독립성·다운로드해시·Setup종료코드·GUI/바로가기/프로세스·제거·보존을통과/실패/미검증으로기록한다. nonce/명령행전체/민감한자료는공유하지않는다. 실패시원로그/중간상태를보존하고연속재시도/강제복구/신뢰초기화를하지않는다. 최소GUI에만Windows Use를쓰고끝나면즉시제어를해제한다. 환경확보가안돼도과거합격시험을반복하지않는다. 결과를개발PC에돌려주면승인범위내수정/검증을이어서진행한다. 새Setup공개/Transfer/직원PC변경은하지않는다.
 
 
-## 최신 단일 인계 — 신규 Rod 채널 Setup0.1.6.0 RC2 (2026-11-18)
+## 최신 단일 인계 — 신규 Rod 채널 Setup0.1.6.0 RC2 (2026-11-19)
 
-운영Toast0.1.4→0.1.5 업데이트/재실행성공은완료이며반복하지않는다. 예전Setup0.1.5.0 RC1은구채널용이다. 이번대상은 **SouthpawToolsLauncherSetup-Rodetoast-0.1.6.0-RC2.exe**,SHA256 `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`. 아직원격운송/정식공개되지않았으므로예전Draft의1.5파일로대체하지말고운송승인후정확한URL/tag를추가받아GitHub에서직접다운로드한다. 수동파일복사/다른빌드/키주입/신뢰초기화금지.
+SPENT03에서 기존 sw204 설치와 자료를 보존하면서 독립 Windows 환경의 설치·실행·제거를 한 번에 검증한다. 이전 운영 0.1.4 → 0.1.5 시험은 완료 이력으로 재사용한다.
+
+[인증 전용 운송 Draft](https://github.com/rodetoast/creative-group-trial-releases/releases/tag/untagged-cf8b2fae6bd4310b72da)의 ID는 `450851743`이다. 개발 PC에서 EXE와 SHA-256 파일을 인증 재다운로드하여 원본과 대조했다. 설치 파일은 `SouthpawToolsLauncherSetup-Rodetoast-0.1.6.0-RC2.exe` (81,300,016바이트), SHA-256은 `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`이다.
+
+SPENT03 호스트에서 사용 가능한 독립 Windows Sandbox, 기존 VM 또는 충돌 없는 테스트 사용자를 먼저 확인한다. 환경이 있으면 Draft 접근 권한이 있는 GitHub 계정으로 공식 브라우저 인증을 하고, 호스트의 새 폴더에서 아래 명령으로 두 파일을 받는다. 브라우저 인증·2FA는 사용자가 직접 수행하고, 자격증명은 게스트에 전달하지 않는다.
+
+```powershell
+gh release view rodetoast-channel-016-rc2-transport-20261119 --repo rodetoast/creative-group-trial-releases --json databaseId,isDraft,assets
+gh release download rodetoast-channel-016-rc2-transport-20261119 --repo rodetoast/creative-group-trial-releases --pattern SouthpawToolsLauncherSetup-Rodetoast-0.1.6.0-RC2.exe --pattern SouthpawToolsLauncherSetup-Rodetoast-0.1.6.0-RC2.exe.sha256
+Get-FileHash -Algorithm SHA256 -LiteralPath './SouthpawToolsLauncherSetup-Rodetoast-0.1.6.0-RC2.exe'
+```
+
+Draft ID와 파일 크기·SHA-256이 일치하면 검증된 호스트 폴더의 읽기 전용 매핑을 사용한다. 독립 환경의 HKCU 제품/제거 등록과 시작 메뉴·바탕화면 바로가기 충돌을 확인한 뒤 설치한다. 독립 환경이 없으면 기존 설치를 보존하고 임시 테스트 사용자 또는 VM에 필요한 최소 승인만 요청한다. 인증 실패는 환경 차단으로, 설치·실행 중 오류는 로그와 파일 증거로 구분한다. 개발 PC에는 연결된 SPENT03 실행 호스트가 없어 이 설치 시험 결과는 대기 중이다.
 
 - source branch codex/rodetoast-channel-20261118,GUI0.1.6,신규Bootstrap0.1.6,Setup0.1.6.0,repoID1462539740,전용catalog_id `creative-group-launcher-rodetoast-1462539740`,최소/seed9. Bootstrap SHA `152a02ce9f36f65df534da711a626474a9cc2116a5736adbfc601b33898a0a09`,GUI EXE SHA `2e17bbe8b78e513975e003726ac8d7297955c65e59e6c6a7a3a6721464476bc5`. 앞서만든미공개1.6 RC1이나기존테스트신뢰루트를재사용하지말고새P/D/E를선택한다.
-- sw204기존설치/등록/바로가기/프로젝트/설정은변경하지않는다. 이미사용가능한Windows Sandbox/독립테스트VM/충돌없는기존시험사용자만확인한다. 없으면중단하고필요한최소환경승인을보고하며새계정/VM/기능활성화/정책변경/권한상승/기존제거를하지않는다. Sandbox라면검증된Setup폴더read-only와이번전용출력E폴더만매핑하고인증/실제AppData는공유하지않는다. 공개시험운송이면게스트에gh인증이필요없다. Draft운송을선택한경우에만공식브라우저인증을사용자에게요청하고토큰/비밀번호를추출하거나옮기지않는다.
+- sw204기존설치/등록/바로가기/프로젝트/설정은변경하지않는다. 이미사용가능한Windows Sandbox/독립테스트VM/충돌없는기존시험사용자만확인한다. 없으면중단하고필요한최소환경승인을보고하며새계정/VM/기능활성화/정책변경/권한상승/기존제거를하지않는다. Sandbox라면검증된Setup폴더read-only와이번전용출력E폴더만매핑하고인증/실제AppData는공유하지않는다. 호스트가 공식 인증으로 받은 검증된 파일을 사용하며 게스트에 토큰이나 비밀번호를 전달하지 않는다.
 - 독립환경에도정상제품HKCU/바로가기충돌이없음을확인한다. /DATA=<새D>와맨마지막/D=<새P>로일반권한Setup을실제설치한다. 기본경로는CGL-Rodetoast/ToolsLauncherRodetoast다. 초기GUI1.6,이름/아이콘/콘솔없음,바탕화면/시작메뉴바로가기실제클릭,정상종료·동일Bootstrap재기동·잔여프로세스를확인한다. 실제파일/ZIP/manifest/current/receipt/전용namespace9의서명을확인한다. 회사EXE기능/전체회귀/과거업데이트시험은하지않는다.
 - 현재Rod Latest8은역사적구namespace복제이므로새클라이언트가이를서명namespace/min9에서거부하는것이맞다. seed9로GUI가시작돼도**온라인9는정식게시전미검증**이다. 이차이를원로그와함께기록하고복제8을채택시키거나cache/서명/순번을우회하지않는다. 온라인9게시승인후같은후보를정상새로고침하여새ID/전용namespace9조회·자산HTTPS검증을확인한다. 초기현재1.6=목표1.6이므로이를신규버전업데이트성공으로부르지않는다.
 - D의합성설정/작업파일해시를확보하고정상종료후이번P의Uninstall.exe를실제실행한다. 이번등록/바로가기/소유파일제거,launcher-home/current/receipt와D합성자료보존,호스트기존sw204자료불변을확인한다. 게스트폐기를제거시험성공으로대신하지말고종료전시험자료/로그를E에보존한다.
