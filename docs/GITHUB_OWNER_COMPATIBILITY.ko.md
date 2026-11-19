@@ -474,3 +474,12 @@ RC2에 들어 있던 seed 카탈로그·서명·GUI ZIP을 그대로 게시했�
 0.1.6 Provider에서 고정 ID API로 실제 카탈로그9를 읽었다. seed9가 설정된 신뢰 상태에서 동일 순번·동일 바이트를 정상 수용했고 신뢰 상태 바이트를 유지했다. GUI ZIP을 Provider로 다운로드하고 공개 원격 자산을 격리 폴더에 초기화한 뒤 기존 WindowsUpdater에서 manifest·receipt를 검증했다. GUI EXE SHA-256은 `2e17bbe8b78e513975e003726ac8d7297955c65e59e6c6a7a3a6721464476bc5`이다. 빌드에 사용한 0.1.6 GUI 소스를 Qt offscreen에서 실행하여 실제 온라인 갱신과 앱 5개 표시 상태를 확인했다. 같은 0.1.6이므로 보류된 새 런처 업데이트는 없었다. Windows 패키지 EXE의 온라인 화면 시험은 수행하지 않았다.
 
 사용자가 보고한 SPENT03의 RC2 설치·실행·바로가기·재실행·제거·합성 데이터 보존 성공과 sw204 보존, 임시 계정·프로필 정리 결과를 사용했다. 재시험이나 패키지 재빌드는 없었다. 신규 직원용 Setup 0.1.6.0은 기존 RC2 자산으로 공개 승인 대기 중이다. Setup SHA-256은 `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`이다.
+
+
+## 신규 직원용 Rod Setup 0.1.6.0 정식 공개 (2026-11-19)
+
+- [정식 Release](https://github.com/rodetoast/creative-group-releases/releases/tag/employee-setup-0.1.6.0)의 ID는 `450994875`, 설치 자산 ID는 `766655769`이다. [직원용 설치 EXE](https://github.com/rodetoast/creative-group-releases/releases/download/employee-setup-0.1.6.0/SouthpawToolsLauncherSetup-0.1.6.0.exe)는 81,300,016바이트이며 SHA-256은 `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`이다.
+- SPENT03에서 검증한 RC2 EXE를 파일명만 바꿔 공개했다. Windows 버전 리소스의 FileVersion은 0.1.6.0, ProductVersion은 0.1.6이다. 확인한 버전 리소스와 설치 UI 설정에서 RC2 표시를 찾지 못했다.
+- Draft 재다운로드 및 비인증 공개 HTTPS 재다운로드에서 동일 SHA-256을 확인했다. 공개 Release 페이지도 HTTP 200으로 확인했다. 기존 SPENT03 시험 결과를 재사용했다.
+- Setup Release에 `--latest=false`를 지정했다. 비인증 Rod Latest API는 `rodetoast-catalog-000009` (450977319)를 반환했다. Rod 카탈로그9의 자산과 Toast 카탈로그8·Setup 0.1.4.1의 자산 ID, 크기, digest는 게시 전후 일치했다.
+- 신규 직원은 Rod Setup으로 처음 설치한다. 기존 Toast 직원은 현재 경로를 계속 사용한다. 운영에서는 두 채널의 지원과 자산 관리를 분리한다. 증거 저장소 실제 이전과 Toast 지원 종료는 별도 결정 사항이다.

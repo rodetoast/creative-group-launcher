@@ -124,3 +124,8 @@ SPENT03 공식운영Bootstrap/키/카탈로그8의GUI0.1.4→0.1.5 실제업데�
 ## Rod 운영 Latest9 (2026-11-19)
 
 Rod 저장소 ID 1462539740의 운영 Latest는 [카탈로그9](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000009)다. Release ID 450977319. RC2 seed와 동일한 기존 서명 자산을 게시했고 실제 HTTPS 다운로드 및 Qt offscreen GUI 소스의 온라인 갱신을 검증했다. SPENT03 RC2 설치 검증은 사용자 보고에 따라 완료 기록을 재사용한다. 신규 직원용 Setup 0.1.6.0은 정식 공개 승인 대기 중이다. Toast 운영 채널은 Latest8을 유지한다.
+
+
+## 신규 직원용 Rod Setup 0.1.6.0 정식 공개 (2026-11-19)
+
+[정식 Release](https://github.com/rodetoast/creative-group-releases/releases/tag/employee-setup-0.1.6.0)와 [직접 다운로드](https://github.com/rodetoast/creative-group-releases/releases/download/employee-setup-0.1.6.0/SouthpawToolsLauncherSetup-0.1.6.0.exe)를 공개했다. 신규 직원의 첫 설치에는 이 링크를 사용한다. 기존 Toast 직원은 현재 설치된 런처를 계속 사용한다. 자세한 경로와 검증 결과는 [운영 인계 문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 절에 있다.
