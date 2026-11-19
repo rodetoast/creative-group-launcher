@@ -129,3 +129,8 @@ Rod 저장소 ID 1462539740의 운영 Latest는 [카탈로그9](https://github.c
 ## 신규 직원용 Rod Setup 0.1.6.0 정식 공개 (2026-11-19)
 
 [정식 Release](https://github.com/rodetoast/creative-group-releases/releases/tag/employee-setup-0.1.6.0)와 [직접 다운로드](https://github.com/rodetoast/creative-group-releases/releases/download/employee-setup-0.1.6.0/SouthpawToolsLauncherSetup-0.1.6.0.exe)를 공개했다. 신규 직원의 첫 설치에는 이 링크를 사용한다. 기존 Toast 직원은 현재 설치된 런처를 계속 사용한다. 자세한 경로와 검증 결과는 [운영 인계 문서](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 절에 있다.
+
+
+## 기존 직원의 Rod 전환 Bridge (2026-11-19)
+
+개발 브랜치는 codex/toast-rod-bridge다. [운영 인계](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)와 [SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md)의 최신 절을 사용한다. Toast Bridge와 Rod 0.1.7은 로컬 후보이며 Windows 실기동 검증 및 게시 승인이 남아 있다.

@@ -8,6 +8,7 @@ from .common import LauncherError, app_lock, atomic_json, digest, inside, read_j
 from .github_provider import GitHubReleasesProvider
 from .github_channels import managed_repository, canonical_channel, CANONICAL_CATALOG_ID
 from .paths import AppPaths
+from .channel_bridge import legacy_binding
 from .runtime_protocol import PURPOSE, response
 from .self_update import APP_ID, MANAGED_PURPOSE, SelfUpdater, version
 
@@ -85,6 +86,8 @@ class ManagedSession:
                 or executable != Path(c["executable"]).resolve() or digest(executable) != c["exe_sha256"]
                 or compiled_version != c["version"]):
             raise LauncherError("관리형 Windows 시작 세션과 제품 EXE가 일치하지 않습니다.")
+        self.legacy_home = (legacy_binding(self.updater.home, self.updater.data_root)
+                            if canonical_channel(self.channel) else None)
         self.current = self.updater.current()
         path, _ = self.updater.engine.resolve_launch(self.current)
         if (path.resolve() != executable or self.current.release_id != c["release_id"]

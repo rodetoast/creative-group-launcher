@@ -219,6 +219,11 @@ class GitHubReleasesProvider(HttpProvider):
         except (KeyError, TypeError, ValueError) as exc:
             raise LauncherError("GitHub Release 또는 필수 카탈로그 자산 누락·형식 오류") from exc
 
+    def verified_catalog_bytes(self):
+        if self._verified_bytes is None:
+            raise LauncherError("검증된 온라인 카탈로그가 없습니다.")
+        return self._verified_bytes
+
     def health(self):
         self.catalog()
         return {"service": "southpaw-tools", "api_version": 1, "transport": "github-releases",

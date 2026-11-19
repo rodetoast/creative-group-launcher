@@ -483,3 +483,23 @@ RC2에 들어 있던 seed 카탈로그·서명·GUI ZIP을 그대로 게시했�
 - Draft 재다운로드 및 비인증 공개 HTTPS 재다운로드에서 동일 SHA-256을 확인했다. 공개 Release 페이지도 HTTP 200으로 확인했다. 기존 SPENT03 시험 결과를 재사용했다.
 - Setup Release에 `--latest=false`를 지정했다. 비인증 Rod Latest API는 `rodetoast-catalog-000009` (450977319)를 반환했다. Rod 카탈로그9의 자산과 Toast 카탈로그8·Setup 0.1.4.1의 자산 ID, 크기, digest는 게시 전후 일치했다.
 - 신규 직원은 Rod Setup으로 처음 설치한다. 기존 Toast 직원은 현재 경로를 계속 사용한다. 운영에서는 두 채널의 지원과 자산 관리를 분리한다. 증거 저장소 실제 이전과 Toast 지원 종료는 별도 결정 사항이다.
+
+
+## 기존 직원의 업데이트 버튼을 통한 Rod 전환 (2026-11-19)
+
+기존 직원은 평소 바로가기에서 런처 업데이트 버튼을 한 번 승인한다. Toast의 기존 Bootstrap이 같은 채널에서 서명한 production-catalog-000009의 Bridge 0.1.6을 기존 업데이트 트랜잭션으로 적용한다. Toast 0.1.4의 소유자 경로 API와 0.1.5의 저장소 ID API는 모두 원본 Toast 저장소에 닿는다. 두 버전 모두 별도 설치 없이 Bridge를 받을 수 있도록 구성했다.
+
+Bridge가 기동 확인을 받은 뒤 Bridge ZIP에 포함된 Rod Bootstrap을 기존 관리 홈 아래 rod에 준비하고 해시를 검사한다. Rod의 고정 ID 1462539740, 전용 식별자, 기존 운영 키로 첫 카탈로그를 확인한다. 첫 전환은 순번 10 이상과 기존 데이터 지원 런처 0.1.7 이상을 요구한다. 검증된 ZIP은 하위 관리 홈에서 기존 엔진으로 초기화한다. 원래 Bootstrap과 바로가기는 유지되며, 다음 실행부터 Bridge가 로컬 Rod Bootstrap을 실행한다. GUI의 조회·다운로드·후속 업데이트 버튼은 Rod를 사용한다. 전환에 성공하면 Bridge는 별도 네트워크 요청 없이 준비된 Rod 홈을 사용한다.
+
+기존 회사 프로그램 데이터 루트는 제자리에서 사용한다. 설정, 앱 포인터, receipt, 보관 ZIP·proof와 업데이트 기록을 이전하거나 재작성하지 않는다. Rod 런처와 채널의 신뢰 상태는 하위 홈에 분리한다. 과거 Toast 자료는 보관 앱의 로컬 proof 검증에만 기존 키로 확인한다. Rod의 온라인 신뢰 및 런처 활성 포인터에 Toast proof를 받아들이지 않는다. 향후 Rod 후보도 이 호환성을 유지해야 한다.
+
+Bridge 자체 시작 실패에는 기존 Toast Bootstrap의 롤백을 사용한다. Rod 준비나 기동 실패에는 Bridge의 로컬 화면에서 기존 앱을 계속 사용할 수 있다. 다시 실행하면 준비를 재시도한다. Rod 프로세스나 업데이트가 남아 있으면 잠금이 중복 창을 차단한다.
+
+직접 관련 자동 시험 37개 통과. 서명 fixture로 Toast→Bridge→Rod, 이후 Rod 채널 후속 업데이트, 기존 설정·합성 앱 5개의 active/receipt/proof/작업 파일 해시 보존을 확인했다. 순번9 거부 후 재실행, Rod 시작 실패, 중복 잠금, 변조 Bootstrap 거부를 검증했다. 실제 운영 키로 로컬 후보를 서명하고 실제 ZIP·manifest를 격리 홈에 초기화해 WindowsUpdater로 검증했다. 기존 0.1.4/0.1.5 소스 엔진은 fixture GitHub 응답으로 Bridge 준비와 구 current 및 데이터 보존을 확인했다. Windows 제품 EXE의 실제 인계는 별도 시험 대상이다.
+
+| 게시 후보 | 런처 | ZIP SHA-256 |
+|---|---|---|
+| production-catalog-000009 (Toast, sequence 9) | Bridge 0.1.6 | 274e8ebc4ebe7480848a3c6409a040ea487a3b9d416e64a09a567b61c9302b65 |
+| rodetoast-catalog-000010 (Rod, sequence 10) | GUI 0.1.7 | 1615294f0ebfdcee44753fa262bb09c53c80339e50e51145717f101048e59392 |
+
+로컬 .test-results/toast-rod-bridge-20261119/candidate-plan.json에 정확한 자산 목록과 해시가 있다. 양쪽 후보는 기존 승인된 회사 ZIP 5개를 재사용한다. 게시 승인 후 Rod 10을 먼저 공개하고 실제 서명·다운로드를 확인한 뒤 Toast Bridge 9를 적용한다. 직원 배포에 앞서 SPENT03에서 Windows 프로세스 인계를 확인한다.

@@ -125,7 +125,12 @@ class Session:
         self.wait_ack('ready')
         if self.updater.channel and self.context['mode'] == 'normal':
             from .windows_shell import configure_launcher_window
-            configure_launcher_window(self.process.pid, Path(sys.executable), self.updater.data_root)
+            from .channel_bridge import legacy_binding
+            from .github_channels import canonical_channel
+            legacy = (legacy_binding(self.updater.home, self.updater.data_root)
+                      if canonical_channel(self.updater.channel) else None)
+            entry = inside(legacy.parent, "CGLBootstrap.exe") if legacy else Path(sys.executable)
+            configure_launcher_window(self.process.pid, entry, self.updater.data_root)
 
     def wait_ack(self,stage):
         deadline=time.monotonic()+self.timeout
@@ -370,7 +375,9 @@ def main(argv=None):
                         data = default_data_root(channel)
                 if channel['repository'].endswith('-trial-releases') and data.resolve() == AppPaths.default().root.resolve():
                     raise LauncherError('시험 채널에는 운영 사용자 데이터 경로를 사용할 수 없습니다.')
-                if canonical_channel(channel) and data.resolve() == AppPaths.default().root.resolve():
+                from .channel_bridge import legacy_binding
+                if (canonical_channel(channel) and data.resolve() == AppPaths.default().root.resolve()
+                        and legacy_binding(home, data.resolve()) is None):
                     raise LauncherError("신규 채널은 기존 직원 데이터 경로를 사용할 수 없습니다.")
                 initialize(home, data, folder / 'seed', channel)
         if args.role=='worker':

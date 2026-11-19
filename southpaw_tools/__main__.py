@@ -90,6 +90,12 @@ def run_window(args, session):
             raise LauncherError("런처 공개키가 Bootstrap 채널과 일치하지 않습니다.")
         window.winId()
         confirmed = False
+        from .channel_bridge import TOAST
+        payload = Path(sys.executable).resolve().parent
+        is_bridge = (not health and session.channel["repository"] == TOAST
+                     and (payload / "rod-channel.json").is_file())
+        from contextlib import ExitStack
+        fallback_locks = ExitStack()
         timer = QTimer(window)
         def poll():
             nonlocal confirmed
@@ -97,13 +103,19 @@ def run_window(args, session):
                 if not confirmed and session.command("confirm"):
                     session.acknowledge("confirmed")
                     confirmed = True
-                    if not health:
+                    if is_bridge:
+                        QTimer.singleShot(0, start_bridge)
+                    elif not health:
                         QTimer.singleShot(0, window.refresh)
                 if session.command("stop") and not window.task:
                     session.acknowledge("stopped")
                     app.exit(0)
             except (LauncherError, OSError, ValueError, TypeError):
                 app.exit(11)
+        def start_bridge():
+            from .channel_bridge import start_bridge_ui
+            start_bridge_ui(app, window, session, payload, fallback_locks)
+
         timer.timeout.connect(poll)
         timer.start(80)
         QTimer.singleShot(0, lambda: session.acknowledge("ready"))
@@ -120,7 +132,11 @@ def run_window(args, session):
             app.quit()
     if args.check or args.screenshot:
         QTimer.singleShot(250, capture)
-    result = app.exec()
+    try:
+        result = app.exec()
+    finally:
+        if session:
+            fallback_locks.close()
     if temporary:
         temporary.cleanup()
     return result

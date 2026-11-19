@@ -293,6 +293,12 @@ class MainWindow(QMainWindow):
         self._diagnostic_write_error = ""
         self.catalog_verifier = (CatalogVerifier(read_json(github_test_policy), self.paths.root / "catalog-trust.json")
                                  if self.github_test_mode else CatalogVerifier.bundled(self.paths.root / "catalog-trust.json"))
+        from .channel_bridge import BridgedAppVerifier
+        legacy_home = getattr(managed_session, "legacy_home", None)
+        if legacy_home:
+            state_root = managed_session.file.parent if managed_session.mode == "health" else managed_session.updater.home
+            self.catalog_verifier = BridgedAppVerifier(
+                self.catalog_verifier.policy, inside(state_root, "app-catalog-trust.json"))
         self.installer.catalog_verifier = self.catalog_verifier
         default_repository = ("toast-source/creative-group-releases"
                               if not self.github_test_mode and self.catalog_verifier.policy["keys"] else "")
@@ -713,6 +719,9 @@ class MainWindow(QMainWindow):
         return GitHubReleasesProvider(repository, verifier=self.catalog_verifier, repository_id=binding)
 
     def refresh(self):
+        if getattr(self, "bridge_fallback", False):
+            self.message.setText("런처를 다시 열면 Rod 연결을 재시도합니다.")
+            return
         if self.task:
             return
         self.launcher_candidate = None
@@ -860,6 +869,11 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def configure(self):
+        if getattr(self, "bridge_fallback", False):
+            return
+        if self.managed_session and self.managed_session.channel.get("repository_id") is not None:
+            self.message.setText("Rod 운영 채널이 관리하는 연결입니다.")
+            return
         dialog = ConnectionDialog(self.config, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             try:
@@ -996,6 +1010,9 @@ class MainWindow(QMainWindow):
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.paths.app(app.app_id))))
 
     def closeEvent(self, event):
+        if getattr(self, "bridge_in_progress", False):
+            event.ignore()
+            return
         if self.task:
             self.task.cancel.set()
             self.message.setText("작업 취소/정리가 끝난 뒤 닫아 주세요. 기존 프로그램은 종료하지 않습니다.")
