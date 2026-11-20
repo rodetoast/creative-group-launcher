@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 import sys
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 from pathlib import Path
 
 from . import __version__
@@ -33,28 +33,36 @@ def main(argv=None):
     if args.check:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from .common import LauncherError
+    from .startup_splash import StartupSplash, wants_session_splash
+
     try:
-        session = None
-        if getattr(sys, "frozen", False) and not args.session_file:
-            from .managed_update import channel_policy
-            from .github_channels import canonical_channel
-            from .paths import AppPaths
-            if canonical_channel(channel_policy()):
-                if not args.check or args.data_dir is None:
-                    raise LauncherError("신규 채널은 CGLBootstrap.exe 또는 설치 바로가기로 실행하세요.")
-                if args.data_dir.resolve() == AppPaths.default().root.resolve():
-                    raise LauncherError("신규 채널 진단에는 기존 직원 데이터 경로를 사용할 수 없습니다.")
-        if args.session_file:
-            from .managed_update import ManagedSession
-            session = ManagedSession(args.session_file, __version__)
-        lease = session.updater._runtime_lock() if session and session.mode == "normal" else nullcontext()
-        with lease:
-            if session and session.updater.current() != session.current:
-                raise LauncherError("시작 직전 활성 런처가 바뀌었습니다.")
-            from .startup_splash import StartupSplash
+        with ExitStack() as startup:
+            splash = None
+            # The startup hint only controls a window. ManagedSession below
+            # independently authenticates the session, executable and release.
+            if args.session_file and wants_session_splash(args.session_file):
+                splash = startup.enter_context(StartupSplash())
+            session = None
+            if getattr(sys, "frozen", False) and not args.session_file:
+                from .managed_update import channel_policy
+                from .github_channels import canonical_channel
+                from .paths import AppPaths
+                if canonical_channel(channel_policy()):
+                    if not args.check or args.data_dir is None:
+                        raise LauncherError("신규 채널은 CGLBootstrap.exe 또는 설치 바로가기로 실행하세요.")
+                    if args.data_dir.resolve() == AppPaths.default().root.resolve():
+                        raise LauncherError("신규 채널 진단에는 기존 직원 데이터 경로를 사용할 수 없습니다.")
+            if args.session_file:
+                from .managed_update import ManagedSession
+                session = ManagedSession(args.session_file, __version__)
             own_splash = (not args.check and (not session or
                           session.mode == "normal" and not session.context.get("startup_splash")))
-            with (StartupSplash() if own_splash else nullcontext()) as splash:
+            if own_splash and splash is None:
+                splash = startup.enter_context(StartupSplash())
+            lease = session.updater._runtime_lock() if session and session.mode == "normal" else nullcontext()
+            with lease:
+                if session and session.updater.current() != session.current:
+                    raise LauncherError("시작 직전 활성 런처가 바뀌었습니다.")
                 return run_window(args, session, splash=splash)
     except (LauncherError, OSError, ValueError, KeyError, TypeError) as exc:
         print(f"런처 시작 실패: {exc}")
@@ -62,7 +70,7 @@ def main(argv=None):
 
 
 def run_window(args, session, *, splash=None):
-    from PySide6.QtCore import QTimer
+    from PySide6.QtCore import QEvent, QObject, QTimer, Qt
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication
     from .ui import DATA, ASSETS, MainWindow
@@ -87,11 +95,6 @@ def run_window(args, session, *, splash=None):
     window = MainWindow(AppPaths(root), catalog_path=args.catalog or DATA, auto_connect=not args.check and not session,
                         github_repository=session.channel["repository"] if session else args.github_repository,
                         github_test_policy=args.github_test_policy, managed_session=session)
-    if splash:
-        # Remove the GUI-owned splash before the Bootstrap enumerates main windows.
-        splash.close()
-    if not health:
-        window.show()
     if session:
         if window.catalog_verifier.policy != session.channel["policy"]:
             raise LauncherError("런처 공개키가 Bootstrap 채널과 일치하지 않습니다.")
@@ -101,7 +104,6 @@ def run_window(args, session, *, splash=None):
         payload = Path(sys.executable).resolve().parent
         is_bridge = (not health and session.channel["repository"] == TOAST
                      and (payload / "rod-channel.json").is_file())
-        from contextlib import ExitStack
         fallback_locks = ExitStack()
         timer = QTimer(window)
         def poll():
@@ -125,7 +127,39 @@ def run_window(args, session, *, splash=None):
 
         timer.timeout.connect(poll)
         timer.start(80)
-        QTimer.singleShot(0, lambda: session.acknowledge("ready"))
+
+    def first_frame_ready():
+        if splash:
+            # The old Bootstrap enumerates windows immediately after ready.
+            # Leave only the actual launcher window for the taskbar setup.
+            splash.close()
+            window.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
+        if session:
+            try:
+                session.acknowledge("ready")
+            except (LauncherError, OSError, ValueError, TypeError):
+                app.exit(11)
+
+    if health:
+        # Health is an intentionally invisible startup probe.
+        QTimer.singleShot(0, first_frame_ready)
+    else:
+        class FirstPaint(QObject):
+            def eventFilter(self, watched, event):
+                if event.type() == QEvent.Type.Paint:
+                    watched.removeEventFilter(self)
+                    # Run after QWidget has handled this first paint.
+                    QTimer.singleShot(0, first_frame_ready)
+                return False
+
+        paint = FirstPaint(window)
+        window.installEventFilter(paint)
+        if splash:
+            window.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        window.show()
+        if splash:
+            splash.keep_above(int(window.winId()))
+
     def capture():
         if args.screenshot:
             args.screenshot.parent.mkdir(parents=True, exist_ok=True)

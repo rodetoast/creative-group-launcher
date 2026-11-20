@@ -160,3 +160,7 @@ Toast Latest는 [production-catalog-000009 / Bridge 0.1.6](https://github.com/to
 ## Rod GUI 0.1.8 운영 공개 (2026-11-20)
 
 [Rod 카탈로그11 / GUI 0.1.8](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000011)은 현 운영 Latest이며 Toast Latest9를 유지한다. 공개 자산 8개·Ed25519·순번·0.1.7 Provider와 기존 Bridge의 직접 0.1.8 준비를 확인했다. 기존 안정 Bootstrap에서 새 GUI 시작 창과 정상 적용·종료·자료 보존을 격리 확인했다. 직원은 현 바로가기와 업데이트 버튼을 사용한다. [UX 및 공개 운영 기록](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다. 안정 Bootstrap 자동 갱신과 QML 운영 적용은 별도 결정이다.
+
+## 기존 Bootstrap에서의 GUI 시작 창 보완 (2026-11-20)
+
+개발 브랜치 `codex/gui-startup-handoff-20261120`에서 GUI 프로세스 검증 전 시작 창을 표시하고 첫 메인 Paint 직후 닫도록 했다. 구 Bootstrap의 프로세스 생성 이전은 GUI 업데이트의 적용 범위 밖이다. [실측 및 안정 Bootstrap 자동 갱신 설계](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다. 운영 Rod11/GUI 0.1.8은 그대로다.

@@ -1,9 +1,26 @@
 """Small Windows startup window, independent of Qt and the update protocol."""
 from contextlib import nullcontext
+import json
 import sys
 from threading import Event, Thread
 
 from .branding import DISPLAY_NAME
+
+
+def wants_session_splash(path):
+    """Read a small presentation hint without importing the update engine."""
+    if path.name != "context.json" or path.parent.parent.name != "sessions":
+        return False
+    try:
+        with path.open("rb") as stream:
+            raw = stream.read(16385)
+        if len(raw) > 16384:
+            return False
+        info = json.loads(raw)
+    except (OSError, ValueError, RecursionError):
+        return False
+    return (isinstance(info, dict) and info.get("managed") is True
+            and info.get("mode") == "normal" and not info.get("startup_splash"))
 
 
 class StartupSplash:
@@ -11,6 +28,7 @@ class StartupSplash:
         self._stop = Event()
         self._shown = Event()
         self._thread = None
+        self._window = None
 
     def __enter__(self):
         self.show()
@@ -34,6 +52,20 @@ class StartupSplash:
             self._thread.join(1)
             if not self._thread.is_alive():
                 self._thread = None
+
+    def keep_above(self, main_window):
+        """Put the launcher below the splash without joining their input queues."""
+        splash_window = self._window
+        if not splash_window:
+            return
+        import ctypes
+        from ctypes import wintypes as w
+
+        user = ctypes.WinDLL("user32")
+        position = user.SetWindowPos
+        position.argtypes = [w.HWND, w.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, w.UINT]
+        # NOSIZE | NOMOVE | NOACTIVATE | NOOWNERZORDER. Reorder only the main window.
+        position(main_window, splash_window, 0, 0, 0, 0, 0x0213)
 
     def _paint(self):
         import ctypes
@@ -73,6 +105,7 @@ class StartupSplash:
             if not self._stop.is_set():
                 user.ShowWindow(window, 4)  # SW_SHOWNOACTIVATE
                 user.UpdateWindow(window)
+                self._window = window
             self._shown.set()
             msg = w.MSG()
             while not self._stop.wait(0.02):
@@ -80,6 +113,7 @@ class StartupSplash:
                     user.TranslateMessage(ctypes.byref(msg))
                     user.DispatchMessageW(ctypes.byref(msg))
         finally:
+            self._window = None
             user.DestroyWindow(window)
 
 
