@@ -52,3 +52,30 @@
 - 변경된 Widgets EXE의 격리 화면 생성과 QML 패키지 첫 준비 프레임을 확인했다. 배포할 버전·서명 ZIP과 Setup은 준비하지 않았다.
 
 다음 결정은 Widgets UX를 GUI 업데이트로 먼저 배포할지와, 안정 Bootstrap까지 바꾸는 별도 Setup 업그레이드를 승인할지다. QML의 운영 적용은 비교 결과를 바탕으로 별도 결정한다.
+
+## Rod GUI 0.1.8 정식 공개 (2026-11-20)
+
+사용자 승인으로 [Rod 카탈로그11](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000011)을 정식 공개하고 Latest로 지정했다. 기존 저장소 ID `1462539740`, Release ID `452397424`, 카탈로그 식별자 `creative-group-launcher-rodetoast-1462539740`, 순번 `11`이다. 기준 소스는 `2c0554c014b47e9a9ec40de63aa0f38c04c438b9`이며 격리 빌드에서 제품 버전을 0.1.8, release_id를 `rodetoast-launcher-0.1.8`로 지정했다. 공식 Windows GUI onedir 역할만 빌드했으며 Bootstrap·Setup·QML 시제품은 운영 자산에 포함하지 않았다.
+
+기존 Ed25519 운영 공개키 ID `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`을 사용했다. Draft와 공개 HTTPS에서 자산 8개를 다운로드하여 파일 크기, SHA-256, 서명을 확인했다. GUI EXE SHA-256은 `4cc2c8412d084284268e538af61312747a6c916554ce403f8e610a20d3fd9426`이다. Rod10 및 이전 릴리스와 Setup, Toast Latest9·직원용 Setup은 게시 전후 일치했다. 회사 앱 5개는 서명된 레코드 및 ZIP 바이트 모두 Rod10과 동일하다.
+
+| 자산 | 바이트 | SHA-256 |
+|---|---:|---|
+| ase-viewer--0.5.8.4-team-3bf37dd.zip | 22085231 | 2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2 |
+| catalog.json | 9502 | e50daaac2bd0292fa4edb9f845df1d5026f1d1c0ee7e7b26a0cb3b1966ca62a0 |
+| catalog.sig.json | 239 | 355ee2d979bdb6bb0818ccbf84ac6b4c6e89742fa7e3a2a780ff409631287cfc |
+| creative-group-launcher--rodetoast-launcher-0.1.8.zip | 52680721 | 6b2a2ab8036c52f3fcff75507c1d94310e049e8994ac55e2cef8ce2a41ffbaa4 |
+| pivot-fixer--0.3.3-team-80b84c9.zip | 20709116 | 214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361 |
+| ps2ase--0.3.6-team-6e84645.zip | 66252089 | 1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9 |
+| tag-master--0.4.0-team-7263f8d.zip | 38813495 | 80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299 |
+| tilenamer--0.1.6-rc3-8ba7a1e.zip | 54046715 | aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4 |
+
+격리된 Bridge 설치의 기존 Rod Bootstrap을 사용했다. 이전 Rod 0.1.7의 코드가 순번10에서 서명된 로컬 후보11을 준비하고, 기존 Windows worker가 0.1.8을 적용해 거래를 `committed`로 기록했다. 실제 0.1.8 창을 열어 GUI 프로세스 소유의 비최상위·포커스 비획득 시작 창이 표시되고 `confirmed` 시점에는 사라진 것을 확인했다. 정상 종료 코드는 0이다. 기존 Bootstrap, Toast 포인터, Rod 0.1.7 보관 ZIP/receipt, 합성 설정과 작업 파일은 보존됐다. 실제 직원 PC와 회사 앱 설치는 이번 시험 범위에 포함하지 않았다.
+
+게시 후에는 운영 0.1.7의 Provider 경로로 공개 Rod11을 수락하고 ZIP 해시와 11→10 롤백 차단을 확인했다. 기존 Bridge 0.1.6 코드의 공개 HTTPS 경로를 별도로 실행해 처음 Rod에 진입할 때 사전 준비 또는 중간 0.1.7 없이 0.1.8을 검증·초기화하고 기존 하위 Rod Bootstrap 호출까지 도달함을 확인했다. 이 마지막 확인은 프로세스 호출 경계만 대체했으며 실제 Windows GUI 기동은 앞의 서명 후보 시험에서 확인했다. 전체 Toast 버튼·Windows 인계는 기존 성공 증거를 재사용했다.
+
+기존 Rod 직원은 런처에서 업데이트를 한 번 승인한다. 아직 전환하지 않은 Toast 직원은 기존 Toast GUI에서 Bridge 업데이트를 한 번 승인하면 된다. 처음 Rod로 진입하는 Bridge는 현재 0.1.8을 받는다. 배포된 구 Toast GUI의 버튼 문구는 전환 전에는 이전 방식으로 표시된다. 새 UX는 0.1.8 실행 후 적용된다.
+
+## 안정 Bootstrap 자동 갱신 설계 경계
+
+이번 공개는 GUI 초기화 구간의 시작 창을 제공한다. 기존 바로가기에서 Bootstrap이 서명·파일을 검증하는 구간은 안정 Bootstrap 교체 없이는 표시되지 않는다. 기존 직원에게 Setup 재설치를 요구하지 않는 자동 갱신은 별도 설계·승인 대상으로 유지한다. 사전 신뢰된 서명 정책으로 별도의 Bootstrap 패키지·manifest·파일 해시를 검증하고, 실행 프로세스가 정상 종료한 뒤 외부 교체 작업자가 기존 진입 경로를 유지해야 한다. 새 시작 확인을 받기 전까지 이전 Bootstrap을 보관하고 오류·중단 시 원복하는 경계를 설계해야 한다. 사용자 데이터·회사 앱 store·기존 단축 경로는 거래에서 제외한다. 이번에는 자동 Bootstrap 교체를 구현하거나 게시하지 않았다.
