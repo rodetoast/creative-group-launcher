@@ -1,8 +1,10 @@
+from contextlib import nullcontext
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from southpaw_tools import bootstrap_upgrade as upgrade
 from southpaw_tools.common import LauncherError, atomic_json, digest, read_json
@@ -75,3 +77,49 @@ class BootstrapUpgradeTests(unittest.TestCase):
               patch("builtins.print") as printed):
             self.assertEqual(frozen_bootstrap(self.root, upgrade_entry=True), 1)
         printed.assert_called_once()
+
+    @unittest.skipUnless(os.name == "nt", "Windows Bootstrap entry")
+    def test_unknown_old_image_is_rejected_before_staging(self):
+        root = self.root / "another-installation"
+        root.mkdir()
+        entry = root / upgrade.ENTRY
+        entry.write_bytes(b"unknown")
+        payload = root / "payload"
+        payload.mkdir()
+        (payload / upgrade.SPEC).touch()
+        current = object()
+        session = SimpleNamespace(mode="normal", current=current, channel={}, updater=SimpleNamespace(home=root))
+        with (patch("sys.executable", str(payload / "CreativeGroupLauncher.exe")),
+              patch.object(upgrade, "canonical_channel", return_value=True),
+              patch.object(upgrade, "_entry_root", return_value=(root, "rod")),
+              patch.object(upgrade, "_approved", return_value=True),
+              patch.object(upgrade, "_signed_candidate", return_value=(
+                  session.updater, current, payload, {"old_entry": {"rod": [self.state["old_sha256"]]}})),
+              patch.object(upgrade, "_lineage") as lineage):
+            with self.assertRaisesRegex(LauncherError, "자동 교체 대상"):
+                upgrade.begin(session, None)
+        lineage.assert_not_called()
+        self.assertEqual(entry.read_bytes(), b"unknown")
+        self.assertFalse((root / upgrade.STAGE).exists())
+
+    def test_probationary_log_failure_stops_new_gui_before_restore(self):
+        from southpaw_tools.bootstrap import Bootstrap
+
+        app = SimpleNamespace(release_id="candidate")
+        boot = Bootstrap.__new__(Bootstrap)
+        boot.updater = SimpleNamespace(home=self.root, channel={"repository": "fixture"},
+                                      current=lambda: app, recover=lambda: None, _lock=nullcontext)
+        boot.splash = None
+
+        def event(phase, **_):
+            if phase == "running":
+                raise PermissionError("simulated log sharing conflict")
+
+        boot.event = event
+        confirm = Mock()
+        with patch("southpaw_tools.bootstrap.Session") as session:
+            with self.assertRaises(PermissionError):
+                boot.run(on_confirmed=confirm)
+        session.return_value.confirm.assert_called_once()
+        session.return_value.stop.assert_called_once()
+        confirm.assert_not_called()

@@ -137,3 +137,33 @@ GUI 패키지만으로는 바로가기에서 Bootstrap이 시작된 시점부터
 - 네이티브 검증은 운영과 분리된 로컬 시험 키로 실행했다. 운영용 공개키와 승인 구 진입 해시를 넣은 **미서명** 0.1.9 후보는 `C:/Dev/CGL-BootstrapAuto-20261120/production-policy-unsigned/`에 있다. ZIP은 81,352,523바이트이며 SHA-256은 `9f30f7519c4f8375485a56f8b5584144fa9a10de417d0b678ffccb46d07cc90c`이다. 내부 manifest와 Bootstrap ZIP의 해시를 재검증했으며 운영 바이너리와 같은 EXE를 로컬 시험에서 사용했다. 후보 계획과 검증 로그는 해당 로컬 작업 루트에 있다. 운영 개인키, 설치 PC, 운영 Release에는 변경을 가하지 않았다.
 
 운영 배포에는 기존 설치 두 유형의 승인 진입 EXE 해시 범위 확정, 운영 서명 및 새 순번 승인, 동일 운영 후보의 격리 확인이 필요하다. 새 Setup은 이번 경로의 선행 조건이 아니다.
+
+## GUI 0.1.9 최종 운영 서명 후보 (2026-11-20)
+
+기준은 Rod 저장소 ID `1462539740`, 카탈로그 식별자 `creative-group-launcher-rodetoast-1462539740`, 현재 Latest11이다. `rodetoast-catalog-000012`/순번 12를 **로컬 서명 후보**로 준비했다. 공식 Ed25519 키 ID `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`을 기존 DPAPI 경로로 사용했다. 개인키 내보내기·보관 변경, GitHub Draft 및 Release 생성은 없다. 격리 trust에서 11→12 수락과 12→11 거부, 서명과 manifest, 원 ZIP 및 회사 앱 5개 자산과 메타데이터 일치를 확인했다.
+
+| 지원할 정확한 진입 EXE | SHA-256 |
+|---|---|
+| Rod 직접 설치 Bootstrap 0.1.6, 공식 Setup 0.1.6.0 | `152a02ce9f36f65df534da711a626474a9cc2116a5736adbfc601b33898a0a09` |
+| Toast Bridge 바깥 Bootstrap 0.1.4, 공식 Setup 0.1.4.1 | `c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19` |
+
+Rod와 Toast Setup EXE의 원격 digest를 로컬 공개 자산/동일 빌드 바이너리와 대조했고, 각 Setup manifest와 실제 `payload/CGLBootstrap.exe`를 대조했다. Toast는 공개 초기 ZIP 내부의 동일 EXE 해시도 확인했다. Toast Bridge의 검증된 하위 Rod 런타임은 교체 대상이 아니다. 과거 별도 수동 가입 ZIP `employee-bootstrap-0.1.1`은 다른 해시의 진입점이며 이 후보에 포함하지 않는다. 허용되지 않은 해시는 시작 구성 요소 교체 준비 이전에 차단한다. 해당 GUI의 기존 업데이트 경로는 유지된다.
+
+첫 운영 서명 격리 실행에서 관찰 도구의 진단 로그 읽기와 Windows 원자적 파일 교체가 충돌했다(WinError 32, `running_log_write`). 구 진입점은 복원됐으나 시험 GUI가 남아 재시작 잠금을 잡았고 교체 작업자가 미처리 오류 창을 띄웠다. `b748cc30fb3ce6a19d83245b0f0de5cf608ce644`에서 시험 기동 실패 시 새 GUI를 닫은 뒤 복원하는 경로와 교체 작업자 오류의 파일 로그 처리를 보완했다. 검증 도구도 실행 중 진단 로그를 폴링하지 않고 공유 삭제가 허용된 핸들로 상태만 읽도록 조정했다. Bootstrap만 다시 빌드했다. GUI EXE는 기존 미서명 후보의 동일 바이트 `46cb24034406628d0e9eecb6f979909916a6151b46b97696385be61ae5c1f421`를 사용했다. 처음 만든 순번12 로컬 서명은 이력으로 보존하며 아래 최종 자산만 공개 승인 대상이다.
+
+대표 검증은 실제 Rod Setup 0.1.6.0의 안정 Bootstrap을 복사한 새 격리 폴더, 기존 운영 서명 카탈로그11, 최종 운영 서명 카탈로그12를 사용했다. 기존 승인 API로 거래를 준비하고 실제 구 Bootstrap worker로 GUI를 적용했다. 이후 실제 GUI와 외부 작업자가 추가 입력 없이 진입점을 바꿔 `committed` 처리했다. 새 시작 단계의 Windows 공유 잠금으로 실패를 유도한 독립 사례에서는 이전 진입 EXE를 정확한 해시로 복원하고 기존 진입점에서 GUI가 다시 열렸다. 양쪽에서 동일 바로가기 파일, 기존·신규 receipt, current 및 trust, 보관 ZIP·proof, 설정과 회사 앱 5개의 합성 작업 파일을 비교했다. 기존 Toast 바깥 진입점·하위 런타임 네이티브 검증은 직전 결과를 재사용했다. 이번에는 운영 Latest에서의 실제 0.1.9 다운로드나 SPENT03 Setup 설치 시험을 반복하지 않았다.
+
+교체 후 같은 바로가기 인자로 실행한 개발 PC 1회 관측에서 Win32 Splash는 **0.124초**, 실제 GUI와 confirmed는 **4.581초**였다. 그때 Splash는 사라졌고 정상 종료 코드는 0이었다. 관련 교체·ACK 테스트 **11개**가 통과했다. 운영 자산과 실제 직원 PC에는 변경이 없다.
+
+| 공개 승인 대상 자산 | 바이트 | SHA-256 |
+|---|---:|---|
+| ase-viewer--0.5.8.4-team-3bf37dd.zip | 22085231 | `2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2` |
+| catalog.json | 9411 | `8fdffde78fddff5593dce4a6ef974c96208e4faa486045354d61d1fef7b24f6a` |
+| catalog.sig.json | 239 | `88139d54d6e1e59b8c6bf521227dc8e4c94e3eb84e225a831ae275fcd352d599` |
+| creative-group-launcher--rodetoast-launcher-0.1.9.zip | 81352867 | `c7e902537538439eb37fe96f13e15de03927be998b676c300da51392c1612104` |
+| pivot-fixer--0.3.3-team-80b84c9.zip | 20709116 | `214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361` |
+| ps2ase--0.3.6-team-6e84645.zip | 66252089 | `1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9` |
+| tag-master--0.4.0-team-7263f8d.zip | 38813495 | `80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299` |
+| tilenamer--0.1.6-rc3-8ba7a1e.zip | 54046715 | `aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4` |
+
+최종 후보는 로컬 `C:/Dev/CGL-BootstrapAuto-20261120/rod12-final-rc/assets/`에 보존한다. `candidate-plan.json`의 SHA-256은 `e97230afc31fb74aa4d6140aa00e6a89786207f040fbbd2c62c7f56daa8828ce`이다. 새 Bootstrap EXE SHA-256은 `0a5bd2501f5a1e1338eec656197acfb8e81a42c6de8b11a49ca277e7d0544718`이다. 남은 결정은 위 8개 자산의 Rod 정식 공개와 카탈로그12 Latest 지정 승인이다.

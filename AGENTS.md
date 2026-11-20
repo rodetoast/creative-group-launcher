@@ -168,3 +168,7 @@ Toast Latest는 [production-catalog-000009 / Bridge 0.1.6](https://github.com/to
 ## Bootstrap 자동 갱신 후보 (2026-11-20)
 
 개발 브랜치 `codex/bootstrap-auto-update-20261120`에서 서명 GUI의 기존 승인으로 Bootstrap 외부 교체를 구현했다. Rod와 Toast Bridge 격리 Windows 기동, 시작 실패의 구 진입점 복원, 같은 바로가기 경로의 Win32 시작 창을 확인했다. [구현·검증 및 미서명 후보 기록](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다. 운영 Rod11·Toast9는 유지한다.
+
+## GUI 0.1.9 최종 운영 서명 후보 (2026-11-20)
+
+Rod 카탈로그12는 로컬 서명 후보이며 운영은 Rod11·Toast9를 유지한다. Boot 교체 허용 범위는 공식 Rod Setup 0.1.6.0과 Toast Setup 0.1.4.1의 정확한 진입 EXE 두 개다. 최종 서명 자산으로 실제 공식 Rod Bootstrap의 자동 교체·실패 복원·기존 바로가기 재실행을 확인했다. [최종 후보 및 승인 기록](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다. 작업 중 생성한 앞선 로컬 순번12 파일은 공개 대상에서 제외한다.
