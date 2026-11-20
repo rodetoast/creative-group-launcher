@@ -50,6 +50,8 @@ class ManagedUpdateGuiTests(unittest.TestCase):
         self.windows.append(self.window)
         self.window.online = True
         self.window.launcher_candidate = fixture.r2
+        self.window.launcher_update_button.show()
+        self.window.render()
         self.before = {str(p.relative_to(fixture.data)): digest(p)
                        for p in fixture.data.rglob("*") if p.is_file()}
         self.pointer = (fixture.home / "current.json").read_bytes()

@@ -176,3 +176,7 @@ Rod 카탈로그12는 로컬 서명 후보이며 운영은 Rod11·Toast9를 유�
 ## Rod GUI 0.1.9 정식 공개 (2026-11-20)
 
 [Rod 카탈로그12](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000012)가 운영 Latest다. Toast Latest9와 기존 Setup을 유지한다. 공개 자산 8개의 SHA-256·서명·Bootstrap 허용 해시 두 개를 확인했다. 직원은 기존 바로가기와 업데이트 버튼을 사용한다. 허용 목록 밖의 구 진입점은 Bootstrap 교체 대상에서 제외된다. [운영 기록 및 지원 범위](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다.
+
+## Qt Quick 제품 GUI 후보 (2026-11-20)
+
+`codex/qml-product-20261120`의 제품 후보는 GUI 0.2.0이다. 새 QML 화면은 기존 Python 설치·업데이트와 Bootstrap 계약을 사용한다. [제품 구현·검증·패키징 기록](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절에 후보 해시, 지원 범위, 승인 경계가 있다. 운영 기준은 Rod12 / GUI 0.1.9 및 Toast9다. 개발 브랜치의 버전을 실제 배포 버전으로 간주하지 않는다.

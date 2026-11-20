@@ -576,7 +576,7 @@ class MainWindow(QMainWindow):
             return
         self.title.setText(app.display_name)
         self.description.setText(app.description)
-        self.hero_icon.setPixmap(app_icon(app, 72).pixmap(72, 72))
+        self._show_app_icon(app)
         text = app.release_notes or "등록된 릴리즈 노트가 없습니다."
         self.notes.show_notes(text)
         self.latest_app_label.setText("프로그램 최신 버전" if self.online else "프로그램 등록 버전")
@@ -637,6 +637,9 @@ class MainWindow(QMainWindow):
             self.message.setText(f"목록 오류 — 설치/업데이트 차단, 로컬 실행 가능: {catalog_error}")
         elif not app.published and not installed and not busy:
             self.message.setText(app.availability_reason or "배포 패키지 미확인")
+
+    def _show_app_icon(self, app):
+        self.hero_icon.setPixmap(app_icon(app, 72).pixmap(72, 72))
 
     def _begin(self, operation, action, success):
         if self.task is not None:
@@ -860,6 +863,15 @@ class MainWindow(QMainWindow):
             pass
         return None
 
+    def _ask(self, title, message, *, default_no=False):
+        buttons = QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        default = QMessageBox.StandardButton.No if default_no else QMessageBox.StandardButton.Yes
+        return QMessageBox.question(self, title, message, buttons, default) == QMessageBox.StandardButton.Yes
+
+    def _choose_item(self, title, message, choices):
+        label, accepted = QInputDialog.getItem(self, title, message, choices, 0, False)
+        return label if accepted else None
+
     def update_launcher(self):
         session, candidate = self.managed_session, self.launcher_candidate
         if not session or not candidate or not self.online or self.task or self._launcher_handoff:
@@ -869,9 +881,8 @@ class MainWindow(QMainWindow):
             change = f"설치 v{session.current.version} → {target}\n전환 단계 v{candidate.version}을 자동 적용합니다."
         else:
             change = f"설치 v{session.current.version} → 최신 v{candidate.version}"
-        if QMessageBox.question(self, "런처 업데이트",
-                                f"{change}\n업데이트를 검증한 후 런처를 재시작합니다. 설치 앱과 사용자 데이터는 유지됩니다."
-                                ) != QMessageBox.StandardButton.Yes:
+        if not self._ask("런처 업데이트",
+                         f"{change}\n업데이트를 검증한 후 런처를 재시작합니다. 설치 앱과 사용자 데이터는 유지됩니다."):
             return
 
         def prepared(transaction):
@@ -978,8 +989,7 @@ class MainWindow(QMainWindow):
                 text += "\n선택한 버전은 그 폴더에 보존된 기존 설정과 작업 파일을 사용합니다."
             elif installed:
                 text += "\n기존 버전은 보존하고, 등록된 사용자 설정을 새 버전으로 복사합니다."
-            if QMessageBox.question(self, title, text, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                    QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            if not self._ask(title, text, default_no=True):
                 return
             provider = self.provider
             self.cancel_button.setEnabled(True)
@@ -1013,17 +1023,15 @@ class MainWindow(QMainWindow):
                 self.message.setText("전환할 수 있는 설치 버전이 없습니다. 설치 시 보관된 서명 목록과 원본 ZIP이 필요합니다.")
                 return
             labels = [f"{item.version} · {item.release_id}" for item in choices]
-            label, accepted = QInputDialog.getItem(self, "설치된 버전 선택",
-                f"현재 버전: {current.version} · {current.release_id}", labels, 0, False)
-            if not accepted:
+            label = self._choose_item("설치된 버전 선택",
+                                      f"현재 버전: {current.version} · {current.release_id}", labels)
+            if label is None:
                 return
             target = choices[labels.index(label)]
-            answer = QMessageBox.question(self, "버전 전환",
+            if self._ask("버전 전환",
                 f"{label}로 전환할까요?\n각 버전의 작업 파일과 설정은 현재 위치에 보존됩니다. "
                 "선택한 버전은 그 폴더의 기존 데이터를 사용합니다.\n"
-                "공용 작업 파일은 그대로 유지됩니다. 버전 간 호환성을 확인한 뒤 여세요.",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-            if answer == QMessageBox.StandardButton.Yes:
+                "공용 작업 파일은 그대로 유지됩니다. 버전 간 호환성을 확인한 뒤 여세요.", default_no=True):
                 self._begin("버전 전환", lambda progress, cancel: self.installer.select_release(
                     app.app_id, target.release_id, pinned=not app.published or target != app,
                     expected_current=current, expected_release=target, cancel=cancel),
@@ -1050,8 +1058,7 @@ class MainWindow(QMainWindow):
             return
         text = (f"{app.display_name}의 설치 파일을 제거할까요?\n"
                 "사용자 설정·작업물·변경된 파일은 설치 폴더에 보존합니다.")
-        if QMessageBox.question(self, "프로그램 제거", text, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+        if not self._ask("프로그램 제거", text, default_no=True):
             return
         def done(result):
             count = len(result["retained_files"])

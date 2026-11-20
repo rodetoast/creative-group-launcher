@@ -18,10 +18,13 @@ def main(argv=None):
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--catalog", type=Path)
     parser.add_argument("--screenshot", type=Path)
+    parser.add_argument("--widgets", action="store_true", help="Compare the legacy UI in an isolated check")
     parser.add_argument("--github-repository", help="Explicit OWNER/REPO; bundled trust policy still applies")
     parser.add_argument("--github-test-policy", type=Path, help="Explicit public test policy; isolated .test-results paths only")
     parser.add_argument("--session-file", type=Path)
     args = parser.parse_args(argv)
+    if args.widgets and not args.check:
+        parser.error("--widgets는 격리된 --check에서만 사용할 수 있습니다.")
     if args.github_test_policy and (args.data_dir is None or not args.github_repository):
         parser.error("시험 공개키에는 --data-dir와 --github-repository를 명시해야 합니다.")
     if args.session_file and any((args.version, args.check, args.data_dir, args.catalog, args.screenshot,
@@ -32,6 +35,7 @@ def main(argv=None):
         return 0
     if args.check:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        os.environ.setdefault("QT_QUICK_BACKEND", "software")
     from .common import LauncherError
     from .startup_splash import StartupSplash, wants_session_splash
 
@@ -92,7 +96,12 @@ def run_window(args, session, *, splash=None):
         temporary = tempfile.TemporaryDirectory(prefix="check-", dir=check_root)
     root = session.data_root if session else args.data_dir or (Path(temporary.name) if temporary else AppPaths.default().root)
     health = session and session.mode == "health"
-    window = MainWindow(AppPaths(root), catalog_path=args.catalog or DATA, auto_connect=not args.check and not session,
+    if getattr(args, "widgets", False):
+        window_type = MainWindow
+    else:
+        from .quick_ui import QuickLauncherWindow
+        window_type = QuickLauncherWindow
+    window = window_type(AppPaths(root), catalog_path=args.catalog or DATA, auto_connect=not args.check and not session,
                         github_repository=session.channel["repository"] if session else args.github_repository,
                         github_test_policy=args.github_test_policy, managed_session=session)
     if session:
@@ -142,7 +151,16 @@ def run_window(args, session, *, splash=None):
         timer.timeout.connect(poll)
         timer.start(80)
 
+    quick = getattr(window, "when_quick_frame", None)
+    shell_painted = bool(health)
+    quick_rendered = not quick
+    ready = False
+
     def first_frame_ready():
+        nonlocal ready
+        if ready or not shell_painted or not quick_rendered:
+            return
+        ready = True
         if splash:
             # The old Bootstrap enumerates windows immediately after ready.
             # Leave only the actual launcher window for the taskbar setup.
@@ -153,17 +171,37 @@ def run_window(args, session, *, splash=None):
                 session.acknowledge("ready")
             except (LauncherError, OSError, ValueError, TypeError):
                 app.exit(11)
+                return
+        if args.check or args.screenshot:
+            QTimer.singleShot(0, capture)
+
+    def quick_frame_ready():
+        nonlocal quick_rendered
+        quick_rendered = True
+        first_frame_ready()
+
+    def shell_frame_ready():
+        nonlocal shell_painted
+        shell_painted = True
+        first_frame_ready()
+
+    if quick:
+        quick(quick_frame_ready)
 
     if health:
-        # Health is an intentionally invisible startup probe.
-        QTimer.singleShot(0, first_frame_ready)
+        if quick:
+            # Keep the health probe invisible, but exercise real QML rendering.
+            window.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+            window.show()
+        else:
+            QTimer.singleShot(0, first_frame_ready)
     else:
         class FirstPaint(QObject):
             def eventFilter(self, watched, event):
                 if event.type() == QEvent.Type.Paint:
                     watched.removeEventFilter(self)
                     # Run after QWidget has handled this first paint.
-                    QTimer.singleShot(0, first_frame_ready)
+                    QTimer.singleShot(0, shell_frame_ready)
                 return False
 
         paint = FirstPaint(window)
@@ -180,13 +218,13 @@ def run_window(args, session, *, splash=None):
             if not window.grab().save(str(args.screenshot)):
                 raise LauncherError("화면 이미지 저장 실패")
         if args.check:
-            print(json.dumps({"version": __version__, "apps": window.list.count(),
+            print(json.dumps({"version": __version__, "apps": len(window.apps),
                               "ui": "created", "tools_started": 0,
                               "device_pixel_ratio": window.devicePixelRatioF(),
                               "size": [window.width(), window.height()]}, ensure_ascii=False))
             app.quit()
-    if args.check or args.screenshot:
-        QTimer.singleShot(250, capture)
+    if args.check:
+        QTimer.singleShot(15000, lambda: app.exit(11))
     try:
         result = app.exec()
     finally:

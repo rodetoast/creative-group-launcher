@@ -18,6 +18,33 @@ NAMES={'fixture-r1':'CGLFixtureR1','fixture-r2':'CGLFixtureR2',
        'bootstrap':'CGLBootstrap','launcher':'CreativeGroupLauncher'}
 
 
+def retain_quick_imports(folder: Path):
+    """Keep only the shipped QML imports and their dependencies.
+
+    PyInstaller collects every Qt style by default, including assets whose
+    names exceed Win32's budget once staged beneath a managed update home.
+    """
+    bundle = folder.resolve()
+    imports = bundle / '_internal/PySide6/qml'
+    modules = {
+        'QtQml', 'QtQml/Models', 'QtQml/WorkerScript', 'QtQuick', 'QtQuick/Window',
+        'QtQuick/Layouts', 'QtQuick/Templates', 'QtQuick/Shapes',
+        'QtQuick/Controls', 'QtQuick/Controls/impl',
+        'QtQuick/Controls/Basic', 'QtQuick/Controls/Basic/impl',
+    }
+    if not imports.resolve().is_relative_to(bundle) or not all((imports/module/'qmldir').is_file()
+                                                               for module in modules):
+        raise LauncherError('Qt Quick 가져오기 경로 또는 필수 모듈이 일치하지 않습니다.')
+    for path in imports.rglob('*'):
+        if path.is_file() and path.parent.relative_to(imports).as_posix() not in modules:
+            if not path.resolve().is_relative_to(imports):
+                raise LauncherError('QQml 모듈이 빌드 출력 밖을 가리킵니다.')
+            path.unlink()
+    # The existing updater also budgets for extraction and rollback paths.
+    # Collapsing the import root leaves headroom for employee profile names.
+    imports.rename(bundle / '_internal/q')
+
+
 def build_environment(root: Path):
     # PyInstaller resolves native dependencies through PATH. Do not collect unrelated
     # application DLLs (for example Poppler's ICU) ahead of Windows' system DLLs.
@@ -105,7 +132,8 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
             command+=['--version-file', str(resource)]
         if role=='launcher':
             command+=['--windowed','--add-data',f'{PROJECT / "southpaw_tools/data"}:southpaw_tools/data',
-                      '--add-data',f'{PROJECT / "southpaw_tools/assets"}:southpaw_tools/assets']
+                      '--add-data',f'{PROJECT / "southpaw_tools/assets"}:southpaw_tools/assets',
+                      '--add-data',f'{PROJECT / "southpaw_tools/quick"}:southpaw_tools/quick']
             if product_icon:
                 command+=['--icon',str(product_icon)]
         else:
@@ -124,13 +152,15 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
             raise LauncherError(f'{role} 빌드 실패. 해당 build.log를 보존하고 확인하세요.')
         folder=root/'dist'/name
         if role=='launcher':
+            retain_quick_imports(folder)
             add_launcher_manifest(folder, launcher_release_id)
         files={p.relative_to(folder).as_posix():digest(p) for p in folder.rglob('*') if p.is_file()}
         exe=folder/f'{name}.exe'
         if exe.read_bytes()[:2]!=b'MZ':
             raise LauncherError('Windows PE 출력이 아닙니다.')
         if role=='launcher':
-            required=['python313.dll','Qt6Core.dll','Qt6Gui.dll','Qt6Widgets.dll','qwindows.dll']
+            required=['python313.dll','Qt6Core.dll','Qt6Gui.dll','Qt6Widgets.dll','qwindows.dll',
+                      'Qt6Qml.dll','Qt6Quick.dll','Qt6QuickWidgets.dll','Launcher.qml']
             for basename in required:
                 if not any(Path(n).name.casefold()==basename.casefold() for n in files):
                     raise LauncherError(f'필수 DLL 누락: {basename}')
@@ -138,6 +168,8 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
                 raise LauncherError('cryptography 네이티브 모듈 누락')
             if not any(n.endswith('southpaw_tools/data/trusted_catalog_keys.json') for n in files):
                 raise LauncherError('고정 신뢰키 정책 리소스 누락')
+            if not any(n.endswith('/QtQuick/Controls/qmldir') for n in files):
+                raise LauncherError('Qt Quick Controls QML 모듈 누락')
         sources={str(p.relative_to(PROJECT)):digest(p) for p in (PROJECT/'southpaw_tools').rglob('*.py')}
         previous['roles'][role]={'folder':str(folder),'executable':str(exe),'sha256':digest(exe),
                                  'files':files,'file_count':len(files),'executed':False,'source_hashes':sources}
