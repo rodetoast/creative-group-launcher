@@ -114,3 +114,26 @@ GUI 패키지만으로는 바로가기에서 Bootstrap이 시작된 시점부터
 수정본에서 Splash 바로 아래에 메인 창이 놓이는 순서, confirmed 시점에 Splash가 사라지는 것과 기존 작업표시줄 표식이 있는 환경의 정상 종료 코드 0 및 합성 작업 파일 보존을 확인했다. 시작 창과 메인 창의 스레드를 부모/소유 관계로 묶은 첫 시험에서는 GUI가 준비되지 않아 기존 Bootstrap이 시간 초과했다. 이 방식은 제거했고, 최종본은 소유 관계 없이 창 순서만 바꾼다. 기록은 `C:/Dev/CGL-SplashHandoff-Final-20261120/native-measurements.json`에 보존했다.
 
 `python -B -m unittest tests.test_startup_splash tests.test_bootstrap_ack tests.test_canonical_channel` 24개 통과. 일반 세션에서 조기 표시, 잘못된 세션의 창 정리, health/부모 Splash 중복 방지와 기존 ACK·채널 진입 계약을 확인했다. 운영 키 사용, 회사 앱 실행, Setup 변경 또는 전체 업데이트 회귀는 수행하지 않았다.
+
+## Bootstrap 자동 교체 후보 (2026-11-20)
+
+개발 기준은 GUI 시작 창 수정 `2e457d9`이며, 별도 브랜치 `codex/bootstrap-auto-update-20261120`에서 작업했다. 운영 GUI 0.1.8 / Rod11, Toast9는 유지한다.
+
+### 적용 계약
+
+- Rod 0.1.9 후보의 서명된 GUI 릴리스 안에 `bootstrap-upgrade.json` 및 `bootstrap-v2.zip`을 넣는다. 기존 Ed25519, 순번, 보관 원 ZIP·receipt·proof와 일치하는 현재 GUI인지 다시 확인한다. 신규 Bootstrap과 `_cgl_b2` 런타임은 이 GUI ZIP의 해시와 파일 manifest로 보호된다. 기존 진입 파일은 설치 유형별 승인 해시와 대조한다. 서명·대상·기존 파일이 일치하지 않으면 그대로 둔다.
+- 기존 GUI 업데이트의 `committed` 거래 또는 첫 Toast Bridge 경로에서 확보한 서명된 Rod 증거가 있는 정상 세션이 시작 구성 요소를 준비한다. 숨은 health 실행에서는 시작하지 않는다. 기존 업데이트 승인을 사용하며 GUI에 별도 설치 단계가 없다. 준비 완료 후 GUI가 종료되며, 전환 중 한 차례 추가 자동 재시작이 있다.
+- 별도 프로세스로 실행한 서명된 후보가 프로세스 신원·경로와 기존 업데이트·실행 잠금을 확인한다. 기존 GUI, Bootstrap 및 Bridge가 종료될 때까지 기다린 후 새 버전 DLL을 `_cgl_b2`에 놓고, 이전 EXE를 검증된 백업으로 보존한 다음 같은 볼륨에서 기존 `CGLBootstrap.exe`만 원자적으로 교체한다. 기존 `_internal` 및 이미 실행 중인 다른 직원 프로세스는 그대로 둔다.
+- 직접 설치는 기존 `launcher-home`을 사용한다. Toast Bridge는 이미 서명된 하위 런타임의 정확한 파일 집합을 매번 확인하므로 하위 Bootstrap을 덮어쓰지 않는다. 기존 바로가기 대상인 바깥 Toast 진입점만 갱신하고, 기존 `launcher-home/rod/launcher-home`과 사용자 데이터 루트에 연결한다. 원래 바로가기 경로와 인자, 작업표시줄 표식, 설치된 앱의 데이터 영역은 유지한다.
+- 새 시작은 nonce와 실제 프로세스 이미지가 일치하고 기존 GUI의 첫 Paint 및 `ready/confirmed`까지 통과해야 확정한다. 확인 전 실패 시 외부 작업자가 검증한 구 진입 EXE를 복원해 다시 실행한다. 이미 개시된 교체에서 작업자가 사라져도 새 진입점이 로드되는 경우 다음 실행에서 확인 또는 복원 작업을 수행할 수 있다. 새 진입점과 외부 작업자가 모두 실행 불능인 동시 장애, 검증할 수 없는 백업 또는 쓰기 권한 거부에서는 자동 정상화가 보장되지 않는다. 기존 데이터와 진단 기록을 유지한다. 운영 환경에서는 이 경우의 지원 경계를 함께 승인한다.
+
+### 격리 결과와 후보
+
+- 현재 서명·설치 엔진으로 후보를 준비해 실제 기존 계열의 Windows Bootstrap worker로 0.1.9를 적용했다. 최초 승인은 격리 테스트가 기존 승인 API를 호출하는 방식으로 준비했으며, 이후 GUI와 외부 작업자가 추가 입력 없이 새 진입점으로 전환해 `committed`에 도달했다. 동일 설치 경로, 기존 영수증, 설정과 5개 앱의 합성 작업 파일 해시가 유지됐다.
+- 별도 격리 세션에서 새 Bootstrap 시험 시작 시점에만 Windows 파일 공유 잠금으로 초기화 오류를 유도했다. 외부 작업자가 이전 진입점의 SHA-256을 복원하고 기존 Bootstrap으로 GUI를 다시 열었으며, 실제 작업·설정 파일과 기존 영수증을 보존했다. GUI 0.1.9를 내리는 대신 시작 진입점만 복원했다.
+- Toast Bridge 토폴로지는 이미 배포한 네이티브 외부 Bootstrap과 Bridge GUI를 격리 신뢰 자료에 연결하고 첫 Rod 다운로드 증거를 로컬 서명 seed로 구성했다. Toast → Bridge → 하위 Rod → GUI의 실제 네 프로세스가 종료된 후 바깥 진입점만 교체됐다. 기존 하위 런타임 해시, Toast/Rod 포인터와 Rod trust, 합성 사용자 설정이 일치했다. 공개 채널 연속 다운로드는 기존 결과를 재사용했다.
+- 교체를 마친 동일 시작 경로와 바로가기 인자로 직접 재실행했다. 이 PC의 1회 측정에서 Win32 Splash가 약 **0.125초**에 표시됐고, **5.226초**에 실제 GUI가 보이며 confirmed가 확인됐다. 그 시점에는 시작 창이 닫혔다. 종료 코드는 0이었다.
+- 관련 자동 테스트 27개가 통과했다. `python -B -m unittest tests.test_bootstrap_upgrade tests.test_startup_splash tests.test_bootstrap_ack tests.test_canonical_channel`을 사용했다. 기존 전체 업데이트 및 Setup 시험은 재수행하지 않았다.
+- 네이티브 검증은 운영과 분리된 로컬 시험 키로 실행했다. 운영용 공개키와 승인 구 진입 해시를 넣은 **미서명** 0.1.9 후보는 `C:/Dev/CGL-BootstrapAuto-20261120/production-policy-unsigned/`에 있다. ZIP은 81,352,523바이트이며 SHA-256은 `9f30f7519c4f8375485a56f8b5584144fa9a10de417d0b678ffccb46d07cc90c`이다. 내부 manifest와 Bootstrap ZIP의 해시를 재검증했으며 운영 바이너리와 같은 EXE를 로컬 시험에서 사용했다. 후보 계획과 검증 로그는 해당 로컬 작업 루트에 있다. 운영 개인키, 설치 PC, 운영 Release에는 변경을 가하지 않았다.
+
+운영 배포에는 기존 설치 두 유형의 승인 진입 EXE 해시 범위 확정, 운영 서명 및 새 순번 승인, 동일 운영 후보의 격리 확인이 필요하다. 새 Setup은 이번 경로의 선행 조건이 아니다.

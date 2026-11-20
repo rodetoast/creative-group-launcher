@@ -164,3 +164,7 @@ Toast Latest는 [production-catalog-000009 / Bridge 0.1.6](https://github.com/to
 ## 기존 Bootstrap에서의 GUI 시작 창 보완 (2026-11-20)
 
 개발 브랜치 `codex/gui-startup-handoff-20261120`에서 GUI 프로세스 검증 전 시작 창을 표시하고 첫 메인 Paint 직후 닫도록 했다. 구 Bootstrap의 프로세스 생성 이전은 GUI 업데이트의 적용 범위 밖이다. [실측 및 안정 Bootstrap 자동 갱신 설계](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다. 운영 Rod11/GUI 0.1.8은 그대로다.
+
+## Bootstrap 자동 갱신 후보 (2026-11-20)
+
+개발 브랜치 `codex/bootstrap-auto-update-20261120`에서 서명 GUI의 기존 승인으로 Bootstrap 외부 교체를 구현했다. Rod와 Toast Bridge 격리 Windows 기동, 시작 실패의 구 진입점 복원, 같은 바로가기 경로의 Win32 시작 창을 확인했다. [구현·검증 및 미서명 후보 기록](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다. 운영 Rod11·Toast9는 유지한다.

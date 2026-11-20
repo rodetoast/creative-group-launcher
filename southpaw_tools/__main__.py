@@ -115,7 +115,7 @@ def run_window(args, session, *, splash=None):
                     if is_bridge:
                         QTimer.singleShot(0, start_bridge)
                     elif not health:
-                        QTimer.singleShot(0, window.refresh)
+                        QTimer.singleShot(0, start_update_or_refresh)
                 if session.command("stop") and not window.task:
                     session.acknowledge("stopped")
                     app.exit(0)
@@ -124,6 +124,20 @@ def run_window(args, session, *, splash=None):
         def start_bridge():
             from .channel_bridge import start_bridge_ui
             start_bridge_ui(app, window, session, payload, fallback_locks)
+
+        def start_update_or_refresh():
+            from .bootstrap_upgrade import SPEC, begin
+            if not (payload / SPEC).is_file():
+                window.refresh()
+                return
+
+            def prepared(restart):
+                if restart:
+                    app.exit(0)
+                else:
+                    QTimer.singleShot(0, window.refresh)
+
+            window._begin("시작 구성 요소 업데이트 준비", lambda progress, cancel: begin(session, cancel), prepared)
 
         timer.timeout.connect(poll)
         timer.start(80)

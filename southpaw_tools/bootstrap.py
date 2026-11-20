@@ -229,7 +229,7 @@ class Bootstrap:
             except subprocess.TimeoutExpired as exc:
                 raise LauncherError('업데이트 작업자가 아직 실행 중입니다. 강제 종료/중복 적용하지 않고 기록을 보존합니다.') from exc
 
-    def run(self,*,transaction=None,stop_after_ready=False,scenario='ok',probe_scenario='ok',stop_file=None):
+    def run(self,*,transaction=None,stop_after_ready=False,scenario='ok',probe_scenario='ok',stop_file=None,on_confirmed=None):
         u=self.updater
         if stop_file is not None:
             stop_file=Path(stop_file).resolve()
@@ -271,6 +271,13 @@ class Bootstrap:
                     applied_transaction = None
                     launched.append(current.release_id)
                     self.event('running',release_id=current.release_id,pid=session.process.pid)
+                    if on_confirmed:
+                        try:
+                            on_confirmed(session)
+                        except Exception:
+                            session.stop()
+                            raise
+                        on_confirmed = None
                     if u.channel:
                         code = session.process.wait()
                         if code == 20:
@@ -342,7 +349,7 @@ class Bootstrap:
                 raise
 
 
-def main(argv=None, *, splash=None):
+def main(argv=None, *, splash=None, managed_home=None, on_confirmed=None, on_initial_failure=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('role',nargs='?',default='run',choices=['run','worker'])
     parser.add_argument('--home',type=Path)
@@ -365,7 +372,7 @@ def main(argv=None, *, splash=None):
                 raise LauncherError('관리형 업데이트에는 승인된 패키징 Bootstrap이 필요합니다.')
             channel = channel_policy()
             folder = Path(sys.executable).resolve().parent
-            home = folder / 'launcher-home'
+            home = managed_home or folder / 'launcher-home'
             if args.home is not None and args.home.resolve() != home:
                 raise LauncherError('Bootstrap 옆 런처 프로그램 경로만 사용할 수 있습니다.')
             args.home = home
@@ -394,7 +401,7 @@ def main(argv=None, *, splash=None):
             value={'release_id':result.release_id,'worker':True}
         else:
             value=Bootstrap(args.home, channel=channel, splash=splash).run(transaction=args.transaction,stop_after_ready=args.stop_after_ready,
-                scenario=args.scenario,probe_scenario=args.probe_scenario,stop_file=args.stop_file)
+                scenario=args.scenario,probe_scenario=args.probe_scenario,stop_file=args.stop_file,on_confirmed=on_confirmed)
         print(json.dumps(value))
         return 0 if value.get('worker_exit') in {None,0} else 2
     except (LauncherError,OSError,ValueError,KeyError,TypeError) as exc:
@@ -411,6 +418,8 @@ def main(argv=None, *, splash=None):
                 secondary(exc, log_error, 'error_log_write')
                 message += '\n진단 기록 저장 실패: ' + error_summary(log_error)
         print(message)
+        if on_initial_failure and on_initial_failure():
+            return 1
         if getattr(sys, 'frozen', False) and sys.stderr is None:
             import ctypes
             from .branding import DISPLAY_NAME

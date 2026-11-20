@@ -117,8 +117,12 @@ class StartupSplash:
             user.DestroyWindow(window)
 
 
-def frozen_bootstrap(project):
+def frozen_bootstrap(project, *, upgrade_entry=False):
     # The worker and developer fixtures must not create an additional window.
+    args = sys.argv[1:]
+    if upgrade_entry and args in (["--bootstrap-swap"], ["--restore-bootstrap"]):
+        from .bootstrap_upgrade import worker
+        return worker(restore=args == ["--restore-bootstrap"])
     show = (sys.platform == "win32" and "worker" not in sys.argv[1:]
             and not {"--help", "-h"}.intersection(sys.argv[1:]))
     while True:
@@ -126,6 +130,14 @@ def frozen_bootstrap(project):
             from . import self_update
             from .bootstrap import main
             self_update.PROJECT = project
-            result = main(splash=splash)
+            if upgrade_entry:
+                from .bootstrap_upgrade import entry_route
+                token = args[1] if len(args) == 2 and args[0] == "--bootstrap-trial" else None
+                home, confirmed, recover = entry_route(token)
+                # A probationary process must return failures to its independent worker.
+                result = main([] if token else args, splash=splash, managed_home=home,
+                              on_confirmed=confirmed, on_initial_failure=recover)
+            else:
+                result = main(splash=splash)
         if result != 3:
             return result

@@ -53,7 +53,7 @@ def product_version_resource(path, filename):
 
 
 def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstrap_windowed=False,
-          bootstrap_icon=None, product_icon=None):
+          bootstrap_icon=None, product_icon=None, bootstrap_upgrade=False):
     root=root.resolve()
     if not root.is_relative_to((PROJECT/'.test-results').resolve()):
         raise LauncherError('빌드 출력은 격리 .test-results 안에만 생성합니다.')
@@ -84,7 +84,7 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
                   f'raise SystemExit(fixture_main({release!r},{version!r},Path({str(PROJECT)!r})))\n')
         elif role=='bootstrap':
             text=(f'from pathlib import Path\nfrom southpaw_tools.startup_splash import frozen_bootstrap\n'
-                  f'raise SystemExit(frozen_bootstrap(Path({str(PROJECT)!r})))\n')
+                  f'raise SystemExit(frozen_bootstrap(Path({str(PROJECT)!r}), upgrade_entry={bootstrap_upgrade!r}))\n')
         else:
             text='from southpaw_tools.__main__ import main\nraise SystemExit(main())\n'
         text=('import sys\nfor stream in (sys.stdout,sys.stderr):\n'
@@ -96,6 +96,9 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
                  '--specpath',str(root/'specs'),'--paths',str(PROJECT),
                  '--exclude-module','PyQt5','--exclude-module','PyQt6','--exclude-module','PySide2',
                  '--exclude-module','tkinter','--exclude-module','tests']
+        if bootstrap_upgrade and role == 'bootstrap':
+            from southpaw_tools.bootstrap_upgrade import RUNTIME
+            command += ['--contents-directory', RUNTIME]
         if role in {'launcher', 'bootstrap'}:
             resource = entries/f'{role}-version.txt'
             product_version_resource(resource, name+'.exe')
@@ -151,12 +154,13 @@ def main(argv=None):
     parser.add_argument('--roles',nargs='+',choices=list(NAMES),default=list(NAMES))
     parser.add_argument('--launcher-release-id',default='windows-dev-0.1.0')
     parser.add_argument('--bootstrap-windowed',action='store_true')
+    parser.add_argument('--bootstrap-upgrade',action='store_true')
     parser.add_argument('--bootstrap-icon',type=Path)
     parser.add_argument('--product-icon',type=Path,help='승인된 ICO를 Bootstrap·런처 EXE에 공통 적용')
     args=parser.parse_args(argv)
     try:
         build(args.root,args.roles,args.launcher_release_id,bootstrap_windowed=args.bootstrap_windowed,
-              bootstrap_icon=args.bootstrap_icon,product_icon=args.product_icon)
+              bootstrap_icon=args.bootstrap_icon,product_icon=args.product_icon,bootstrap_upgrade=args.bootstrap_upgrade)
         return 0
     except (LauncherError,OSError) as exc:
         print(f'격리 빌드 실패: {exc}')

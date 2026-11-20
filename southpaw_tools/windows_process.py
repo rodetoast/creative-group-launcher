@@ -55,3 +55,35 @@ def still_same(record):
     current=identity(record['pid'])
     return bool(current and current['created_ticks']==record['created_ticks']
                 and current['image'].casefold()==record['image'].casefold())
+
+
+def parent_pid(pid):
+    """Return the recorded parent PID of a running Windows process."""
+    class ProcessEntry(ctypes.Structure):
+        _fields_ = [("size", wintypes.DWORD), ("usage", wintypes.DWORD),
+                    ("pid", wintypes.DWORD), ("heap", ctypes.c_size_t),
+                    ("module", wintypes.DWORD), ("threads", wintypes.DWORD),
+                    ("parent", wintypes.DWORD), ("priority", wintypes.LONG),
+                    ("flags", wintypes.DWORD), ("exe", wintypes.WCHAR * 260)]
+
+    dll = ctypes.WinDLL("kernel32", use_last_error=True)
+    dll.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+    dll.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    dll.CloseHandle.argtypes = [wintypes.HANDLE]
+    for func in (dll.Process32FirstW, dll.Process32NextW):
+        func.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessEntry)]
+        func.restype = wintypes.BOOL
+    snapshot = dll.CreateToolhelp32Snapshot(2, 0)
+    if snapshot == ctypes.c_void_p(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        item = ProcessEntry()
+        item.size = ctypes.sizeof(item)
+        found = dll.Process32FirstW(snapshot, ctypes.byref(item))
+        while found:
+            if item.pid == pid:
+                return item.parent
+            found = dll.Process32NextW(snapshot, ctypes.byref(item))
+        return None
+    finally:
+        dll.CloseHandle(snapshot)
