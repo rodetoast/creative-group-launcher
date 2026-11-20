@@ -66,3 +66,12 @@ class BootstrapUpgradeTests(unittest.TestCase):
         self.assertEqual(ack["nonce"], self.state["nonce"])
         self.assertEqual(ack["release_id"], "candidate")
         self.assertEqual(read_json(self.stage / "transaction.json")["phase"], "switching")
+
+    def test_worker_error_returns_to_supervisor_without_unhandled_dialog(self):
+        from southpaw_tools.startup_splash import frozen_bootstrap
+
+        with (patch("sys.argv", ["CGLBootstrap.exe", "--bootstrap-swap"]),
+              patch.object(upgrade, "worker", side_effect=LauncherError("trial failed")),
+              patch("builtins.print") as printed):
+            self.assertEqual(frozen_bootstrap(self.root, upgrade_entry=True), 1)
+        printed.assert_called_once()

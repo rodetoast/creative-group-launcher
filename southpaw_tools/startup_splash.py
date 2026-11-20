@@ -121,8 +121,18 @@ def frozen_bootstrap(project, *, upgrade_entry=False):
     # The worker and developer fixtures must not create an additional window.
     args = sys.argv[1:]
     if upgrade_entry and args in (["--bootstrap-swap"], ["--restore-bootstrap"]):
+        from subprocess import SubprocessError
+        from .bootstrap_diagnostics import error_summary
         from .bootstrap_upgrade import worker
-        return worker(restore=args == ["--restore-bootstrap"])
+        from .common import LauncherError
+
+        try:
+            return worker(restore=args == ["--restore-bootstrap"])
+        except (LauncherError, OSError, ValueError, KeyError, TypeError, SubprocessError) as exc:
+            # The caller redirects this worker to its diagnostic log. A
+            # recovery outcome must never open a PyInstaller traceback dialog.
+            print(f"Bootstrap 교체 작업 종료: {error_summary(exc)}", file=sys.stderr)
+            return 1
     show = (sys.platform == "win32" and "worker" not in sys.argv[1:]
             and not {"--help", "-h"}.intersection(sys.argv[1:]))
     while True:

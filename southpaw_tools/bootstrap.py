@@ -270,14 +270,17 @@ class Bootstrap:
                         self.splash.close()
                     applied_transaction = None
                     launched.append(current.release_id)
-                    self.event('running',release_id=current.release_id,pid=session.process.pid)
-                    if on_confirmed:
-                        try:
+                    try:
+                        self.event('running',release_id=current.release_id,pid=session.process.pid)
+                        if on_confirmed:
                             on_confirmed(session)
-                        except Exception:
+                    except Exception:
+                        # A failed trial must release its GUI before the old
+                        # entry attempts to take the running lock again.
+                        if on_confirmed:
                             session.stop()
-                            raise
-                        on_confirmed = None
+                        raise
+                    on_confirmed = None
                     if u.channel:
                         code = session.process.wait()
                         if code == 20:
