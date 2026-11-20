@@ -532,3 +532,13 @@ Draft와 공개 HTTPS에서 8개 자산을 재다운로드해 후보 크기·SHA
 SPENT03은 사용자가 보고한 Windows 프로세스 인계 결과를 재사용했다. 그 시험은 `stage-rod`로 서명된 Rod 후보를 준비했다. 운영 코드의 `run_bridge`는 Rod 관리 홈이 없을 때 고정 저장소 ID 및 기존 운영 키로 순번10 이상을 확인하고 ZIP을 다운로드·검증·초기화한다. 개발 PC에서 빈 Rod 관리 홈과 실제 서명 Bridge 후보로 이 경로를 직접 실행해 공개 HTTPS 카탈로그10부터 GUI 0.1.7 ZIP, receipt, EXE까지 자동 준비를 확인했다. 이 확인은 자식 Bootstrap 프로세스 실행 경계만 대체했으며 기존 Toast 포인터와 합성 파일이 남아 있는 것을 확인했다. 실제 Windows 인계와 자동 HTTPS 준비를 각각 확인했으며, 배포된 Toast GUI 버튼으로 시작해 온라인 두 채널을 연속 통과하는 시험은 Toast 9 게시 전 미검증이다.
 
 다음 승인 대상은 Toast `production-catalog-000009`와 Bridge 0.1.6의 정식 공개다. 승인 뒤 대표 격리 설치에서 기존 업데이트 버튼 한 번으로 별도 `stage-rod` 없이 Rod GUI가 시작되는지 확인한다.
+
+## Toast Bridge의 별도 준비 없는 Windows 전환 검증 (2026-11-20)
+
+개발 PC Windows `DESKTOP-1MK6D95`의 새 격리 홈에서 기존 직원 Bootstrap과 Toast 0.1.5 초기 설치를 사용했다. 기존 인계 도구의 0.1.5 소스 GUI가 미공개 Toast 카탈로그9를 그 시험 프로세스에서만 제공받았다. 실제 Qt 업데이트 버튼의 확인 대화상자에서 한 번 승인했고 기존 Windows Bootstrap worker가 서명된 Bridge 0.1.6을 적용해 거래를 `committed`로 기록했다. 시험 도구가 동일 Bootstrap을 자동 재실행했다.
+
+Rod 홈이 없는 상태에서 실제 Bridge EXE가 공개 Rod 카탈로그10을 HTTPS로 조회하고 0.1.7 ZIP을 검증·적용했다. `stage-rod`를 실행하지 않았다. 실제 Rod 0.1.7 프로세스의 Windows 창과 `confirmed`를 확인했으며, 로컬의 카탈로그 바이트·보관 ZIP·EXE가 승인 후보와 일치했다. 합성 작업 파일은 유지됐다. 기존 회사 앱 데이터 보존, Setup 및 전체 회귀는 기존 결과를 재사용했다.
+
+창이 표시되자마자 시험 스크립트가 요청한 첫 종료는 제한 시간에 끝나지 않았다. 기존 프로세스가 살아 있어 별도 실행은 `running.lock`에 의해 차단됐다. 원래 Rod 창을 다시 닫아 Rod와 Bridge 모두 Bootstrap 로그에서 종료 코드 0을 확인했다. 전환 자체를 반복하거나 제품 코드를 수정하지 않았다.
+
+예정 Toast 태그 `production-catalog-000009`의 충돌이 없고, Toast Latest8·Rod Latest10은 유지 중이다. Toast 후보 8개를 계획의 크기와 SHA-256에 대조했다. 게시 승인 대상 Bridge ZIP SHA-256은 `274e8ebc4ebe7480848a3c6409a040ea487a3b9d416e64a09a567b61c9302b65`이다. 미공개 Toast 9를 시험 전송으로 제공했으므로 운영 Toast에서의 다운로드는 실제 게시 다음에만 확인할 수 있다. 로컬 증거는 `.test-results/bridge-live-windows-20261120/result.json`과 격리 실행의 Bootstrap 로그에 있다.
