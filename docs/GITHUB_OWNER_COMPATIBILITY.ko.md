@@ -542,3 +542,21 @@ Rod 홈이 없는 상태에서 실제 Bridge EXE가 공개 Rod 카탈로그10을
 창이 표시되자마자 시험 스크립트가 요청한 첫 종료는 제한 시간에 끝나지 않았다. 기존 프로세스가 살아 있어 별도 실행은 `running.lock`에 의해 차단됐다. 원래 Rod 창을 다시 닫아 Rod와 Bridge 모두 Bootstrap 로그에서 종료 코드 0을 확인했다. 전환 자체를 반복하거나 제품 코드를 수정하지 않았다.
 
 예정 Toast 태그 `production-catalog-000009`의 충돌이 없고, Toast Latest8·Rod Latest10은 유지 중이다. Toast 후보 8개를 계획의 크기와 SHA-256에 대조했다. 게시 승인 대상 Bridge ZIP SHA-256은 `274e8ebc4ebe7480848a3c6409a040ea487a3b9d416e64a09a567b61c9302b65`이다. 미공개 Toast 9를 시험 전송으로 제공했으므로 운영 Toast에서의 다운로드는 실제 게시 다음에만 확인할 수 있다. 로컬 증거는 `.test-results/bridge-live-windows-20261120/result.json`과 격리 실행의 Bootstrap 로그에 있다.
+
+## Toast Bridge 0.1.6 운영 공개 및 실제 온라인 전환 (2026-11-20)
+
+사용자 승인으로 Toast 저장소 ID `1447701732`에 [production-catalog-000009](https://github.com/toast-source/creative-group-releases/releases/tag/production-catalog-000009)를 정식 공개하고 Latest로 지정했다. Release ID는 `452305050`, 서명 카탈로그 순번은 `9`다. 운영 Ed25519 키 ID `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`을 사용한 기존 후보 바이트를 재사용했다. Draft와 공개 HTTPS에서 자산 8개를 재다운로드해 원본 크기·SHA-256·서명을 대조했다. 기존 Toast 릴리스·자산 및 Rod Latest10·Setup 0.1.6.0의 원격 메타데이터가 게시 전후 일치했다. 회사 앱 5개 항목과 패키지는 Toast8과 동일하다.
+
+| 자산 | SHA-256 |
+|---|---|
+| Toast Bridge 0.1.6 ZIP | `274e8ebc4ebe7480848a3c6409a040ea487a3b9d416e64a09a567b61c9302b65` |
+| Toast 카탈로그9 | `a3f8efd0acb8265ea5930c3933060770b840dafeee75bfaa84197ef9f4fd2b4e` |
+| Toast 카탈로그9 서명 | `d7540eb8c3848cf7f42379c4fe5acfb95204106f1f05eef017b6d2979fc89235` |
+| Rod GUI 0.1.7 ZIP | `1615294f0ebfdcee44753fa262bb09c53c80339e50e51145717f101048e59392` |
+| 실제 실행 Rod GUI 0.1.7 EXE | `a75a9efa11912105aa88c36a5be5e48ac57f837b73216c74ae71800c44f23a2a` |
+
+개발 PC `DESKTOP-1MK6D95`의 새 격리 홈에서 공식 Bootstrap과 배포된 Toast 0.1.5 **EXE**로 한 번 시험했다. GUI에서 실제 Toast Latest9를 조회하고 업데이트 확인을 한 번 승인했다. 공개 HTTPS에서 Bridge를 받아 기존 Bootstrap의 종료·적용·재시작 경로로 거래가 `committed`됐다. Rod 홈이 없던 상태에서 실제 Bridge가 공개 Latest10을 조회해 0.1.7을 다운로드·검증·적용했고 실제 Rod 창 및 `confirmed`를 확인했다. 시험용 HTTP 응답이나 `stage-rod`는 사용하지 않았다. GUI를 닫은 후 Rod·Bridge 종료 코드 0과 시험 프로세스 종료를 확인했다. 로컬 증거는 `.test-results/toast-catalog9-publication-20261120/native-result.json`과 격리 홈의 Bootstrap 로그에 있다.
+
+원래 Bootstrap 바이트와 경로, 기존 0.1.5 ZIP·EXE·receipt, 합성 작업 파일, 기존 데이터 루트가 유지됐다. 기존 앱 데이터 보호에 관한 37개 관련 시험과 Windows 인계 결과를 재사용했다. 이번 운영 확인에서는 실제 직원 PC와 회사 프로그램을 실행하거나 변경하지 않았다. 0.1.4 시작점의 수신 호환성은 기존 자동 확인 결과를 사용했으며 이번 네이티브 시작점은 0.1.5였다.
+
+기존 직원은 기존 바로가기와 런처의 업데이트 버튼을 사용한다. 미전환 설치도 Toast에 연결할 수 있도록 기존 Toast 저장소 및 Bridge9를 유지한다. 신규 설치 경로는 Rod Setup 0.1.6.0이다. 이미 전환한 설치의 활성 GUI와 후속 업데이트는 Rod를 사용한다.

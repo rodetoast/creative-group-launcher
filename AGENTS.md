@@ -148,3 +148,7 @@ Rod 저장소 ID 1462539740의 운영 Latest는 [카탈로그9](https://github.c
 ## Toast Bridge Windows 전환 검증 완료 (2026-11-20)
 
 Toast 0.1.5 소스 GUI에서 한 번 승인하고 기존 Windows Bootstrap과 서명된 Bridge EXE로 공개 Rod Latest10의 0.1.7을 자동 다운로드·검증·기동했다. Rod 홈 사전 준비나 stage-rod 없이 실제 창과 confirmed를 확인했다. Toast 9는 격리 시험 프로세스에서만 제공했다. [운영 기록](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 절을 읽는다. 다음 승인 대상은 Toast production-catalog-000009 / Bridge 0.1.6 정식 게시다.
+
+## Toast Bridge 운영 전환 공개 완료 (2026-11-20)
+
+Toast Latest는 [production-catalog-000009 / Bridge 0.1.6](https://github.com/toast-source/creative-group-releases/releases/tag/production-catalog-000009), Rod Latest는 10이다. 실제 배포 Toast 0.1.5 EXE의 업데이트 확인을 격리 Windows에서 한 번 승인해 공개 Toast9 → Bridge → 공개 Rod10 → 실제 GUI 0.1.7 실행과 정상 종료를 확인했다. 기존 직원은 기존 바로가기와 업데이트 버튼을 사용한다. 신규 설치는 Rod Setup 0.1.6.0이다. 미전환 설치를 위해 Toast 채널을 유지한다. [운영 공개·검증 기록](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 절을 읽는다.
