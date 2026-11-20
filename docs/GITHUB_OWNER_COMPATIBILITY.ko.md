@@ -509,3 +509,26 @@ Bridge 자체 시작 실패에는 기존 Toast Bootstrap의 롤백을 사용한�
 ## Bridge 사전 Windows 검증 준비 (2026-11-19)
 
 [인증 전용 Draft](https://github.com/rodetoast/creative-group-trial-releases/releases/tag/untagged-017ca42db43ca66c9947) ID 451033277의 운송 묶음을 재다운로드하여 원본 후보와 대조했다. [SPENT03 단일 인계](SPENT03_OWNER_COMPAT_TRIAL.ko.md)에는 0.1.5 소스 GUI 버튼, 실제 Windows Bootstrap·Bridge·Rod 기동 및 복구를 구분한 절차가 있다. 개발 세션에 SPENT03 실행 호스트가 연결되어 있지 않아 실기동 결과는 대기 중이다. Rod 10과 Toast 9의 게시 승인 전까지 양쪽 운영 목록은 유지한다.
+
+## Rod 카탈로그10 운영 공개 (2026-11-20)
+
+사용자 승인으로 Rod GUI 0.1.7의 [정식 Release](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000010)를 공개했다. 저장소 ID `1462539740`, Release ID `452284964`, 카탈로그 식별자 `creative-group-launcher-rodetoast-1462539740`, sequence `10`이다. 기존 Ed25519 운영 키 ID는 `1efdfb848bb31e3fa5c07095f952c08d920be77253261fbf2742755341f018e0`이다. 후보를 재빌드하거나 재서명하지 않았다.
+
+Draft와 공개 HTTPS에서 8개 자산을 재다운로드해 후보 크기·SHA-256 및 Ed25519 서명을 확인했다. 기존 회사 앱 5개 항목과 ZIP은 Rod 9와 동일하다. GUI 0.1.7 EXE의 SHA-256 `a75a9efa11912105aa88c36a5be5e48ac57f837b73216c74ae71800c44f23a2a`를 확인했다.
+
+| 자산 | 바이트 | SHA-256 |
+|---|---:|---|
+| ase-viewer--0.5.8.4-team-3bf37dd.zip | 22085231 | 2532c273c4cf9930cf882ef1f84cae55c9a97479a69123431560b1299edec2d2 |
+| catalog.json | 9396 | 2946bdfbf314223affe7b9f31ce7c7c17e9c185dccf177bf4a6d0a7f6ac237f4 |
+| catalog.sig.json | 239 | 693c583f496960a883dd1ae75f36dec97500537b14d9efc85948a1b04822e53f |
+| creative-group-launcher--rodetoast-launcher-0.1.7.zip | 52650066 | 1615294f0ebfdcee44753fa262bb09c53c80339e50e51145717f101048e59392 |
+| pivot-fixer--0.3.3-team-80b84c9.zip | 20709116 | 214c966925e9def3aeebeb0245359e355606bf3627c47b29d956a78e5ec37361 |
+| ps2ase--0.3.6-team-6e84645.zip | 66252089 | 1945520ea353e584520f0984de65b4de0dbd4e3c206087fa5741ee74282a53d9 |
+| tag-master--0.4.0-team-7263f8d.zip | 38813495 | 80865038ddab9a1b9050d04cbb48cb777edf4e6419caafb05b8b51c0f6962299 |
+| tilenamer--0.1.6-rc3-8ba7a1e.zip | 54046715 | aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4 |
+
+[Rod Latest API](https://api.github.com/repos/rodetoast/creative-group-releases/releases/latest)는 `rodetoast-catalog-000010`을 반환했다. 배포된 Rod 0.1.6의 소스와 동일한 GitHub Provider/신뢰 정책을 격리 경로에서 실행해 실제 HTTPS로 기존 카탈로그9에서 10으로 갱신하고 GUI ZIP을 내려받았다. 10 수락 후 9 롤백도 차단했다. 기존 Rod Release가 보존됐고 Toast Latest8과 Setup 0.1.4.1의 자산 목록 및 digest가 게시 전후 일치했다.
+
+SPENT03은 사용자가 보고한 Windows 프로세스 인계 결과를 재사용했다. 그 시험은 `stage-rod`로 서명된 Rod 후보를 준비했다. 운영 코드의 `run_bridge`는 Rod 관리 홈이 없을 때 고정 저장소 ID 및 기존 운영 키로 순번10 이상을 확인하고 ZIP을 다운로드·검증·초기화한다. 개발 PC에서 빈 Rod 관리 홈과 실제 서명 Bridge 후보로 이 경로를 직접 실행해 공개 HTTPS 카탈로그10부터 GUI 0.1.7 ZIP, receipt, EXE까지 자동 준비를 확인했다. 이 확인은 자식 Bootstrap 프로세스 실행 경계만 대체했으며 기존 Toast 포인터와 합성 파일이 남아 있는 것을 확인했다. 실제 Windows 인계와 자동 HTTPS 준비를 각각 확인했으며, 배포된 Toast GUI 버튼으로 시작해 온라인 두 채널을 연속 통과하는 시험은 Toast 9 게시 전 미검증이다.
+
+다음 승인 대상은 Toast `production-catalog-000009`와 Bridge 0.1.6의 정식 공개다. 승인 뒤 대표 격리 설치에서 기존 업데이트 버튼 한 번으로 별도 `stage-rod` 없이 Rod GUI가 시작되는지 확인한다.

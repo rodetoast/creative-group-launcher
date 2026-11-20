@@ -140,3 +140,7 @@ Rod 저장소 ID 1462539740의 운영 Latest는 [카탈로그9](https://github.c
 ## SPENT03 Bridge 시험 운송 (2026-11-19)
 
 서명 후보 운송 Draft 451033277과 시험 도구를 준비했다. [SPENT03 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md) 최신 절에 실행 범위와 운영 게시 조건이 있다. 실제 Windows 결과는 대기 중이다.
+
+## Rod 카탈로그10 운영 공개 (2026-11-20)
+
+[Rod 카탈로그10/GUI0.1.7](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000010)이 실제 Latest다. 공개 HTTPS 자산 8개·Ed25519·Rod 0.1.6의 9→10 조회/다운로드/롤백 방어를 확인했다. Toast Latest8/Setup0.1.4.1은 유지한다. 기존 SPENT03은 stage-rod를 사용한 Windows 인계였으며, 후속 격리 확인은 stage-rod 없는 실제 HTTPS 자동 준비까지 통과하고 자식 프로세스 실행 경계만 대체했다. 전체 운영 흐름은 Toast9 게시 승인 뒤에 확인할 범위다. [운영 공개 기록](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 절을 먼저 읽는다.

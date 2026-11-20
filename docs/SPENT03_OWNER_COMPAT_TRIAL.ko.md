@@ -222,3 +222,7 @@ python -B tools/bridge_windows_trial.py stage-rod --scope C:/Dev/BRIDGE-ONE --bu
 0.1.5 버튼은 배포 EXE가 아닌 동일 소스 GUI로 확인한다. Bridge/Rod 기동과 복구·재실행은 실제 Windows 제품 EXE로 확인한다. 카탈로그가 게시되기 전에는 이 두 결과를 연속 운영 다운로드 성공으로 합치지 않는다. 앱·설정·바로가기 보존, 실패 로그, 프로세스 흐름을 한 결과 문서에 남긴다. 실패 시 해당 원인과 원본 로그를 보존한다. 계정·실제 설치·네트워크 정책·서명 신뢰를 변경하지 않는다.
 
 후보 GUI ZIP SHA-256은 Toast Bridge 0.1.6 274e8ebc4ebe7480848a3c6409a040ea487a3b9d416e64a09a567b61c9302b65, Rod GUI 0.1.7 1615294f0ebfdcee44753fa262bb09c53c80339e50e51145717f101048e59392이다. Windows 확인 결과를 받은 뒤 운영 게시 승인을 요청한다. 순서는 Rod 카탈로그10과 GUI 0.1.7, Rod 실제 온라인 조회·다운로드 확인, Toast 카탈로그9와 Bridge 0.1.6이다. Rod 10 공개부터 기존 Rod 직원에게 업데이트가 노출된다.
+
+## Rod 운영 카탈로그10 공개 이후 (2026-11-20)
+
+기존 격리 Windows 인계 결과는 재사용한다. 위 절의 Rod Latest9 거부 조건은 당시 게시 전 상태다. 현재 [Rod Latest10](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000010)에서 검증된 Bridge 소스가 별도 stage-rod 없이 공개 HTTPS로 0.1.7을 준비함을 개발 PC 격리 환경에서 확인했다. 자식 실행은 대체했다. 운영 Toast9가 승인·게시되기 전에는 기존 배포 Toast GUI의 업데이트 버튼부터 Rod 창까지 이어지는 실제 온라인 전환을 완료로 기록하지 않는다. 승인 후 대표 격리 확인에는 stage-rod를 사용하지 않는다.
