@@ -82,7 +82,7 @@ class WindowsUpdater(SelfUpdater):
 
 
 class Session:
-    def __init__(self,updater,app,mode,*,scenario='ok',timeout=10,transaction=None):
+    def __init__(self,updater,app,mode,*,scenario='ok',timeout=10,transaction=None,startup_splash=False):
         if mode not in {'normal','health'} or scenario not in {'ok','wrong-nonce','timeout','immediate-exit'} or not 0<timeout<=30:
             raise LauncherError('Windows 시작 세션 인자 오류')
         updater._validate_release(app)
@@ -107,6 +107,8 @@ class Session:
                       'update_transaction':transaction if mode=='health' else None}
         if updater.channel:
             self.context['managed'] = True
+            if startup_splash:
+                self.context['startup_splash'] = True
         call('session_context_write', atomic_json, self.folder/'context.json', self.context,
              target=self.folder/'context.json', api='atomic_json')
 
@@ -198,7 +200,8 @@ class Session:
 
 
 class Bootstrap:
-    def __init__(self,home, *, channel=None):
+    def __init__(self,home, *, channel=None, splash=None):
+        self.splash = splash
         self.updater=WindowsUpdater(home, channel=channel)
         self.events=[]
         self.log=inside(self.updater.home,f'bootstrap-runs/{uuid.uuid4().hex}.json')
@@ -247,7 +250,8 @@ class Bootstrap:
                             if journal['phase']!='requested' or journal['old']!=current.to_dict():
                                 raise LauncherError('사용자가 승인한 현재 릴리스의 업데이트 요청이 아닙니다.')
                         session=call('session_prepare', Session, u, current, 'normal', scenario=scenario,
-                                     transaction=transaction, timeout=25 if u.channel else 10, api='Session.__init__')
+                                     transaction=transaction, timeout=25 if u.channel else 10,
+                                     startup_splash=bool(self.splash), api='Session.__init__')
                         try:
                             self.event('starting',release_id=current.release_id)
                             session.start()
@@ -262,6 +266,8 @@ class Bootstrap:
                                 worker_exit = 2
                                 continue
                             raise
+                    if self.splash:
+                        self.splash.close()
                     applied_transaction = None
                     launched.append(current.release_id)
                     self.event('running',release_id=current.release_id,pid=session.process.pid)
@@ -276,6 +282,8 @@ class Bootstrap:
                             if journal['phase'] != 'requested' or journal['old'] != current.to_dict():
                                 raise LauncherError('현재 세션의 승인된 업데이트 요청이 아닙니다.')
                             self.event('old_exited', release_id=current.release_id, pid=session.process.pid)
+                            if self.splash:
+                                self.splash.show()
                             worker_exit = self.worker(requested, 'ok')
                             self.event('applied' if worker_exit == 0 else 'apply_failed', exit_code=worker_exit)
                             if worker_exit == 0:
@@ -334,7 +342,7 @@ class Bootstrap:
                 raise
 
 
-def main(argv=None):
+def main(argv=None, *, splash=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('role',nargs='?',default='run',choices=['run','worker'])
     parser.add_argument('--home',type=Path)
@@ -385,7 +393,7 @@ def main(argv=None):
                                                                   timeout=20 if channel else 3)
             value={'release_id':result.release_id,'worker':True}
         else:
-            value=Bootstrap(args.home, channel=channel).run(transaction=args.transaction,stop_after_ready=args.stop_after_ready,
+            value=Bootstrap(args.home, channel=channel, splash=splash).run(transaction=args.transaction,stop_after_ready=args.stop_after_ready,
                 scenario=args.scenario,probe_scenario=args.probe_scenario,stop_file=args.stop_file)
         print(json.dumps(value))
         return 0 if value.get('worker_exit') in {None,0} else 2
@@ -406,7 +414,13 @@ def main(argv=None):
         if getattr(sys, 'frozen', False) and sys.stderr is None:
             import ctypes
             from .branding import DISPLAY_NAME
-            ctypes.windll.user32.MessageBoxW(None, message, DISPLAY_NAME, 0x10)
+            if splash:
+                splash.close()
+                # Retry starts a new attempt through the normal recovery path.
+                if ctypes.windll.user32.MessageBoxW(None, message, DISPLAY_NAME, 0x15) == 4:
+                    return 3
+            else:
+                ctypes.windll.user32.MessageBoxW(None, message, DISPLAY_NAME, 0x10)
         return 1
 
 

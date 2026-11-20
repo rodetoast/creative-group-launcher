@@ -4,6 +4,8 @@ import json
 import time
 import unittest
 import urllib.error
+from dataclasses import replace
+from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,7 +14,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QMessageBox
 
 from southpaw_tools.common import LauncherError, digest
-from southpaw_tools.github_channels import latest_api_url
+from southpaw_tools.github_channels import CANONICAL_CATALOG_ID, CANONICAL_REPOSITORY, CANONICAL_REPOSITORY_ID, latest_api_url
 from southpaw_tools.paths import AppPaths
 from southpaw_tools.ui import MainWindow, GITHUB_AUTO_REFRESH_MS
 from tests import test_ui as ui_helpers
@@ -100,13 +102,28 @@ class GitHubUiTests(unittest.TestCase):
         window.close()
         self.assertFalse(window.update_timer.isActive())
 
-    def test_repeated_refresh_and_busy_refresh_make_no_extra_requests(self):
+    def test_manual_refresh_fetches_again_and_only_blocks_while_busy(self):
         window=self.window();self.refresh(window)
-        window.refresh();window.refresh();self.assertEqual(self.api_count(),1)
+        self.assertTrue(window.refresh_button.isEnabled())
+        QTest.mouseClick(window.refresh_button, Qt.MouseButton.LeftButton)
         self.assertFalse(window.refresh_button.isEnabled())
-        window._github_next_check=0
-        window.refresh();window.refresh();self.wait_task(window)
+        window.refresh()
+        self.wait_task(window)
         self.assertEqual(self.api_count(),2)
+        self.assertTrue(window.refresh_button.isEnabled())
+
+    def test_manual_refresh_is_restored_after_catalog_body_timeout(self):
+        window=self.window()
+        endpoint=latest_api_url('toast-source/creative-group-releases')
+        reply=self.fixture.transport.routes[endpoint]
+        self.fixture.transport.routes[endpoint]=TimeoutError()
+        self.refresh(window)
+        self.assertFalse(window.online)
+        self.assertTrue(window.refresh_button.isEnabled())
+        self.fixture.transport.routes[endpoint]=reply
+        self.refresh(window)
+        self.assertTrue(window.online)
+        self.assertTrue(window.refresh_button.isEnabled())
 
     def test_network_failure_keeps_local_launch_enabled(self):
         window=self.window();self.refresh(window);self.click_install(window)
@@ -124,7 +141,7 @@ class GitHubUiTests(unittest.TestCase):
         normal.primary_action()  # Normal-mode behavior, FakeProcesses only.
         self.assertEqual(len(self.fixture.engine.processes.calls),1)
 
-    def test_rate_limit_blocks_repeated_requests_for_one_hour(self):
+    def test_rate_limit_defers_automatic_refresh_but_leaves_manual_retry(self):
         window=self.window()
         for code in (403,429):
             with self.subTest(code=code):
@@ -133,7 +150,33 @@ class GitHubUiTests(unittest.TestCase):
                 window._github_next_check=0;self.refresh(window)
                 self.assertIn('GitHub 호출 제한',window.server_status.text())
                 self.assertGreater(window._github_next_check-time.monotonic(),3590)
-                before=self.api_count();window.refresh();self.assertEqual(self.api_count(),before)
+                before=self.api_count()
+                window._automatic_refresh()
+                self.assertEqual(self.api_count(),before)
+                self.assertTrue(window.refresh_button.isEnabled())
+                self.refresh(window)
+                self.assertEqual(self.api_count(),before+1)
+
+    def test_toast_bridge_preview_requires_the_pinned_rod_catalog(self):
+        window = self.window()
+        window.managed_session = SimpleNamespace(
+            channel={"repository": "toast-source/creative-group-releases", "policy": self.fixture.signer.policy},
+            updater=SimpleNamespace(home=self.fixture.root))
+        bridge = replace(self.fixture.app, app_id="creative-group-launcher", release_id="toast-bridge-0.1.6")
+        rod = replace(bridge, release_id="rodetoast-launcher-0.1.7", version="0.1.7")
+        with patch("southpaw_tools.ui.GitHubReleasesProvider") as provider:
+            provider.return_value.catalog.return_value = [rod]
+            self.assertEqual(window._rod_target(bridge), "0.1.7")
+            args, kwargs = provider.call_args
+            self.assertEqual(args, (CANONICAL_REPOSITORY,))
+            self.assertEqual(kwargs["repository_id"], CANONICAL_REPOSITORY_ID)
+            self.assertEqual(kwargs["verifier"].policy["catalog_id"], CANONICAL_CATALOG_ID)
+            self.assertEqual(kwargs["verifier"].policy["minimum_sequence"], 10)
+            provider.return_value.catalog.side_effect = LauncherError("서명 검증 실패")
+            self.assertIsNone(window._rod_target(bridge))
+            provider.reset_mock()
+            self.assertIsNone(window._rod_target(replace(bridge, release_id="ordinary-release")))
+            provider.assert_not_called()
 
     def test_signature_failure_preserves_installed_pointer_and_launch(self):
         window=self.window();self.refresh(window);self.click_install(window)

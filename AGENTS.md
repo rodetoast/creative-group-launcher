@@ -152,3 +152,7 @@ Toast 0.1.5 소스 GUI에서 한 번 승인하고 기존 Windows Bootstrap과 �
 ## Toast Bridge 운영 전환 공개 완료 (2026-11-20)
 
 Toast Latest는 [production-catalog-000009 / Bridge 0.1.6](https://github.com/toast-source/creative-group-releases/releases/tag/production-catalog-000009), Rod Latest는 10이다. 실제 배포 Toast 0.1.5 EXE의 업데이트 확인을 격리 Windows에서 한 번 승인해 공개 Toast9 → Bridge → 공개 Rod10 → 실제 GUI 0.1.7 실행과 정상 종료를 확인했다. 기존 직원은 기존 바로가기와 업데이트 버튼을 사용한다. 신규 설치는 Rod Setup 0.1.6.0이다. 미전환 설치를 위해 Toast 채널을 유지한다. [운영 공개·검증 기록](docs/GITHUB_OWNER_COMPATIBILITY.ko.md)의 최신 절을 읽는다.
+
+## 업데이트 UX·시작 창·Qt Quick 조사 (2026-11-20)
+
+개발 브랜치 `codex/startup-update-ux-20261120`에서 수동 재조회, 런처/앱/Bridge 목표 버전 표시, Win32 시작 창을 구현했다. [개발·기술 비교 및 측정](docs/LAUNCHER_UI_AND_STARTUP.ko.md)을 읽는다. 기존 직원의 안정 Bootstrap은 GUI 업데이트 범위와 별개다. 운영 Toast9/Rod10과 Setup은 이번 개발의 배포 대상이 아니다.

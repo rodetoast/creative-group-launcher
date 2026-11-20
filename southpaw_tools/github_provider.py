@@ -130,7 +130,8 @@ class GitHubReleasesProvider(HttpProvider):
         https_url(url)
         headers = {"User-Agent": "CreativeGroupLauncher/0.1.0", "Accept-Encoding": "identity"}
         if api:
-            headers.update({"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10"})
+            headers.update({"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10",
+                            "Cache-Control": "no-cache"})
         else:
             headers["Accept"] = "application/octet-stream"
         try:

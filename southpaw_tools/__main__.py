@@ -51,13 +51,17 @@ def main(argv=None):
         with lease:
             if session and session.updater.current() != session.current:
                 raise LauncherError("시작 직전 활성 런처가 바뀌었습니다.")
-            return run_window(args, session)
+            from .startup_splash import StartupSplash
+            own_splash = (not args.check and (not session or
+                          session.mode == "normal" and not session.context.get("startup_splash")))
+            with (StartupSplash() if own_splash else nullcontext()) as splash:
+                return run_window(args, session, splash=splash)
     except (LauncherError, OSError, ValueError, KeyError, TypeError) as exc:
         print(f"런처 시작 실패: {exc}")
         return 1
 
 
-def run_window(args, session):
+def run_window(args, session, *, splash=None):
     from PySide6.QtCore import QTimer
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication
@@ -83,6 +87,9 @@ def run_window(args, session):
     window = MainWindow(AppPaths(root), catalog_path=args.catalog or DATA, auto_connect=not args.check and not session,
                         github_repository=session.channel["repository"] if session else args.github_repository,
                         github_test_policy=args.github_test_policy, managed_session=session)
+    if splash:
+        # Remove the GUI-owned splash before the Bootstrap enumerates main windows.
+        splash.close()
     if not health:
         window.show()
     if session:

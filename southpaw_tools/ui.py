@@ -31,7 +31,7 @@ from .catalog_trust import CatalogVerifier
 
 DATA = Path(__file__).resolve().parent / "data" / "catalog.json"
 ASSETS = Path(__file__).resolve().parent / "assets"
-GITHUB_MIN_REFRESH = 300
+GITHUB_AUTO_MIN_REFRESH = 300
 GITHUB_AUTO_REFRESH_MS = 60 * 60 * 1000
 GITHUB_RATE_WAIT = 3600
 REFRESH_OPERATIONS = {"서버 연결과 업데이트 확인", "GitHub 업데이트 확인"}
@@ -101,7 +101,7 @@ class Task(QThread):
         try:
             self.result = self.action(self.progress.emit, self.cancel)
         except Exception as exc:
-            self.error = str(exc)
+            self.error = str(exc) or type(exc).__name__
             self.path_error = isinstance(exc, WindowsPathError)
 
 
@@ -264,6 +264,8 @@ class MainWindow(QMainWindow):
         self.paths = paths or AppPaths.default()
         self.managed_session = managed_session
         self.launcher_candidate = None
+        self.launcher_target = None
+        self._launcher_handoff = False
         self.github_test_mode = github_test_policy is not None
         if self.github_test_mode:
             test_root = Path(__file__).resolve().parents[1] / ".test-results"
@@ -398,6 +400,10 @@ class MainWindow(QMainWindow):
         self.launcher_update_button.hide()
         top.addWidget(self.launcher_update_button)
         main.addLayout(top)
+        self.launcher_versions = QLabel(f"런처 설치 버전 v{__version__} · 최신 버전 미확인")
+        self.launcher_versions.setObjectName("muted")
+        self.launcher_versions.setWordWrap(True)
+        main.addWidget(self.launcher_versions)
 
         hero = QFrame()
         hero.setObjectName("hero")
@@ -449,7 +455,9 @@ class MainWindow(QMainWindow):
         info_layout.addWidget(info_title)
         self.info = {}
         for key in ("설치 상태", "설치 버전", "승인 버전", "다운로드", "배포 식별자"):
-            label = QLabel("최신 버전" if key == "승인 버전" else key)
+            label = QLabel("프로그램 최신 버전" if key == "승인 버전" else key)
+            if key == "승인 버전":
+                self.latest_app_label = label
             label.setObjectName("muted")
             info_layout.addWidget(label)
             value = QLabel("—")
@@ -526,7 +534,7 @@ class MainWindow(QMainWindow):
         return self.config.get("transport") == "github"
 
     def _automatic_refresh(self):
-        if self._github():
+        if self._github() and time.monotonic() >= self._github_next_check:
             self.refresh()
 
     def _github_failure(self, message, *, installing=False):
@@ -559,6 +567,10 @@ class MainWindow(QMainWindow):
         self.message.setText(f"{state}: {detail}")
 
     def render(self, *_):
+        busy = self.task is not None or self._launcher_handoff
+        self.refresh_button.setEnabled(not busy)
+        self.connection_button.setEnabled(not busy)
+        self.launcher_update_button.setEnabled(not busy and self.online)
         app = self.selected()
         if not app:
             return
@@ -567,10 +579,10 @@ class MainWindow(QMainWindow):
         self.hero_icon.setPixmap(app_icon(app, 72).pixmap(72, 72))
         text = app.release_notes or "등록된 릴리즈 노트가 없습니다."
         self.notes.show_notes(text)
+        self.latest_app_label.setText("프로그램 최신 버전" if self.online else "프로그램 등록 버전")
         self.info["승인 버전"].setText(app.version)
         self.info["다운로드"].setText(f"{app.package_size / 1024**2:.1f} MB" if app.published else "배포 패키지 미확인")
         self.info["배포 식별자"].setText(app.release_id)
-        busy = self.task is not None
         error, catalog_error = "", self.catalog_error
         installed, running, update = None, False, False
         pending, pinned = False, False
@@ -619,8 +631,6 @@ class MainWindow(QMainWindow):
             if installed and not (pending or repair or update and can_install):
                 self.primary.setText("시험 실행 차단")
                 self.primary.setEnabled(False)
-        self.refresh_button.setEnabled(not busy and (not self._github() or time.monotonic() >= self._github_next_check))
-        self.connection_button.setEnabled(not busy)
         if error:
             self.message.setText(f"복구 필요: {error}")
         elif catalog_error:
@@ -722,10 +732,12 @@ class MainWindow(QMainWindow):
         if getattr(self, "bridge_fallback", False):
             self.message.setText("런처를 다시 열면 Rod 연결을 재시도합니다.")
             return
-        if self.task:
+        if self.task or self._launcher_handoff:
             return
         self.launcher_candidate = None
+        self.launcher_target = None
         self.launcher_update_button.hide()
+        self.launcher_versions.setText(f"런처 설치 버전 v{__version__} · 최신 버전 미확인")
         github = self._github()
         repository = self.config.get('github_repository')
         if github and (repository is None or isinstance(repository,str) and not repository.strip()):
@@ -737,14 +749,10 @@ class MainWindow(QMainWindow):
             self._connection_status()
             self.render()
             return
-        if github and time.monotonic() < self._github_next_check:
-            seconds = max(1, int(self._github_next_check - time.monotonic()))
-            self.message.setText(f"다음 업데이트 확인까지 {seconds}초 남았습니다. 설치된 프로그램은 실행할 수 있습니다.")
-            return
         try:
             if github:
                 provider = self._github_provider()
-                self._github_next_check = time.monotonic() + GITHUB_MIN_REFRESH
+                self._github_next_check = max(self._github_next_check, time.monotonic() + GITHUB_AUTO_MIN_REFRESH)
             else:
                 provider = HttpProvider(self.config.get("server_url", "http://127.0.0.1:8765"),
                                         self.config.get("lan_token", ""),
@@ -764,17 +772,20 @@ class MainWindow(QMainWindow):
             if github:
                 try:
                     apps = provider.catalog()
-                    return {"transport": "github-releases"}, apps, ""
-                except Exception as exc:
-                    return {"transport": "github-releases"}, None, str(exc)
+                except OSError:
+                    return {"transport": "github-releases"}, None, "GitHub 네트워크 응답을 읽지 못했습니다.", None
+                except (LauncherError, ValueError) as exc:
+                    return {"transport": "github-releases"}, None, str(exc) or "GitHub 목록 확인 실패", None
+                launcher = next((a for a in apps if a.app_id == "creative-group-launcher"), None)
+                return {"transport": "github-releases"}, apps, "", self._rod_target(launcher)
             health = provider.health()
             try:
-                return health, provider.catalog(), ""
+                return health, provider.catalog(), "", None
             except Exception as exc:
-                return health, None, str(exc)
+                return health, None, str(exc) or "네트워크 응답 시간 초과", None
 
         def connected(result):
-            health, apps, catalog_error = result
+            health, apps, catalog_error, target = result
             self.health = health
             self.last_checked = datetime.now().strftime("%H:%M:%S")
             self.server_state = "응답 확인(마지막 조회)"
@@ -801,28 +812,71 @@ class MainWindow(QMainWindow):
             self._merge_installed()
             self.message.setText("")
             self._populate(selected)
-            if self.managed_session and self.managed_session.newer(launcher):
-                self.launcher_candidate = launcher
-                self.launcher_update_button.setText(f"런처 v{launcher.version} 업데이트")
-                self.launcher_update_button.show()
+            if self.managed_session and launcher and launcher.published:
+                newer = self.managed_session.newer(launcher)
+                if self._is_bridge_update(launcher):
+                    destination = f"Rod 최신 v{target}" if target else "Rod 최신 버전 미확인"
+                    latest = f"{destination} · 전환 단계 v{launcher.version}"
+                else:
+                    latest = f"런처 최신 버전 v{launcher.version}"
+                self.launcher_versions.setText(f"런처 설치 버전 v{__version__} · {latest}")
+                if newer:
+                    self.launcher_candidate = launcher
+                    self.launcher_target = target
+                    label = "Rod 채널로 업데이트" if self._is_bridge_update(launcher) else "런처 업데이트"
+                    self.launcher_update_button.setText(label)
+                    self.launcher_update_button.show()
 
         self.online = False
         self.server_state = "업데이트 확인 중" if github else "확인 중"
         self._connection_status()
         self._begin("GitHub 업데이트 확인" if github else "서버 연결과 업데이트 확인", fetch, connected)
 
+    def _is_bridge_update(self, launcher):
+        from .channel_bridge import TOAST
+        return (self._github() and self.managed_session and self.managed_session.channel["repository"] == TOAST
+                and self.config.get("github_repository") == TOAST
+                and launcher is not None and launcher.published
+                and launcher.release_id.startswith("toast-bridge-"))
+
+    def _rod_target(self, launcher):
+        if not self._is_bridge_update(launcher):
+            return None
+        from .channel_bridge import MINIMUM_BRIDGE_SEQUENCE
+        from .github_channels import CANONICAL_CATALOG_ID, CANONICAL_REPOSITORY, CANONICAL_REPOSITORY_ID
+        from .self_update import version
+        policy = {**self.managed_session.channel["policy"], "catalog_id": CANONICAL_CATALOG_ID,
+                  "minimum_sequence": MINIMUM_BRIDGE_SEQUENCE}
+        try:
+            preview = inside(self.managed_session.updater.home, "rod-preview-trust.json")
+            verifier = CatalogVerifier(policy, preview)
+            provider = GitHubReleasesProvider(CANONICAL_REPOSITORY, repository_id=CANONICAL_REPOSITORY_ID,
+                                              verifier=verifier)
+            target = next((a for a in provider.catalog() if a.app_id == "creative-group-launcher" and a.published), None)
+            if target and version(target.version) >= (0, 1, 7):
+                return target.version
+        except (LauncherError, OSError, ValueError):
+            # The preview is informational; the actual Bridge verifies again.
+            pass
+        return None
+
     def update_launcher(self):
         session, candidate = self.managed_session, self.launcher_candidate
-        if not session or not candidate or not self.online or self.task:
+        if not session or not candidate or not self.online or self.task or self._launcher_handoff:
             return
+        if self._is_bridge_update(candidate):
+            target = f"Rod v{self.launcher_target}" if self.launcher_target else "Rod 채널 · 최신 버전 확인 필요"
+            change = f"설치 v{session.current.version} → {target}\n전환 단계 v{candidate.version}을 자동 적용합니다."
+        else:
+            change = f"설치 v{session.current.version} → 최신 v{candidate.version}"
         if QMessageBox.question(self, "런처 업데이트",
-                                f"v{session.current.version} → v{candidate.version}\n"
-                                "업데이트를 검증한 후 런처를 재시작합니다. 설치 앱과 사용자 데이터는 유지됩니다."
+                                f"{change}\n업데이트를 검증한 후 런처를 재시작합니다. 설치 앱과 사용자 데이터는 유지됩니다."
                                 ) != QMessageBox.StandardButton.Yes:
             return
 
         def prepared(transaction):
             session.handoff(transaction)
+            self._launcher_handoff = True
             from PySide6.QtWidgets import QApplication
             QTimer.singleShot(0, lambda: QApplication.instance().exit(20))
 
@@ -835,7 +889,7 @@ class MainWindow(QMainWindow):
             self.server_status.setText(f"{state}{mode}")
             self.server_status.setToolTip(f"GitHub · {self.config.get('github_repository') or '운영 저장소 미지정'}\n"
                                           f"확인 {self.last_checked} · {self.catalog_state}\n"
-                                          f"패키지: {self.package_state} · 자동 1시간 / 수동 최소 5분")
+                                          f"패키지: {self.package_state} · 자동 1시간 / 수동 확인 시 다시 조회")
             return
         try:
             host = urllib.parse.urlsplit(self.config.get("server_url", "http://127.0.0.1:8765")).hostname

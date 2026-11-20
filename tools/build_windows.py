@@ -83,9 +83,8 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
             text=(f'from pathlib import Path\nfrom southpaw_tools.runtime_protocol import fixture_main\n'
                   f'raise SystemExit(fixture_main({release!r},{version!r},Path({str(PROJECT)!r})))\n')
         elif role=='bootstrap':
-            text=(f'from pathlib import Path\nimport southpaw_tools.self_update as engine\n'
-                  f'engine.PROJECT=Path({str(PROJECT)!r})\n'
-                  'from southpaw_tools.bootstrap import main\nraise SystemExit(main())\n')
+            text=(f'from pathlib import Path\nfrom southpaw_tools.startup_splash import frozen_bootstrap\n'
+                  f'raise SystemExit(frozen_bootstrap(Path({str(PROJECT)!r})))\n')
         else:
             text='from southpaw_tools.__main__ import main\nraise SystemExit(main())\n'
         text=('import sys\nfor stream in (sys.stdout,sys.stderr):\n'
