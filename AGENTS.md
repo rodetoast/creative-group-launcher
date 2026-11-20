@@ -172,3 +172,7 @@ Toast Latest는 [production-catalog-000009 / Bridge 0.1.6](https://github.com/to
 ## GUI 0.1.9 최종 운영 서명 후보 (2026-11-20)
 
 Rod 카탈로그12는 로컬 서명 후보이며 운영은 Rod11·Toast9를 유지한다. Boot 교체 허용 범위는 공식 Rod Setup 0.1.6.0과 Toast Setup 0.1.4.1의 정확한 진입 EXE 두 개다. 최종 서명 자산으로 실제 공식 Rod Bootstrap의 자동 교체·실패 복원·기존 바로가기 재실행을 확인했다. [최종 후보 및 승인 기록](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다. 작업 중 생성한 앞선 로컬 순번12 파일은 공개 대상에서 제외한다.
+
+## Rod GUI 0.1.9 정식 공개 (2026-11-20)
+
+[Rod 카탈로그12](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000012)가 운영 Latest다. Toast Latest9와 기존 Setup을 유지한다. 공개 자산 8개의 SHA-256·서명·Bootstrap 허용 해시 두 개를 확인했다. 직원은 기존 바로가기와 업데이트 버튼을 사용한다. 허용 목록 밖의 구 진입점은 Bootstrap 교체 대상에서 제외된다. [운영 기록 및 지원 범위](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절을 읽는다.

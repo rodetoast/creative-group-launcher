@@ -167,3 +167,13 @@ Rod와 Toast Setup EXE의 원격 digest를 로컬 공개 자산/동일 빌드 �
 | tilenamer--0.1.6-rc3-8ba7a1e.zip | 54046715 | `aac38dc3a47dffe1a1cb7c2de3048922c4e45240df84ba6a6347107d67b9c3b4` |
 
 최종 후보는 로컬 `C:/Dev/CGL-BootstrapAuto-20261120/rod12-final-rc/assets/`에 보존한다. `candidate-plan.json`의 SHA-256은 `e97230afc31fb74aa4d6140aa00e6a89786207f040fbbd2c62c7f56daa8828ce`이다. 새 Bootstrap EXE SHA-256은 `0a5bd2501f5a1e1338eec656197acfb8e81a42c6de8b11a49ca277e7d0544718`이다. 남은 결정은 위 8개 자산의 Rod 정식 공개와 카탈로그12 Latest 지정 승인이다.
+
+## GUI 0.1.9 / Rod 카탈로그12 운영 공개 (2026-11-20)
+
+사용자 승인으로 [rodetoast-catalog-000012](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000012)를 정식 공개하고 Rod Latest로 지정했다. Release ID는 `452539099`, 저장소 ID는 `1462539740`, 카탈로그 순번은 `12`다. 승인 계획 SHA-256 `e97230afc31fb74aa4d6140aa00e6a89786207f040fbbd2c62c7f56daa8828ce`의 자산 8개를 그대로 사용했다. GUI ZIP SHA-256은 `c7e902537538439eb37fe96f13e15de03927be998b676c300da51392c1612104`이다.
+
+GitHub Draft와 공개 HTTPS에서 8개 전부를 다시 내려받아 파일 크기와 SHA-256을 비교했다. 운영 Ed25519 서명, 카탈로그·ZIP 바인딩, 내부 GUI manifest와 Bootstrap ZIP의 파일별 해시, 채널 정책 및 허용 진입점 두 개를 확인했다. 새 Bootstrap SHA-256은 `0a5bd2501f5a1e1338eec656197acfb8e81a42c6de8b11a49ca277e7d0544718`이다. 이전 Rod Release 및 직원용 Setup, Toast Latest9·직원용 Setup은 게시 전후 일치했다.
+
+기존 Rod GUI 0.1.8과 동일한 Provider 경로가 공개 Latest12를 받아들이고 이전 순번 11을 거부하는 것을 격리 trust 상태에서 확인했다. 기존 서명된 Toast9 Bridge ZIP의 Rod 정책과 비교하고, 그 Bridge의 순번 하한 10으로 동일한 공개 카탈로그12 조회를 확인했다. Bootstrap 교체와 복원, 시작 창의 실기동은 최종 서명 후보의 기존 Windows 검증을 사용했다. 이번 게시 과정에서 Setup·Windows 전체 업데이트 시험이나 실제 직원 PC 조작은 수행하지 않았다.
+
+지원하는 기존 진입점은 공식 Rod Setup 0.1.6.0의 Bootstrap 0.1.6 (`152a02ce9f36f65df534da711a626474a9cc2116a5736adbfc601b33898a0a09`)과 공식 Toast Setup 0.1.4.1의 바깥 Bootstrap 0.1.4 (`c15f48a0d72dd0a8bdc1ad909a75ae3327a91a2f136170dc4c3713651df6cb19`)이다. 해당 직원은 기존 바로가기에서 업데이트를 한 번 승인한다. 허용 해시 밖의 진입 파일에는 Bootstrap 자동 교체가 적용되지 않는다. 새 Setup 배포나 기존 Toast 채널의 폐기는 이 작업의 범위 밖이다.
