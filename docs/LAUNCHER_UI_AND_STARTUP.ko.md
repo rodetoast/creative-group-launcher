@@ -333,3 +333,12 @@ GUI 소스 `b5368d3a7cce7ecfdf32ef3e558b8c9927083645`와 검토 시작 시점 �
 기존 Windows 캡처 5개를 시각적으로 확인했고 PNG에 텍스트나 개인 메타데이터 청크가 없는 것을 확인했다. [GitHub UI 검토 갤러리](ui-reviews/0.2.1/README.md)에 그대로 보존했다.
 
 운영 Latest는 Rod13과 Toast9다. 이번 작업의 운영 변경은 없었다. 정식 공개와 Latest14 전환은 별도 승인 대상이다.
+
+
+## Southpaw Tools 0.2.1 Rod14 운영 공개 (2026-11-23)
+
+승인 기준 `73e860abeec5edec6fee3c4947121a36f462a028` 및 운영 서명 후보를 사용해 [Rod 카탈로그14 정식 Release](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000014)를 공개했다. 저장소 ID `1462539740`, Release ID `455234386`. Draft에서 자산을 재다운로드해 확인한 뒤 공개했고, 공개 HTTPS에서 다시 받은 8개 자산의 크기·SHA-256, 운영 Ed25519 서명, 순번 14, GUI·Bootstrap manifest를 검증한 후 Rod Latest14로 지정했다. GUI ZIP은 70,468,020바이트, SHA-256 `324dfdf7bb2c4bd7210c0dabe918c6ccbc1125de21e9198980bfc308571b450a`다.
+
+Rod13 신뢰 상태에서 공개 Latest14를 수락했고 이후 13 재수락이 차단됐다. 공개 Latest14는 Toast9 Bridge의 Rod 저장소 ID·Ed25519 키·최소 순번 조건을 통과했다. 기존 Bootstrap의 실제 0.2.0 → 0.2.1 적용, ready/confirmed, 정상 종료와 설정·설치 영수증·런처 진입점 보존 결과는 기존 운영 서명 후보의 격리 Windows 시험을 재사용했다. 기존 직원은 기존 바로가기와 업데이트 버튼을 사용한다.
+
+게시 전후 Rod13과 이전 Rod Release 메타데이터·자산, Toast Latest9, 양 채널의 기존 직원용 Setup을 비교해 유지 상태를 확인했다. 회사 앱 5개는 Rod13과 동일 바이트 및 서명 메타데이터다. 기존 [GitHub 검토 갤러리](https://github.com/rodetoast/creative-group-launcher/blob/73e860abeec5edec6fee3c4947121a36f462a028/docs/ui-reviews/0.2.1/README.md)와 [대표 PNG](https://raw.githubusercontent.com/rodetoast/creative-group-launcher/73e860abeec5edec6fee3c4947121a36f462a028/docs/ui-reviews/0.2.1/settings-dark-150.png)는 원래 커밋에 고정됐다. Windows 설치·복구·UI 시험을 반복하거나 직원 PC에 접근하지 않았다.
