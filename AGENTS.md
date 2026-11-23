@@ -182,3 +182,8 @@ Rod 카탈로그12는 로컬 서명 후보이며 운영은 Rod11·Toast9를 유�
 `codex/qml-product-20261120`의 제품 후보는 GUI 0.2.0이다. 새 QML 화면은 기존 Python 설치·업데이트와 Bootstrap 계약을 사용한다. [제품 구현·검증·패키징 기록](docs/LAUNCHER_UI_AND_STARTUP.ko.md)의 최신 절에 후보 해시, 지원 범위, 승인 경계가 있다. 운영 기준은 Rod12 / GUI 0.1.9 및 Toast9다. 개발 브랜치의 버전을 실제 배포 버전으로 간주하지 않는다.
 
 2026-11-23 후속 후보도 0.2.0이다. 시작 경로와 Qt 패키징을 개선한 후보의 해시·실측 결과는 같은 문서의 최신 절을 기준으로 한다.
+
+
+## Rod 운영과 계정 통합 현행 기준 (2026-11-23)
+
+운영은 Rod 카탈로그13 / GUI 0.2.0, 신규 직원용 Rod Setup 0.1.6.0, 기존 설치용 Toast 카탈로그9 / Bridge 0.1.6이다. GUI 0.2.1은 미서명 로컬 후보다. 직원별 확인 없이 Toast 호환 채널과 기존 설치 링크를 유지한다. 새로운 운영 공개와 Repository Transfer는 각각 사용자 승인 대상이다. [계정 통합 현행 결정](docs/GITHUB_OWNER_COMPATIBILITY.ko.md#계정-통합-현행-결정-2026-11-23)과 [SPENT03 현행 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md#spent03-현행-단일-인계--보관된-toast-rc1-2026-11-23)를 먼저 읽는다.

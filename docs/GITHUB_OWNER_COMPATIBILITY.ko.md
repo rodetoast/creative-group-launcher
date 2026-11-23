@@ -560,3 +560,24 @@ Rod 홈이 없는 상태에서 실제 Bridge EXE가 공개 Rod 카탈로그10을
 원래 Bootstrap 바이트와 경로, 기존 0.1.5 ZIP·EXE·receipt, 합성 작업 파일, 기존 데이터 루트가 유지됐다. 기존 앱 데이터 보호에 관한 37개 관련 시험과 Windows 인계 결과를 재사용했다. 이번 운영 확인에서는 실제 직원 PC와 회사 프로그램을 실행하거나 변경하지 않았다. 0.1.4 시작점의 수신 호환성은 기존 자동 확인 결과를 사용했으며 이번 네이티브 시작점은 0.1.5였다.
 
 기존 직원은 기존 바로가기와 런처의 업데이트 버튼을 사용한다. 미전환 설치도 Toast에 연결할 수 있도록 기존 Toast 저장소 및 Bridge9를 유지한다. 신규 설치 경로는 Rod Setup 0.1.6.0이다. 이미 전환한 설치의 활성 GUI와 후속 업데이트는 Rod를 사용한다.
+
+
+## 계정 통합 현행 결정 (2026-11-23)
+
+**병행 운영(B안)을 유지한다.** 소스 저장소 7개와 시험 저장소 이전 기록은 재사용한다. 신규 직원용 운영은 Rod 저장소 ID 1462539740에서 관리한다. 실제 Latest는 Rod 카탈로그13 / GUI 0.2.0, 시험 저장소 Latest는 trial 카탈로그11이다. GUI 0.2.1은 미서명 개발 후보이며 이 통합 작업과 별개다. [Rod13](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000013) · [0.2.0 검증 기록](LAUNCHER_UI_AND_STARTUP.ko.md#qml-020-rod13-운영-공개-2026-11-23)
+
+기존 설치가 사용하는 Toast 저장소 ID 1447701732, [Toast 카탈로그9](https://github.com/toast-source/creative-group-releases/releases/tag/production-catalog-000009), Bridge 0.1.6, 기존 설치 링크를 유지한다. 기존 0.1.4/0.1.5 사용자에게는 현재 바로가기와 업데이트 버튼으로 Bridge가 제공된다. Bridge는 독립적인 Rod 서명 카탈로그에서 현재 GUI를 선택한다. 현행 공급자로 Toast9와 Rod13의 실제 공개 HTTPS 카탈로그·서명·자산 메타데이터를 읽어 기존 공개 검증본과 대조했다. Toast Bridge ZIP 해시와 내부 Rod 바인딩, Rod 저장소 ID와 서명 정책, 최소 순번 10과 최소 GUI 0.1.7 조건에 현재 Rod13/GUI 0.2.0이 부합하는 것을 확인했다. 시스템 전체 회귀와 Windows 전환 검증은 기존 완료 결과를 사용했다.
+
+Toast 주소는 미전환 0.1.4 및 롤백된 PC를 보호하기 위해 **종료 날짜 없이 유지**한다. 해당 버전은 owner 리디렉션을 거부할 수 있다. 기존 사용자 전원에게 개별 확인을 요청하지 않는다. 종료에는 직원별 확인과 독립적으로 작동하는 호환 경로의 실제 검증과 별도 승인이 필요하다. Rod에 같은 이름의 활성 운영 저장소가 이미 있으므로 공식 Transfer(A안)를 현행 전환 절차로 삼지 않는다.
+
+### Setup과 SPENT03
+
+신규 직원의 정식 설치 파일은 **Rod Setup 0.1.6.0**이다. SPENT03의 RC2 설치·실행·바로가기·재실행·제거·합성 데이터 보존 통과 기록을 재사용했다. 원격 EXE의 digest와 보존한 공개 다운로드는 RC2 SHA-256 `405906b160b3314c225cc76cca41e610fdce40154937488a0a861b059da5bf07`과 일치한다. [공식 신규 직원용 설치 파일](https://github.com/rodetoast/creative-group-releases/releases/download/employee-setup-0.1.6.0/SouthpawToolsLauncherSetup-0.1.6.0.exe)
+
+Toast Setup **0.1.5.0 RC1**은 과거 설치 후속 확인용이다. 시험 저장소 Draft 449518343의 인증 전용 상태, EXE·해시 파일 크기와 digest를 현재 원격에서 확인했다. 보존한 EXE의 SHA-256은 `8d8c5940e0f08adfcf9d073fe3c29971f96de3fb06396f41f11fa5b817f56453`이다. 이전 SPENT03 시도는 설치 전에 중단됐다. 개발 PC에서 새 Windows 설치 시험이나 빌드를 하지 않았으며, SPENT03의 현재 독립 환경과 인증 준비 여부는 현지에서 확인해야 한다. [SPENT03 현행 단일 인계](SPENT03_OWNER_COMPAT_TRIAL.ko.md#spent03-현행-단일-인계--보관된-toast-rc1-2026-11-23)
+
+### 비공개 증거 저장소
+
+현재 원격은 Toast 소유, ID 1454974908, Private이다. Toast 계정의 push 권한과 원격 main `ba7773d9b87d1c3ac5688c12a3ac058392403b5d`, 검증 후보 브랜치 `codex/evidence-owner-compat-20261118`의 `854b44b04ed98cd1f5fdd208cd19682cd42b19c0`를 확인했다. 후보는 현재 main의 직계 후속이며 변경은 도구·테스트·문서 5개에 한정된다. 기존 58개 시험을 재사용했다. 파일·증거의 내용이나 공유 범위는 변경하지 않았다. Rod 계정 인증은 확인됐지만 기존 Private 원격 읽기는 HTTP 404였고, Rod 이름 조회도 현재 404였다. 이전 후 권한과 동명 충돌 유무는 승인된 Transfer 단계에서 다시 확인한다.
+
+다음 승인 대상은 **Private 증거 저장소 Transfer 및 guard 후보를 활성 브랜치에 반영하는 작업**이다. 승인 시 변경 직전 main·후보·Private·수신 계정·권한을 확인하고, 후보를 활성 main에 안전하게 fast-forward할 수 있는 상태인지 재확인한다. 원격 이력이 달라지면 파일을 덮어쓰지 않고 필요한 도구 변경만 검토한다. 공식 Transfer 후 동일 ID와 Private·기본 브랜치·이력, Rod 로그인 및 push 권한을 확인하고 origin을 정상 전환한 뒤 guard 진단을 실행한다. 실제 Transfer, main 반영, 공개 범위 변경, 테스트 증거 게시와 직원 환경 변경은 이번에 수행하지 않았다.

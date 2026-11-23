@@ -226,3 +226,18 @@ python -B tools/bridge_windows_trial.py stage-rod --scope C:/Dev/BRIDGE-ONE --bu
 ## Rod 운영 카탈로그10 공개 이후 (2026-11-20)
 
 기존 격리 Windows 인계 결과는 재사용한다. 위 절의 Rod Latest9 거부 조건은 당시 게시 전 상태다. 현재 [Rod Latest10](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000010)에서 검증된 Bridge 소스가 별도 stage-rod 없이 공개 HTTPS로 0.1.7을 준비함을 개발 PC 격리 환경에서 확인했다. 자식 실행은 대체했다. 운영 Toast9가 승인·게시되기 전에는 기존 배포 Toast GUI의 업데이트 버튼부터 Rod 창까지 이어지는 실제 온라인 전환을 완료로 기록하지 않는다. 승인 후 대표 격리 확인에는 stage-rod를 사용하지 않는다.
+
+
+## SPENT03 현행 단일 인계 — 보관된 Toast RC1 (2026-11-23)
+
+새 직원용 Rod Setup 0.1.6.0은 이미 RC2 Windows 검증을 통과해 정식 공개됐다. 이번 역사적 확인의 대상은 **보관된 Toast Setup 0.1.5.0 RC1** 하나다. 기존 직원용 sw204 설치·등록·바로가기·사용자 자료를 보존하고 Rod Setup 시험, 기존 Bridge 전환 시험 및 회사 EXE 시험을 반복하지 않는다.
+
+1. 기존에 사용 가능한 Windows Sandbox, 독립 VM 또는 충돌 없는 시험 사용자가 있는지 확인한다. 기존 RC2용 임시 환경이 정리됐다는 기록을 사용하며, 그 환경이 지금도 존재한다고 가정하지 않는다. 독립 환경이 없으면 생성·기능 활성화에 필요한 승인만 요청하고 기존 sw204 환경을 건드리지 않는다.
+2. 호스트의 공식 GitHub 인증으로 [인증 전용 Draft](https://github.com/rodetoast/creative-group-trial-releases/releases/tag/untagged-2e356c394839407bb519) ID `449518343`에서 기존 두 자산을 새 폴더로 받는다. 대화나 게스트로 자격증명을 전달하지 않는다.
+   ```powershell
+   gh release download employee-setup-0150-rc1-transport-20261118 --repo rodetoast/creative-group-trial-releases --dir <새다운로드폴더> --pattern SouthpawToolsLauncherSetup-0.1.5.0-RC1.exe --pattern SouthpawToolsLauncherSetup-0.1.5.0-RC1.exe.sha256
+   ```
+   EXE는 83,404,359바이트, SHA-256은 `8d8c5940e0f08adfcf9d073fe3c29971f96de3fb06396f41f11fa5b817f56453`이다. 파일만 게스트에 읽기 전용으로 전달한다. Draft 접근이 없으면 공식 인증 절차를 따르고 권한 부족을 기록한다.
+3. 동일 문서의 기존 RC1 독립 Windows 인계에서 등록 키 확인, P/D/E 분리, Setup 인수 및 EXE 기준값을 재사용한다. 격리 환경에 명시된 제품 등록·바로가기 충돌이 없을 때에만 설치한다. 설치 → GUI 0.1.5 최초 기동과 양쪽 바로가기 재실행 → 종료 → 실제 제거 및 합성 데이터·관리 기록 보존을 한 번에 확인한다.
+4. **초기 seed는 Toast8, 현재 온라인 Latest는 Toast9**다. seed 검증과 공개 조회를 구분해 기록한다. 공개 조회 시 Bridge 0.1.6이 업데이트 대상으로 보일 수 있다. RC1 설치 수명주기의 출발 상태를 유지하기 위해 업데이트는 승인하지 않는다. 검증된 운영 카탈로그 순번이나 파일을 초기화하지 않는다.
+5. 새 E/REPORT.ko.md에 독립성·인증/해시·설치·실행·바로가기·종료·제거·보존을 각각 통과/실패/미검증으로 기록한다. 로그 최소본을 보존하고 회사 파일·자격증명을 공유하지 않는다. Windows Use는 GUI 확인 직후 해제한다. 결과는 개발 PC에 전달하며 릴리스 변경과 원격 Transfer는 수행하지 않는다.
