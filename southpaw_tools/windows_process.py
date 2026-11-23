@@ -44,7 +44,12 @@ def identity(pid: int):
         buffer=ctypes.create_unicode_buffer(32768)
         length=wintypes.DWORD(len(buffer))
         if not dll.QueryFullProcessImageNameW(handle,0,buffer,ctypes.byref(length)):
-            raise failure('process_identity_image', 'QueryFullProcessImageNameW')
+            code = ctypes.get_last_error()
+            # Windows can deny the image lookup just before signaling exit.
+            # Only a signal on this same handle proves it is safe to proceed.
+            if code == 5 and dll.WaitForSingleObject(handle, 100) == 0:
+                return None
+            raise failure('process_identity_image', 'QueryFullProcessImageNameW', code)
         created=(times[0].dwHighDateTime<<32)|times[0].dwLowDateTime
         return {'pid':pid,'created_ticks':str(created),'image':str(Path(buffer.value).resolve())}
     finally:

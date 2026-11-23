@@ -155,6 +155,13 @@ def run_window(args, session, *, splash=None):
     shell_painted = bool(health)
     quick_rendered = not quick
     ready = False
+    bootstrap_splash = None
+    if session and not health and not splash and session.context.get("startup_splash") and sys.platform == "win32":
+        from .win32_splash import parent_splash
+        try:
+            bootstrap_splash = parent_splash(os.getppid())
+        except OSError:
+            pass  # Window ordering is optional; the ready protocol is independent.
 
     def first_frame_ready():
         nonlocal ready
@@ -165,6 +172,7 @@ def run_window(args, session, *, splash=None):
             # The old Bootstrap enumerates windows immediately after ready.
             # Leave only the actual launcher window for the taskbar setup.
             splash.close()
+        if splash or bootstrap_splash:
             window.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
         if session:
             try:
@@ -206,11 +214,15 @@ def run_window(args, session, *, splash=None):
 
         paint = FirstPaint(window)
         window.installEventFilter(paint)
-        if splash:
+        if splash or bootstrap_splash:
             window.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         window.show()
         if splash:
             splash.keep_above(int(window.winId()))
+        elif bootstrap_splash:
+            from .win32_splash import place_below
+
+            place_below(int(window.winId()), bootstrap_splash)
 
     def capture():
         if args.screenshot:

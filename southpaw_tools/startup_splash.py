@@ -4,9 +4,6 @@ import json
 import sys
 from threading import Event, Thread
 
-from .branding import DISPLAY_NAME
-
-
 def wants_session_splash(path):
     """Read a small presentation hint without importing the update engine."""
     if path.name != "context.json" or path.parent.parent.name != "sessions":
@@ -58,63 +55,17 @@ class StartupSplash:
         splash_window = self._window
         if not splash_window:
             return
-        import ctypes
-        from ctypes import wintypes as w
+        from .win32_splash import place_below
 
-        user = ctypes.WinDLL("user32")
-        position = user.SetWindowPos
-        position.argtypes = [w.HWND, w.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, w.UINT]
-        # NOSIZE | NOMOVE | NOACTIVATE | NOOWNERZORDER. Reorder only the main window.
-        position(main_window, splash_window, 0, 0, 0, 0, 0x0213)
+        place_below(main_window, splash_window)
 
     def _paint(self):
-        import ctypes
-        from ctypes import wintypes as w
-
-        user = ctypes.WinDLL("user32")
-        gdi = ctypes.WinDLL("gdi32")
-        create = user.CreateWindowExW
-        create.argtypes = [w.DWORD, w.LPCWSTR, w.LPCWSTR, w.DWORD, ctypes.c_int, ctypes.c_int,
-                           ctypes.c_int, ctypes.c_int, w.HWND, w.HMENU, w.HINSTANCE, ctypes.c_void_p]
-        create.restype = w.HWND
-        for function in (user.DestroyWindow, user.UpdateWindow):
-            function.argtypes = [w.HWND]
-        user.ShowWindow.argtypes = [w.HWND, ctypes.c_int]
-        user.SendMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
-        user.SendMessageW.restype = w.LPARAM
-        gdi.GetStockObject.restype = w.HANDLE
-        width, height = 340, 116
-        work = w.RECT()
-        if not user.SystemParametersInfoW(0x30, 0, ctypes.byref(work), 0):  # SPI_GETWORKAREA
-            work.right, work.bottom = user.GetSystemMetrics(0), user.GetSystemMetrics(1)
-        x = work.left + (work.right - work.left - width) // 2
-        y = work.top + (work.bottom - work.top - height) // 2
-        # WS_EX_NOACTIVATE | TOOLWINDOW, popup border. No topmost flag.
-        window = create(0x08000080, "Static", DISPLAY_NAME, 0x80800000, x, y, width, height,
-                        None, None, None, None)
-        if not window:
-            self._shown.set()
-            return
         try:
-            font = gdi.GetStockObject(17)  # DEFAULT_GUI_FONT
-            for text, top in ((DISPLAY_NAME, 27), ("프로그램을 준비하고 있습니다…", 62)):
-                child = create(0, "Static", text, 0x50000001, 12, top, width - 26, 24,
-                               window, None, None, None)
-                if child and font:
-                    user.SendMessageW(child, 0x30, font, 1)  # WM_SETFONT
-            if not self._stop.is_set():
-                user.ShowWindow(window, 4)  # SW_SHOWNOACTIVATE
-                user.UpdateWindow(window)
-                self._window = window
-            self._shown.set()
-            msg = w.MSG()
-            while not self._stop.wait(0.02):
-                while user.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):
-                    user.TranslateMessage(ctypes.byref(msg))
-                    user.DispatchMessageW(ctypes.byref(msg))
+            from .win32_splash import run
+
+            run(self)
         finally:
-            self._window = None
-            user.DestroyWindow(window)
+            self._shown.set()
 
 
 def frozen_bootstrap(project, *, upgrade_entry=False):

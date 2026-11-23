@@ -170,6 +170,9 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
                 command+=['--icon',str(product_icon)]
         else:
             command+=['--windowed' if bootstrap_windowed and role=='bootstrap' else '--console']
+            if role == 'bootstrap':
+                icon = PROJECT / 'southpaw_tools/assets/southpaw-launcher.ico'
+                command += ['--exclude-module', 'PySide6', '--add-data', f'{icon}:southpaw_tools/assets']
             if role == 'bootstrap' and (product_icon or bootstrap_icon):
                 command+=['--icon',str(product_icon or bootstrap_icon)]
             channel = PROJECT / 'southpaw_tools/data/managed-channel.json'

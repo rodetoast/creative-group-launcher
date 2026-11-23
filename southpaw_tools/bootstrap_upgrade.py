@@ -16,10 +16,12 @@ from .github_channels import canonical_channel
 from .windows_process import identity, parent_pid, still_same
 
 ENTRY = "CGLBootstrap.exe"
-RUNTIME = "_cgl_b2"
-STAGE = ".bootstrap-v2"
+# Keep the previous entry's runtime and transaction intact for restoration.
+GENERATION = 3
+RUNTIME = "_cgl_b3"
+STAGE = ".bootstrap-v3"
 SPEC = "bootstrap-upgrade.json"
-PACKAGE = "bootstrap-v2.zip"
+PACKAGE = "bootstrap-v3.zip"
 APP_ID = "creative-group-launcher"
 TERMINAL = {"committed", "failed_before_swap", "restored"}
 
@@ -44,7 +46,7 @@ def _signed_candidate(home, channel):
     spec = read_json(inside(payload, SPEC))
     files = spec.get("files")
     allowed = spec.get("old_entry")
-    if (not canonical_channel(channel) or spec.get("generation") != 2
+    if (not canonical_channel(channel) or spec.get("generation") != GENERATION
             or not isinstance(allowed, dict) or set(allowed) != {"rod", "bridge"}
             or not isinstance(files, dict) or ENTRY not in files
             or not all(name == ENTRY or name.startswith(RUNTIME + "/") for name in files)
@@ -92,7 +94,7 @@ def _lineage(root):
 
 def _state(stage):
     state = read_json(inside(stage, "transaction.json"))
-    if (state.get("generation") != 2 or not isinstance(state.get("nonce"), str)
+    if (state.get("generation") != GENERATION or not isinstance(state.get("nonce"), str)
             or len(state["nonce"]) != 32 or state.get("phase") not in
             TERMINAL | {"staged", "waiting", "switching"}):
         raise LauncherError("Bootstrap 교체 기록 형식 오류")
@@ -173,7 +175,7 @@ def begin(session, cancel):
     _durable_copy(entry, backup)
     if digest(backup) != old_hash:
         raise LauncherError("기존 Bootstrap 백업을 검증할 수 없습니다.")
-    record = {"generation": 2, "nonce": secrets.token_hex(16), "kind": kind,
+    record = {"generation": GENERATION, "nonce": secrets.token_hex(16), "kind": kind,
               "old_sha256": old_hash, "release_id": current.release_id, "chain": chain}
     _phase(stage, record, "staged")
     with inside(stage, "worker.log").open("xb") as log:

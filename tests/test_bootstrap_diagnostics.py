@@ -76,6 +76,19 @@ class BootstrapDiagnosticTests(unittest.TestCase):
         self.assertEqual(d['operations'][0]['api'],'QueryFullProcessImageNameW')
         dll.CloseHandle.assert_called_once_with(123)
 
+    def test_image_denied_after_exit_requires_signal_from_original_handle(self):
+        dll = Mock()
+        dll.OpenProcess.return_value = 123
+        dll.WaitForSingleObject.side_effect = [258, 0]
+        dll.GetProcessTimes.return_value = 1
+        dll.QueryFullProcessImageNameW.return_value = 0
+        with (patch.object(wp.ctypes, 'WinDLL', return_value=dll),
+              patch.object(wp.ctypes, 'get_last_error', return_value=5)):
+            self.assertIsNone(wp.identity(2920))
+        self.assertEqual([call.args for call in dll.WaitForSingleObject.call_args_list],
+                         [(123, 0), (123, 100)])
+        dll.CloseHandle.assert_called_once_with(123)
+
     def updater(self):
         u=WindowsUpdater.__new__(WindowsUpdater)
         u.home=self.home; u.active_probe=None
