@@ -61,6 +61,7 @@ Item {
         if (dataView.online && dataView.launcher_update_button.visible)
             return dataView.verifiedVersion ? "업데이트 가능 · v" + dataView.verifiedVersion : "업데이트 가능"
         if (dataView.online && dataView.latestVerified) return "최신 버전 사용 중"
+        if (dataView.online && dataView.verifiedVersion) return "운영 버전 v" + dataView.verifiedVersion
         if (dataView.online) return "앱 목록 확인 완료"
         if (dataView.lastCheck === "" && dataView.server_status.text === "오프라인 · 미확인")
             return "업데이트 확인 전"

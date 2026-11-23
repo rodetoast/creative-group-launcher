@@ -15,6 +15,38 @@ from .common import LauncherError, atomic_json, inside, read_json
 from .ui import ASSETS, REFRESH_OPERATIONS, MainWindow, NotesDocument, app_icon
 
 
+def _set_windows_caption(hwnd, dark):
+    """Apply Windows SDK DWM attributes to the existing native frame."""
+    import ctypes
+    from ctypes import wintypes
+
+    # DWMWINDOWATTRIBUTE in dwmapi.h. Probe HRESULTs on the running OS.
+    immersive_dark_mode, caption_color, text_color = 20, 35, 36
+    default_color = 0xFFFFFFFF
+    try:
+        set_attribute = ctypes.WinDLL("dwmapi").DwmSetWindowAttribute
+        set_attribute.argtypes = (wintypes.HWND, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD)
+        set_attribute.restype = wintypes.LONG
+    except (OSError, AttributeError):
+        return
+
+    def apply(attribute, value):
+        return set_attribute(hwnd, attribute, ctypes.byref(value), ctypes.sizeof(value)) == 0
+
+    def colorref(red, green, blue):
+        return wintypes.DWORD(red | green << 8 | blue << 16)
+
+    # Match Launcher.qml's dark header and text. The light theme restores OS colors.
+    caption = colorref(0x1B, 0x1E, 0x2B) if dark else wintypes.DWORD(default_color)
+    text = colorref(0xF5, 0xF3, 0xFF) if dark else wintypes.DWORD(default_color)
+    if not apply(caption_color, caption):
+        return
+    if not apply(text_color, text):
+        apply(caption_color, wintypes.DWORD(default_color))
+        return
+    apply(immersive_dark_mode, wintypes.BOOL(dark))
+
+
 class Field:
     """Presentation-only port for the shared workflow's labels and actions."""
     def __init__(self, notify, text="", visible=True):
@@ -332,6 +364,7 @@ class QuickLauncherWindow(MainWindow):
         self.active_app = ""
         self.app_issues = {}
         self.surface = LauncherSurface(self)
+        self.surface.appearanceChanged.connect(self._apply_caption)
         for name in self.FIELDS:
             setattr(self, name, Field(self.surface.invalidate, visible=name not in self.HIDDEN_FIELDS))
         self.info = {key: Field(self.surface.invalidate, "—")
@@ -359,6 +392,14 @@ class QuickLauncherWindow(MainWindow):
             raise LauncherError("QML 화면 준비 실패: " + " / ".join(error.toString() for error in view.errors()))
         view.quickWindow().afterRendering.connect(self._frame_rendered, Qt.ConnectionType.QueuedConnection)
         self.setCentralWidget(view)
+
+    def showEvent(self, event):
+        self._apply_caption()
+        super().showEvent(event)
+
+    def _apply_caption(self):
+        if sys.platform == "win32" and QApplication.platformName() == "windows":
+            _set_windows_caption(int(self.winId()), self.surface.dark)
 
     def _scene_error(self, _, message):
         print(f"QML 장면 초기화 실패: {message}")
