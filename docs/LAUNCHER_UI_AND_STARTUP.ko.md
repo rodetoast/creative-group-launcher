@@ -355,3 +355,14 @@ Windows에서 공식 심볼을 넣은 다크 100%, 라이트 150%, 620 논리 �
 로컬 관리형 0.2.2 ZIP은 70,475,753바이트, SHA-256 `a30b7d1c80fde8619ca13b40ccfce260d9ecd2633b855cd533265b5b784483fc`다. ZIP manifest의 심볼, 기존 제품 아이콘 및 Rod14 Bootstrap 번들을 확인했다. 심볼 파일과 이를 포함한 화면은 로컬 후보와 검토 경로에 보존한다. 공개 GitHub에는 코드와 텍스트 상태 캡처만 포함했다. [헤더 검토 갤러리](ui-reviews/header-branding/README.md)
 
 운영은 Rod Latest14/GUI 0.2.1 및 Toast Latest9를 유지했다. 실제 회사 심볼의 공개 재배포 범위 확인과 운영 서명·새 Rod 카탈로그 게시 승인 이후 직원용 배포를 진행할 수 있다.
+
+
+## 0.2.2 공식 심볼 승인과 Rod15 운영 서명 후보 (2026-11-23)
+
+사용자가 Southpaw Tools 헤더, 관리형 GUI ZIP, 공개 GitHub 저장소 및 Release 자산, UI 검토 캡처에 변경 없는 회사 심볼을 사용할 수 있도록 승인했다. 공식 홈페이지 헤더의 185×183 RGBA 원본을 `southpaw_tools/assets/southpaw-games-company-mark.png`에 같은 바이트로 보존했다. SHA-256 `62140c29ed1d268af188c50d6eac96c153e93d90b4f8697c96fc9cb4db17791f`. 이전 갤러리의 텍스트 대체 화면을 이미 촬영한 공식 심볼 적용 화면으로 갱신했다. [공식 원본](https://southpaw.games/wp-content/uploads/2022/07/Logo_White-4.png) · [Windows 검토 갤러리](ui-reviews/header-branding/README.md)
+
+승인된 소스 `762bb1e0551cef5b6bc8e8e5a98644f3bcc4ef65`의 GUI ZIP을 재사용했다. 70,475,753바이트, SHA-256 `a30b7d1c80fde8619ca13b40ccfce260d9ecd2633b855cd533265b5b784483fc`. 공식 심볼의 원본 바이트와 ZIP·manifest 해시가 일치했다. 제품 아이콘과 Bootstrap 번들 및 교체 정책은 Rod14와 바이트가 같다. 기존 Windows 패키지의 심볼 표시, ready/confirmed, 정상 종료 기록을 사용했다.
+
+기존 운영 Ed25519 키로 `rodetoast-catalog-000015` 후보(순번 15, 저장소 ID 1462539740)를 로컬에 서명했다. 자산 8개의 크기와 SHA-256을 확인했으며 회사 앱 5개 ZIP과 서명 메타데이터는 Rod14와 같다. 현행 공개 Rod14를 조회해 로컬 검증본과 대조했고, 14→15의 서명 수락과 15 수락 이후 14 재수락 차단, Toast9 Bridge의 Rod 바인딩 및 후보 수락을 확인했다. 새 Windows 전체 시험은 수행하지 않았다.
+
+서명 후보 계획과 자산은 개발 PC `C:/Dev/CGL-Rod15-20261123/`에 있다. 기존 직원은 관리형 업데이트를 사용한다. 운영 Latest는 Rod14와 Toast9이며, Rod15 정식 Release 공개 및 Latest 전환은 별도 승인 대기다.
