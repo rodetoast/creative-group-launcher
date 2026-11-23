@@ -201,8 +201,9 @@ class LauncherSurface(QObject):
         return self._selected
 
     @Property(str, constant=True)
-    def brandIcon(self):
-        return QUrl.fromLocalFile(str(ASSETS / "southpaw-launcher.png")).toString()
+    def companyMark(self):
+        mark = ASSETS / "southpaw-games-company-mark.png"
+        return QUrl.fromLocalFile(str(mark)).toString() if mark.is_file() else ""
 
     @Property(bool, notify=appearanceChanged)
     def dark(self):

@@ -479,19 +479,30 @@ Item {
                     Layout.column: 0
                     Layout.fillWidth: !root.wideHeader
                     spacing: root.compact ? 8 : 12
-                    Image {
-                        source: launcher.brandIcon
+                    Rectangle {
+                        visible: companyMark.status === Image.Ready
                         Layout.preferredWidth: root.compact ? 34 : 46
-                        Layout.preferredHeight: width
-                        fillMode: Image.PreserveAspectFit
+                        Layout.preferredHeight: Layout.preferredWidth
+                        radius: root.radius
+                        color: launcher.dark ? "transparent" : "#1b1e2b"
+                        Accessible.role: Accessible.Graphic
+                        Accessible.name: "Southpaw Games"
+                        Image {
+                            id: companyMark
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            source: launcher.companyMark
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                        }
                     }
                     Caption {
-                        visible: root.wideHeader
+                        visible: root.wideHeader || companyMark.status !== Image.Ready
                         text: "SOUTHPAW\nGAMES"
                         color: root.ink
-                        font.pixelSize: 15
+                        font.pixelSize: root.compact ? 12 : 15
                         font.bold: true
-                        font.letterSpacing: 0.8
+                        font.letterSpacing: root.compact ? 0.4 : 0.8
                     }
                     Rectangle {
                         visible: root.wideHeader

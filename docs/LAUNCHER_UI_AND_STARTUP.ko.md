@@ -342,3 +342,16 @@ GUI 소스 `b5368d3a7cce7ecfdf32ef3e558b8c9927083645`와 검토 시작 시점 �
 Rod13 신뢰 상태에서 공개 Latest14를 수락했고 이후 13 재수락이 차단됐다. 공개 Latest14는 Toast9 Bridge의 Rod 저장소 ID·Ed25519 키·최소 순번 조건을 통과했다. 기존 Bootstrap의 실제 0.2.0 → 0.2.1 적용, ready/confirmed, 정상 종료와 설정·설치 영수증·런처 진입점 보존 결과는 기존 운영 서명 후보의 격리 Windows 시험을 재사용했다. 기존 직원은 기존 바로가기와 업데이트 버튼을 사용한다.
 
 게시 전후 Rod13과 이전 Rod Release 메타데이터·자산, Toast Latest9, 양 채널의 기존 직원용 Setup을 비교해 유지 상태를 확인했다. 회사 앱 5개는 Rod13과 동일 바이트 및 서명 메타데이터다. 기존 [GitHub 검토 갤러리](https://github.com/rodetoast/creative-group-launcher/blob/73e860abeec5edec6fee3c4947121a36f462a028/docs/ui-reviews/0.2.1/README.md)와 [대표 PNG](https://raw.githubusercontent.com/rodetoast/creative-group-launcher/73e860abeec5edec6fee3c4947121a36f462a028/docs/ui-reviews/0.2.1/settings-dark-150.png)는 원래 커밋에 고정됐다. Windows 설치·복구·UI 시험을 반복하거나 직원 PC에 접근하지 않았다.
+
+
+## 0.2.2 회사 심볼과 제품 아이콘 분리 (2026-11-23)
+
+2026-11-23 조회 시 Southpaw Games 공식 한국어 홈페이지의 공용 탐색 헤더가 흰색 심볼 `Logo_White-4.png`를 사용하고 있었다. 별도로 연결된 Skul Press Kit의 `logo.png`는 게임 타이틀이다. 공식 홈페이지의 현재 심볼을 로컬 후보에 적용했다. 별도의 최신 사내 브랜드 원본이나 공개 재배포 범위는 확인되지 않았다. [공식 홈페이지](https://southpaw.games/) · [공식 헤더 심볼](https://southpaw.games/wp-content/uploads/2022/07/Logo_White-4.png)
+
+공식 원본은 185×183 RGBA, SHA-256 `62140c29ed1d268af188c50d6eac96c153e93d90b4f8697c96fc9cb4db17791f`다. 로컬 빌드에 동일 바이트를 `southpaw_tools/assets/southpaw-games-company-mark.png`로 공급한다. 다크는 흰색 심볼의 투명도를 살리고 라이트는 네이비 바탕으로 대비를 확보한다. 일반 창의 심볼은 36 논리 픽셀, 좁은 창은 24다. 전용 파일이 없으면 회사명을 텍스트로 표시한다. Windows 제목 표시줄·실행 파일·바로가기·Setup·시작 화면에서는 기존 제품 아이콘을 사용한다.
+
+Windows에서 공식 심볼을 넣은 다크 100%, 라이트 150%, 620 논리 픽셀의 라이트 200% 화면을 확인했다. 회사명과 제품명, 버전·조회 상태, 업데이트 확인·환경 설정 버튼을 확인했다. 헤더 관련 기존 QML 시험 3개와 패키징 EXE의 ready/confirmed 및 정상 종료를 확인했다. 해당 패키지 스모크는 격리 시험 서명 프로필에서 수행했으며 공개 카탈로그 조회가 검증 범위가 아니다.
+
+로컬 관리형 0.2.2 ZIP은 70,475,753바이트, SHA-256 `a30b7d1c80fde8619ca13b40ccfce260d9ecd2633b855cd533265b5b784483fc`다. ZIP manifest의 심볼, 기존 제품 아이콘 및 Rod14 Bootstrap 번들을 확인했다. 심볼 파일과 이를 포함한 화면은 로컬 후보와 검토 경로에 보존한다. 공개 GitHub에는 코드와 텍스트 상태 캡처만 포함했다. [헤더 검토 갤러리](ui-reviews/header-branding/README.md)
+
+운영은 Rod Latest14/GUI 0.2.1 및 Toast Latest9를 유지했다. 실제 회사 심볼의 공개 재배포 범위 확인과 운영 서명·새 Rod 카탈로그 게시 승인 이후 직원용 배포를 진행할 수 있다.
