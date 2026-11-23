@@ -1,5 +1,6 @@
 """Pinned channel and signed first-run seed for the managed launcher."""
 from pathlib import Path
+from contextlib import nullcontext
 import shutil
 import sys
 
@@ -88,13 +89,21 @@ class ManagedSession:
             raise LauncherError("관리형 Windows 시작 세션과 제품 EXE가 일치하지 않습니다.")
         self.legacy_home = (legacy_binding(self.updater.home, self.updater.data_root)
                             if canonical_channel(self.channel) else None)
-        self.current = self.updater.current()
-        path, _ = self.updater.engine.resolve_launch(self.current)
-        if (path.resolve() != executable or self.current.release_id != c["release_id"]
-                or self.current.version != compiled_version or self.current.executable_sha256 != c["exe_sha256"]):
-            raise LauncherError("관리형 런처 활성 버전이 시작 요청과 다릅니다.")
         self.data_root = (self.updater.data_root if self.mode == "normal"
                           else inside(self.file.parent, "health-data"))
+
+    def startup_lease(self):
+        # The update worker already holds the runtime lock during its health probe.
+        return self.updater._runtime_lock() if self.mode == "normal" else nullcontext()
+
+    def verify_current(self):
+        """Validate the active payload while the caller holds the startup lease."""
+        c = self.context
+        self.current = self.updater.current()
+        path, _ = self.updater.engine.resolve_launch(self.current)
+        if (path.resolve() != Path(sys.executable).resolve() or self.current.release_id != c["release_id"]
+                or self.current.version != c["version"] or self.current.executable_sha256 != c["exe_sha256"]):
+            raise LauncherError("관리형 런처 활성 버전이 시작 요청과 다릅니다.")
 
     def acknowledge(self, stage, **extra):
         c = self.context

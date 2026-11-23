@@ -63,10 +63,10 @@ def main(argv=None):
                           session.mode == "normal" and not session.context.get("startup_splash")))
             if own_splash and splash is None:
                 splash = startup.enter_context(StartupSplash())
-            lease = session.updater._runtime_lock() if session and session.mode == "normal" else nullcontext()
+            lease = session.startup_lease() if session else nullcontext()
             with lease:
-                if session and session.updater.current() != session.current:
-                    raise LauncherError("시작 직전 활성 런처가 바뀌었습니다.")
+                if session:
+                    session.verify_current()
                 return run_window(args, session, splash=splash)
     except (LauncherError, OSError, ValueError, KeyError, TypeError) as exc:
         print(f"런처 시작 실패: {exc}")

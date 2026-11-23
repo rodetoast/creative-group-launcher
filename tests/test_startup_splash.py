@@ -1,4 +1,5 @@
 """The old Bootstrap's GUI must show startup feedback before loading its updater."""
+from contextlib import contextmanager, nullcontext
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -56,12 +57,32 @@ class StartupSplashTests(unittest.TestCase):
 
     def test_health_never_creates_a_gui_owned_splash(self):
         self.hint(mode="health")
-        current = object()
-        session = SimpleNamespace(mode="health", context={}, current=current,
-                                  updater=SimpleNamespace(current=lambda: current))
+        session = SimpleNamespace(mode="health", context={}, startup_lease=nullcontext,
+                                  verify_current=lambda: None)
         with (patch("southpaw_tools.startup_splash.StartupSplash") as splash,
               patch("southpaw_tools.managed_update.ManagedSession", return_value=session),
               patch("southpaw_tools.__main__.run_window", return_value=0) as window):
             self.assertEqual(main(["--session-file", str(self.context)]), 0)
         splash.assert_not_called()
         self.assertIsNone(window.call_args.kwargs["splash"])
+
+    def test_normal_start_verifies_once_under_runtime_lease_before_opening_window(self):
+        self.hint(startup_splash=True)
+        events = []
+
+        @contextmanager
+        def lease():
+            events.append("acquired")
+            try:
+                yield
+            finally:
+                events.append("released")
+
+        session = SimpleNamespace(mode="normal", context={"startup_splash": True},
+                                  startup_lease=lease,
+                                  verify_current=lambda: events.append("verified"))
+        with (patch("southpaw_tools.managed_update.ManagedSession", return_value=session),
+              patch("southpaw_tools.__main__.run_window",
+                    side_effect=lambda *_args, **_kwargs: events.append("window") or 0)):
+            self.assertEqual(main(["--session-file", str(self.context)]), 0)
+        self.assertEqual(events, ["acquired", "verified", "window", "released"])

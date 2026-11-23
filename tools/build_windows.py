@@ -36,13 +36,45 @@ def retain_quick_imports(folder: Path):
                                                                for module in modules):
         raise LauncherError('Qt Quick 가져오기 경로 또는 필수 모듈이 일치하지 않습니다.')
     for path in imports.rglob('*'):
-        if path.is_file() and path.parent.relative_to(imports).as_posix() not in modules:
+        if path.is_file() and (path.parent.relative_to(imports).as_posix() not in modules
+                              or path.suffix == '.qmltypes'):
             if not path.resolve().is_relative_to(imports):
                 raise LauncherError('QQml 모듈이 빌드 출력 밖을 가리킵니다.')
             path.unlink()
     # The existing updater also budgets for extraction and rollback paths.
     # Collapsing the import root leaves headroom for employee profile names.
     imports.rename(bundle / '_internal/q')
+
+
+def retain_linked_qt_libraries(folder: Path):
+    """Keep Qt DLL dependencies of every bundled executable and plugin."""
+    import pefile  # Installed with the pinned Windows PyInstaller toolchain.
+
+    bundle = folder.resolve()
+    binaries = {path for path in bundle.rglob('*') if path.suffix.lower() in {'.dll', '.pyd', '.exe'}
+                and path.is_file()}
+    # Plugins are roots even when loaded by name at runtime. Only prune Qt's
+    # shared libraries at the top level, after pruning unreferenced QML plugins.
+    libraries = {p.name.lower(): p for p in binaries
+                 if p.parent == bundle / '_internal' and p.name.lower().startswith('qt6')
+                 and p.suffix.lower() == '.dll'}
+    pending = list(binaries.difference(libraries.values()))
+    retained = set(pending)
+    while pending:
+        with pefile.PE(str(pending.pop()), fast_load=True) as pe:
+            pe.parse_data_directories(directories=[1, 13])  # Import and delay import.
+            imports = [*getattr(pe, 'DIRECTORY_ENTRY_IMPORT', ()),
+                       *getattr(pe, 'DIRECTORY_ENTRY_DELAY_IMPORT', ())]
+            for entry in imports:
+                library = libraries.get(entry.dll.decode('ascii').lower())
+                if library and library not in retained:
+                    retained.add(library)
+                    pending.append(library)
+    for path in libraries.values():
+        if path not in retained:
+            if not path.resolve().is_relative_to(bundle):
+                raise LauncherError('Qt DLL이 빌드 출력 밖을 가리킵니다.')
+            path.unlink()
 
 
 def build_environment(root: Path):
@@ -153,6 +185,7 @@ def build(root: Path, roles, launcher_release_id='windows-dev-0.1.0', *, bootstr
         folder=root/'dist'/name
         if role=='launcher':
             retain_quick_imports(folder)
+            retain_linked_qt_libraries(folder)
             add_launcher_manifest(folder, launcher_release_id)
         files={p.relative_to(folder).as_posix():digest(p) for p in folder.rglob('*') if p.is_file()}
         exe=folder/f'{name}.exe'
