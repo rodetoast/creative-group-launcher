@@ -294,3 +294,14 @@ Windows에서 패키징한 실제 EXE의 다크 라이브러리와 시작 창을
 최종 ZIP은 `assets/creative-group-launcher--rodetoast-launcher-0.2.0.zip`, 70,466,143바이트(67.2 MiB), SHA-256 `dd8196ac5746b286acab9001f8bfa5d63a8224b0263d750835e32d8be022d7c0`이다. EXE SHA-256은 `5e97717f46a11fe8a9405de9b6a90fb0ec2d90bbfea77c99a2ab42adedd6e48c`다. Windows 캡처 `windows-dark-live-rod12.png`·`windows-light-live-rod12.png`와 `windows-evidence.json`을 같은 디렉터리에 보존했다.
 
 Rod Latest12와 Toast Latest9를 유지했으며 Rod13 태그와 Release가 없는 상태를 조회했다. 이번 범위에서 운영 공개는 수행하지 않았다. 승인 후 `candidate-plan.json`의 8개 자산을 새 태그의 Draft에 올려 일치 여부를 확인하고, 정식 공개 및 Rod Latest13 승격 뒤 공개 HTTPS 경로의 서명·순번·자산 메타데이터를 확인한다. 기존 직원에게는 현재 업데이트 경로를 사용한다.
+
+
+## QML 0.2.0 Rod13 운영 공개 (2026-11-23)
+
+사용자가 승인한 기준 커밋 `4f5e558e9a2fdab5a30d29a953c0e0043b16379b`의 운영 서명 후보를 [Rod 카탈로그13 정식 Release](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000013)로 공개했다. 저장소 ID `1462539740`, Release ID `455055812`. 업로드한 Draft 자산 8개를 검증한 뒤 정식 공개했다. 공개 HTTPS에서 8개를 전부 다운로드해 크기와 SHA-256을 후보와 대조하고, 운영 Ed25519 서명, 순번 13, ZIP·EXE·Bootstrap manifest를 검증한 뒤 Rod Latest를 13으로 지정했다.
+
+GUI 0.2.0 ZIP은 70,466,143바이트, SHA-256 `dd8196ac5746b286acab9001f8bfa5d63a8224b0263d750835e32d8be022d7c0`. 자산별 원격 ID·크기·digest 및 검증 기록은 개발 PC의 `C:/Dev/CGL-Rod13-20261123/publication/state.json`, 공개 재다운로드 원본은 같은 경로의 `public-redownload/`에 있다. 회사 앱 5개 ZIP 및 카탈로그 앱 항목은 Rod12와 일치했다. 게시 전후 기존 Rod Release 메타데이터와 자산, Toast Latest9, 양 채널의 직원용 Setup Release와 자산이 동일했다.
+
+실제 Latest13을 기존 Rod12 신뢰 상태에서 검증했고, 13 수락 뒤 12 재수락이 차단됐다. Toast Bridge 0.1.6의 공개 검증본에 포함된 Rod 저장소 ID·신뢰키가 일치하고, Bridge의 최소 순번 10·GUI 0.1.7 조건을 실제 Latest13이 통과했다. 격리 Windows에서 완료한 Rod12→Rod13 적용, Bootstrap 교체, ready/confirmed, 정상 종료와 사용자 파일·영수증 보존 결과를 재사용했다. 게시 후 직원 PC의 설치나 실기동 시험은 수행하지 않았다.
+
+기존 Rod12 설치와 Toast9 Bridge의 공식 진입점은 기존 바로가기와 런처 업데이트를 사용한다. Bootstrap 3세대 자동 교체는 후보 `bootstrap-upgrade.json`에 명시된 Rod·Toast 지원 해시와 서명 증거가 일치하는 경우에 적용된다. 기존 설치 경로와 직원용 Setup 다운로드 링크를 사용한다.
