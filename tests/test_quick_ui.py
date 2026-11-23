@@ -29,18 +29,29 @@ class QuickUiTests(unittest.TestCase):
         self.assertTrue(window._first_frame)
         return window
 
-    def click(self, window, name):
+    def control(self, window, name):
         root = window.quick.rootObject()
         item = root.findChild(QQuickItem, name)
         if item is None:
             # Repeater delegates are visual children of the grid.
             items = [root]
+            for popup in root.findChildren(QObject):
+                if popup.objectName() in {"settingsDialog", "approvalDialog", "toolDetail"}:
+                    content = popup.property("contentItem")
+                    if isinstance(content, QQuickItem):
+                        items.append(content)
             while items:
                 candidate = items.pop(0)
+                if not isinstance(candidate, QQuickItem):
+                    continue
                 if candidate.objectName() == name:
                     item = candidate
                     break
                 items.extend(candidate.childItems())
+        return item
+
+    def click(self, window, name):
+        item = self.control(window, name)
         self.assertIsNotNone(item, name)
         self.assertTrue(item.isVisible() and item.isEnabled(), name)
         point = item.mapToScene(QPointF(item.width() / 2, item.height() / 2)).toPoint()
@@ -56,9 +67,40 @@ class QuickUiTests(unittest.TestCase):
         window.resize(800, 570)
         self.assertEqual(window.quick.rootObject().findChild(QQuickItem, "toolGrid").property("columns"), 2)
         self.click(window, "settingsAction")
-        self.click(window, "themeSwitch")
+        self.click(window, "lightThemeAction")
         self.assertFalse(window.surface.dark)
         self.assertFalse(self.window().surface.dark)
+
+    def test_settings_dismissal_consumes_click_and_returns_focus(self):
+        window = self.window()
+        root = window.quick.rootObject()
+        popup = root.findChild(QObject, "settingsDialog")
+        self.click(window, "settingsAction")
+        self.click(window, "updateSourceAction")
+        self.assertTrue(self.control(window, "updateSourceValue").isVisible())
+        self.click(window, "closeSettingsAction")
+        self.assertFalse(popup.property("visible"))
+        for dismissal in ("outside", "anchor", "escape"):
+            self.click(window, "settingsAction")
+            self.assertTrue(popup.property("visible"), dismissal)
+            if dismissal == "escape":
+                QTest.keyClick(window.quick, Qt.Key.Key_Escape)
+            else:
+                self.click(window, "detailsAction" if dismissal == "outside" else "settingsAction")
+            self.assertFalse(popup.property("visible"), dismissal)
+            self.assertFalse(root.property("detailOpen"), dismissal)
+            self.assertEqual(window.quick.quickWindow().activeFocusItem().objectName(), "settingsAction")
+        self.click(window, "detailsAction")
+        self.assertTrue(root.property("detailOpen"))
+        self.assertFalse(self.control(window, "managementAction").isVisible())
+
+    def test_theme_save_failure_keeps_previous_choice(self):
+        window = self.window()
+        self.click(window, "settingsAction")
+        with patch("southpaw_tools.quick_ui.atomic_json", side_effect=OSError):
+            self.click(window, "lightThemeAction")
+        self.assertTrue(window.surface.dark)
+        self.assertTrue(self.control(window, "darkThemeAction").property("selected"))
 
     def test_workspace_card_addresses_app_by_id_and_opens_detail(self):
         window = self.window()
@@ -137,6 +179,37 @@ class QuickUiTests(unittest.TestCase):
         self.click(window, "detailsAction")
         QTest.qWait(180)
         self.click(window, "managementAction")
+        QTest.qWait(100)
+        self.assertTrue(self.control(window, "managementActions").isVisible())
+        with patch.object(window, "open_folder") as open_folder:
+            self.click(window, "folderAction")
+            open_folder.assert_called_once_with()
+        self.assertFalse(self.control(window, "versionsAction").isEnabled())
+        self.click(window, "managementAction")
+        with (patch.object(self.engine, "retained_versions", return_value=[app, upgraded]),
+              patch.object(window, "choose_version") as choose_version):
+            self.click(window, "managementAction")
+            QTest.qWait(100)
+            self.click(window, "versionsAction")
+            choose_version.assert_called_once_with()
+        QTest.keyClick(window.quick, Qt.Key.Key_Escape)
+        self.assertFalse(self.control(window, "managementActions").isVisible())
+        self.assertEqual(window.quick.quickWindow().activeFocusItem().objectName(), "managementAction")
+        self.click(window, "managementAction")
+        QTest.qWait(100)
+        observed = []
+
+        def dismiss_removal():
+            popup = window.quick.rootObject().findChild(QObject, "approvalDialog")
+            self.click(window, "refreshAction")
+            observed.append((popup.property("visible"), window.quick.quickWindow().activeFocusItem().objectName()))
+            self.click(window, "closeApprovalAction")
+
+        QTimer.singleShot(100, dismiss_removal)
+        self.click(window, "removeAction")
+        self.assertEqual(observed, [(True, "cancelApprovalAction")])
+        self.assertEqual(self.engine.installed("dummy"), upgraded)
+        self.assertEqual(window.quick.quickWindow().activeFocusItem().objectName(), "removeAction")
         QTimer.singleShot(100, lambda: self.click(window, "confirmAction"))
         self.click(window, "removeAction")
         self.wait_task(window)

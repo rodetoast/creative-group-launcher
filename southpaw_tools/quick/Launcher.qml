@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import QtQuick.Window
 
 Item {
     id: root
@@ -28,6 +29,7 @@ Item {
     property Item detailOrigin: null
     property bool detailOpen: false
     property bool notesExpanded: false
+    property bool managementExpanded: false
     readonly property bool dockDetail: width >= 1210
     readonly property bool wideHeader: width >= 1100
     readonly property color selectedCard: launcher.dark ? "#28233b" : "#f5effd"
@@ -40,6 +42,9 @@ Item {
     readonly property color hover: launcher.dark ? "#292d3e" : "#e2e2ed"
     readonly property color green: launcher.dark ? "#8ed4b4" : "#126044"
     readonly property color amber: launcher.dark ? "#ffd29b" : "#80522c"
+    readonly property color danger: launcher.dark ? "#ffc0c5" : "#a02137"
+    readonly property color dangerLine: launcher.dark ? "#79505b" : "#d4a0aa"
+    readonly property color dangerHover: launcher.dark ? "#402934" : "#fae9ed"
     readonly property color warningPad: launcher.dark ? "#332a25" : "#f6eadd"
     readonly property int small: 12
     readonly property int bodyText: 14
@@ -192,11 +197,12 @@ Item {
         }
     }
 
-    component Action: Button {
+    component LauncherButton: Button {
         id: button
         property string command: ""
         property bool emphasis: false
         property bool destructive: false
+        property bool selected: false
         property bool quiet: false
         property string glyph: ""
         implicitHeight: root.controlHeight
@@ -231,7 +237,8 @@ Item {
                     text: button.text
                     textFormat: Text.PlainText
                     color: !button.enabled ? root.muted : button.emphasis ? root.primaryText
-                                            : button.destructive ? root.amber : root.ink
+                                            : button.destructive ? root.danger
+                                            : button.selected ? root.accent : root.ink
                     font: button.font
                     elide: Text.ElideRight
                     horizontalAlignment: Text.AlignHCenter
@@ -243,10 +250,13 @@ Item {
             color: button.emphasis
                    ? (!button.enabled ? root.disabledPrimary : button.down ? root.primaryPressed
                                        : button.hovered ? root.primaryHover : root.primaryFill)
-                   : button.enabled && (button.hovered || button.down) ? root.hover
+                   : button.enabled && (button.hovered || button.down)
+                     ? (button.destructive ? root.dangerHover : root.hover)
+                   : button.selected ? root.accentPad
                    : button.quiet ? "transparent" : root.card
-            border.color: button.activeFocus ? root.accent
-                          : button.quiet || button.emphasis ? "transparent" : root.line
+            border.color: button.activeFocus || button.selected ? root.accent
+                          : button.quiet || button.emphasis ? "transparent"
+                          : button.destructive && button.enabled ? root.dangerLine : root.line
             border.width: button.activeFocus ? 2 : 1
             gradient: button.emphasis && button.enabled ? actionGradient : null
             Gradient {
@@ -382,7 +392,7 @@ Item {
             }
             RowLayout {
                 Layout.fillWidth: true
-                Action {
+                LauncherButton {
                     id: primary
                     objectName: "primaryAction"
                     Layout.fillWidth: true
@@ -399,7 +409,7 @@ Item {
                         else launcher.actOnApp(card.modelData.id, "primary")
                     }
                 }
-                Action {
+                LauncherButton {
                     id: detailsButton
                     objectName: "detailsAction"
                     text: "상세 정보"
@@ -419,6 +429,7 @@ Item {
         if (launcher.selectApp(appId)) {
             root.detailOrigin = origin
             notesExpanded = false
+            managementExpanded = false
             detailOpen = true
             if (dockDetail) {
                 if (dockLoader.item) dockLoader.item.focusClose()
@@ -548,21 +559,23 @@ Item {
                     Layout.preferredWidth: implicitWidth
                     Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                     spacing: root.tightGap
-                    Action {
+                    LauncherButton {
                         objectName: "refreshAction"
                         text: root.dataView.refresh_button.text
                         enabled: root.dataView.refresh_button.enabled
                         command: "refresh"
                         glyph: "refresh"
                     }
-                    Action {
+                    LauncherButton {
+                        id: settingsButton
                         objectName: "settingsAction"
                         text: "환경 설정"
                         glyph: "settings"
-                        onClicked: settings.open()
+                        selected: settings.visible
+                        onClicked: settings.visible ? settings.close() : settings.open()
                     }
                 }
-                Action {
+                LauncherButton {
                     objectName: "updateLauncherAction"
                     Layout.row: root.wideHeader ? 0 : 2
                     Layout.column: root.wideHeader ? 2 : 0
@@ -686,7 +699,7 @@ Item {
                         visible: root.working && root.dataView.activeApp === ""
                     }
                 }
-                Action {
+                LauncherButton {
                     objectName: "cancelAction"
                     text: "취소"
                     command: "cancel"
@@ -723,7 +736,12 @@ Item {
         id: detailContent
         Item {
             function focusClose() { closeDetail.forceActiveFocus() }
-            Keys.onEscapePressed: root.closeDetails()
+            Keys.onEscapePressed: {
+                if (managementDisclosure.visible && root.managementExpanded) {
+                    root.managementExpanded = false
+                    managementDisclosure.forceActiveFocus()
+                } else root.closeDetails()
+            }
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: root.inset
@@ -732,7 +750,7 @@ Item {
                     Layout.fillWidth: true
                     Caption { text: "프로그램 정보"; color: root.ink; font.pixelSize: root.heading; font.bold: true }
                     Item { Layout.fillWidth: true }
-                    Action {
+                    LauncherButton {
                         id: closeDetail
                         objectName: "closeDetailAction"
                         text: "닫기"
@@ -807,7 +825,7 @@ Item {
                             color: root.amber
                             wrapMode: Text.Wrap
                         }
-                        Action {
+                        LauncherButton {
                             objectName: "detailPrimaryAction"
                             Layout.fillWidth: true
                             text: root.dataView.primary.text
@@ -817,12 +835,22 @@ Item {
                             emphasis: true
                         }
                         Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: root.line }
-                        Action {
-                            objectName: "notesDisclosure"
-                            text: "변경 내역"
-                            glyph: root.notesExpanded ? "up" : "down"
-                            quiet: true
-                            onClicked: root.notesExpanded = !root.notesExpanded
+                        RowLayout {
+                            Layout.fillWidth: true
+                            LauncherButton {
+                                objectName: "notesDisclosure"
+                                text: "변경 내역"
+                                glyph: root.notesExpanded ? "up" : "down"
+                                quiet: true
+                                onClicked: root.notesExpanded = !root.notesExpanded
+                            }
+                            Item { Layout.fillWidth: true }
+                            LauncherButton {
+                                text: "진단 정보"
+                                glyph: "info"
+                                quiet: true
+                                command: "details"
+                            }
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -891,19 +919,83 @@ Item {
                                 }
                             }
                         }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: root.dataView.selectedInstalled
+                            spacing: root.tightGap
+                            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: root.line }
+                            LauncherButton {
+                                id: managementDisclosure
+                                objectName: "managementAction"
+                                Layout.fillWidth: true
+                                text: root.managementExpanded ? "고급 관리 접기" : "고급 관리"
+                                glyph: root.managementExpanded ? "up" : "down"
+                                onClicked: {
+                                    root.managementExpanded = !root.managementExpanded
+                                    if (root.managementExpanded) {
+                                        Qt.callLater(function() {
+                                            const flick = detailBody.contentItem
+                                            const bottom = managementActions.mapToItem(
+                                                flick.contentItem, 0, managementActions.height).y
+                                            flick.contentY = Math.max(flick.contentY, bottom - flick.height)
+                                        })
+                                    }
+                                }
+                            }
+                            ColumnLayout {
+                                id: managementActions
+                                objectName: "managementActions"
+                                Layout.fillWidth: true
+                                visible: root.managementExpanded
+                                spacing: root.tightGap
+                                readonly property string versionNotice:
+                                    visible && !root.working && root.dataView.versions_button.enabled
+                                    ? launcher.versionNotice() : ""
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: root.tightGap
+                                    LauncherButton {
+                                        objectName: "folderAction"
+                                        text: "설치 위치 열기"
+                                        command: "folder"
+                                        enabled: !root.working && root.dataView.folder_button.enabled
+                                    }
+                                    LauncherButton {
+                                        objectName: "versionsAction"
+                                        text: "설치된 버전 선택"
+                                        command: "versions"
+                                        enabled: !root.working && root.dataView.versions_button.enabled
+                                                 && managementActions.versionNotice === ""
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                }
+                                Caption {
+                                    Layout.fillWidth: true
+                                    visible: text !== ""
+                                    text: root.working ? "작업이 끝난 뒤 관리할 수 있습니다."
+                                          : !root.dataView.versions_button.enabled
+                                            ? "실행 중이거나 복구가 필요한 프로그램은 버전을 전환할 수 없습니다."
+                                            : managementActions.versionNotice
+                                    font.pixelSize: root.small
+                                    wrapMode: Text.WordWrap
+                                }
+                                LauncherButton {
+                                    objectName: "removeAction"
+                                    text: "프로그램 제거"
+                                    destructive: true
+                                    command: "remove"
+                                    enabled: !root.working && root.dataView.remove_button.enabled
+                                }
+                            }
+                        }
                     }
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    Action {
-                        objectName: "managementAction"
-                        text: "프로그램 관리"
-                        glyph: "settings"
-                        enabled: !root.working
-                        onClicked: management.open()
-                    }
+                    visible: root.dataView.launch_current.visible
                     Item { Layout.fillWidth: true }
-                    Action {
+                    LauncherButton {
+                        id: currentLaunch
                         text: "실행"
                         glyph: "play"
                         command: "launch"
@@ -934,63 +1026,102 @@ Item {
         background: Rectangle { color: root.card; radius: root.radius; border.color: root.line }
     }
 
-    Panel {
+    Popup {
         id: settings
         objectName: "settingsDialog"
-        title: "환경 설정"
+        parent: root
+        z: 25
+        modal: true
+        dim: false
+        focus: true
+        padding: root.gap
+        width: Math.min(388, root.width - 2 * root.tightGap)
+        function place() {
+            const anchor = settingsButton.mapToItem(root, settingsButton.width, settingsButton.height)
+            x = Math.max(root.tightGap, Math.min(anchor.x - width, root.width - width - root.tightGap))
+            y = Math.max(root.tightGap, Math.min(anchor.y + root.tightGap, root.height - height - root.tightGap))
+        }
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnReleaseOutside
+        onAboutToShow: {
+            sourceDisclosure.expanded = false
+            place()
+        }
+        onHeightChanged: if (visible) place()
+        Connections {
+            target: root
+            function onWidthChanged() { if (settings.visible) Qt.callLater(settings.place) }
+            function onHeightChanged() { if (settings.visible) Qt.callLater(settings.place) }
+        }
+        onOpened: (launcher.dark ? darkTheme : lightTheme).forceActiveFocus()
+        onClosed: settingsButton.forceActiveFocus()
+        background: Rectangle { color: root.card; radius: root.radius; border.color: root.line }
         contentItem: ColumnLayout {
-            spacing: 10
-            Switch {
-                objectName: "themeSwitch"
-                text: "라이트 테마"
-                checked: !launcher.dark
-                onToggled: launcher.setDark(!checked)
+            spacing: root.tightGap
+            RowLayout {
+                Layout.fillWidth: true
+                Caption { text: "환경 설정"; color: root.ink; font.pixelSize: root.heading; font.bold: true }
+                Item { Layout.fillWidth: true }
+                LauncherButton {
+                    objectName: "closeSettingsAction"
+                    text: "닫기"
+                    glyph: "close"
+                    quiet: true
+                    onClicked: settings.close()
+                }
+            }
+            Caption { text: "화면"; color: root.ink; font.weight: Font.DemiBold }
+            Caption { text: "테마"; font.pixelSize: root.small }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                LauncherButton {
+                    id: darkTheme
+                    objectName: "darkThemeAction"
+                    Layout.fillWidth: true
+                    text: "다크"
+                    selected: launcher.dark
+                    Accessible.checkable: true
+                    Accessible.checked: selected
+                    onClicked: launcher.setDark(true)
+                }
+                LauncherButton {
+                    id: lightTheme
+                    objectName: "lightThemeAction"
+                    Layout.fillWidth: true
+                    text: "라이트"
+                    selected: !launcher.dark
+                    Accessible.checkable: true
+                    Accessible.checked: selected
+                    onClicked: launcher.setDark(false)
+                }
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.topMargin: root.tightGap
+                Layout.preferredHeight: 1
+                color: root.line
+            }
+            LauncherButton {
+                id: sourceDisclosure
+                objectName: "updateSourceAction"
+                property bool expanded: false
+                text: "업데이트 출처"
+                glyph: expanded ? "up" : "down"
+                quiet: true
+                onClicked: expanded = !expanded
             }
             Caption {
+                objectName: "updateSourceValue"
                 Layout.fillWidth: true
+                visible: sourceDisclosure.expanded
                 text: root.dataView.connectedRepo || "배포 저장소 미지정"
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
             }
-            Action {
+            LauncherButton {
                 text: "연결 설정"
-                visible: root.dataView.connection_button.visible
+                visible: sourceDisclosure.expanded && root.dataView.connection_button.visible
                 enabled: root.dataView.connection_button.enabled
                 onClicked: { settings.close(); launcher.act("configure") }
-            }
-            Action { text: "닫기"; onClicked: settings.close() }
-        }
-    }
-
-    Panel {
-        id: management
-        objectName: "managementDialog"
-        title: "프로그램 관리"
-        contentItem: ColumnLayout {
-            spacing: 8
-            Action {
-                Layout.fillWidth: true
-                text: "설치 위치 열기"
-                enabled: root.dataView.folder_button.enabled
-                onClicked: { management.close(); launcher.act("folder") }
-            }
-            Action {
-                Layout.fillWidth: true
-                text: "설치된 버전 선택"
-                enabled: root.dataView.versions_button.enabled
-                onClicked: { management.close(); launcher.act("versions") }
-            }
-            Action {
-                Layout.fillWidth: true
-                text: "상세 정보"
-                onClicked: { management.close(); launcher.act("details") }
-            }
-            Action {
-                objectName: "removeAction"
-                Layout.fillWidth: true
-                text: "제거"
-                destructive: true
-                enabled: root.dataView.remove_button.enabled
-                onClicked: { management.close(); launcher.act("remove") }
             }
         }
     }
@@ -998,8 +1129,46 @@ Item {
     Panel {
         id: approval
         objectName: "approvalDialog"
+        property Item returnFocus: null
+        readonly property bool removal: launcher.prompt.title === "프로그램 제거"
+        closePolicy: Popup.CloseOnEscape
+                     | (launcher.prompt.information ? Popup.CloseOnReleaseOutside : Popup.NoAutoClose)
         title: launcher.prompt.title || ""
-        onClosed: if (launcher.prompt.title) launcher.reply(false, -1)
+        onOpened: cancelApproval.forceActiveFocus()
+        onClosed: {
+            if (launcher.prompt.title) launcher.reply(false, -1)
+            if (returnFocus && returnFocus.visible && returnFocus.enabled) returnFocus.forceActiveFocus()
+            else if (root.detailOpen) {
+                const panel = root.dockDetail ? dockLoader.item : detail.contentItem.item
+                if (panel) panel.focusClose()
+            }
+            returnFocus = null
+        }
+        header: Item {
+            implicitHeight: approvalHeading.implicitHeight + root.tightGap
+            RowLayout {
+                id: approvalHeading
+                anchors.fill: parent
+                anchors.leftMargin: root.gap
+                anchors.rightMargin: root.gap
+                anchors.topMargin: root.tightGap
+                Caption {
+                    Layout.fillWidth: true
+                    text: approval.title
+                    color: root.ink
+                    font.pixelSize: root.heading
+                    font.bold: true
+                    wrapMode: Text.WordWrap
+                }
+                LauncherButton {
+                    objectName: "closeApprovalAction"
+                    text: "닫기"
+                    glyph: "close"
+                    quiet: true
+                    onClicked: approval.close()
+                }
+            }
+        }
         contentItem: ColumnLayout {
             spacing: 10
             ScrollView {
@@ -1027,14 +1196,17 @@ Item {
             }
             RowLayout {
                 Layout.alignment: Qt.AlignRight
-                Action {
+                LauncherButton {
+                    id: cancelApproval
+                    objectName: "cancelApprovalAction"
                     text: launcher.prompt.information ? "닫기" : "취소"
                     onClicked: { launcher.reply(false, -1); approval.close() }
                 }
-                Action {
+                LauncherButton {
                     objectName: "confirmAction"
-                    text: "확인"
-                    emphasis: true
+                    text: approval.removal ? "제거" : "확인"
+                    destructive: approval.removal
+                    emphasis: !approval.removal
                     visible: !launcher.prompt.information
                     onClicked: { launcher.reply(true, choices.currentIndex); approval.close() }
                 }
@@ -1045,8 +1217,10 @@ Item {
     Connections {
         target: launcher
         function onPromptChanged() {
-            if (launcher.prompt.title) approval.open()
-            else approval.close()
+            if (launcher.prompt.title) {
+                if (!approval.visible) approval.returnFocus = root.Window.window.activeFocusItem
+                approval.open()
+            } else approval.close()
         }
     }
 }

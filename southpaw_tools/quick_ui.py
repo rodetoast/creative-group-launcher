@@ -222,7 +222,8 @@ class LauncherSurface(QObject):
         result = {name: dict(getattr(w, name).data) for name in w.FIELDS}
         result.update({name: field.text() for name, field in w.info.items()})
         app = w.selected()
-        result.update(online=w.online, busy=w.task is not None or w._launcher_handoff,
+        selected_installed = any(row["id"] == app.app_id and row["installed"] for row in self._rows) if app else False
+        result.update(selectedInstalled=selected_installed, online=w.online, busy=w.task is not None or w._launcher_handoff,
                       catalogError=bool(w.catalog_error), hasSelection=app is not None,
                       selectedId=app.app_id if app else "", connectedRepo=w.config.get("github_repository", ""),
                       testing=w.github_test_mode, knownProgress=w.known_progress,
@@ -308,6 +309,20 @@ class LauncherSurface(QObject):
         getattr(self.window, action)()
         self.invalidate()
 
+    @Slot(result=str)
+    def versionNotice(self):
+        app = self.window.selected()
+        if app is None:
+            return ""
+        installer = self.window.installer
+        try:
+            current = installer.installed(app.app_id)
+            if current and any(item != current for item in installer.retained_versions(app.app_id)):
+                return ""
+        except (LauncherError, OSError):
+            return "보관된 버전을 확인할 수 없습니다."
+        return "전환 가능한 보관 버전이 없습니다."
+
     @Slot(bool)
     def setDark(self, dark):
         if self._dark == dark:
@@ -317,7 +332,8 @@ class LauncherSurface(QObject):
                 raise LauncherError("테마 설정 경로를 사용할 수 없습니다.")
             atomic_json(self._prefs, {"theme": "dark" if dark else "light"})
         except (LauncherError, OSError):
-            self.window.message.setText("테마를 이번 실행에만 적용했습니다. 환경 설정 파일을 확인해 주세요.")
+            self.window.message.setText("테마를 저장하지 못했습니다. 환경 설정 파일을 확인해 주세요.")
+            return
         self._dark = dark
         self.appearanceChanged.emit()
 
