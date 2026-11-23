@@ -11,7 +11,7 @@ Item {
     readonly property var dataView: launcher.view
     // Shared visual vocabulary for the library, detail view and dialogs.
     readonly property color canvas: launcher.dark ? "#151822" : "#f4f4f8"
-    readonly property color sidebar: launcher.dark ? "#1b1e2b" : "#eaeaf2"
+    readonly property color sidebar: launcher.dark ? "#1b1e2b" : "#f1eff8"
     readonly property color card: launcher.dark ? "#202432" : "#ffffff"
     readonly property color line: launcher.dark ? "#393e51" : "#d9d9e6"
     readonly property color ink: launcher.dark ? "#f5f3ff" : "#222335"
@@ -26,6 +26,17 @@ Item {
     readonly property color installedPad: launcher.dark ? "#253b36" : "#ddf1e8"
     readonly property int cardRadius: 13
     property Item detailOrigin: null
+    property bool detailOpen: false
+    property bool notesExpanded: false
+    readonly property bool dockDetail: width >= 1210
+    readonly property bool wideHeader: width >= 1100
+    readonly property color selectedCard: launcher.dark ? "#28233b" : "#f5effd"
+    readonly property color softPanel: launcher.dark ? "#191c2a" : "#f9f8fd"
+    onDockDetailChanged: {
+        if (!detailOpen) return
+        if (dockDetail) detail.close()
+        else detail.open()
+    }
     readonly property color hover: launcher.dark ? "#292d3e" : "#e2e2ed"
     readonly property color green: launcher.dark ? "#8ed4b4" : "#126044"
     readonly property color amber: launcher.dark ? "#ffd29b" : "#80522c"
@@ -36,11 +47,11 @@ Item {
     readonly property int tightGap: 8
     readonly property int gap: 16
     readonly property int radius: 10
-    readonly property int controlHeight: 40
+    readonly property int controlHeight: 43
     readonly property string productFont: launcher.uiFont
     readonly property bool compact: width < 820
-    readonly property int cardWidth: 300
-    readonly property int inset: compact ? 16 : 24
+    readonly property int cardWidth: 280
+    readonly property int inset: compact ? 16 : 30
     readonly property int transitionMs: 140
     readonly property bool working: dataView.busy || dataView.bridgeBusy
     readonly property bool checkFailed: dataView.catalogError || dataView.lastCheck === "failed"
@@ -50,7 +61,7 @@ Item {
         if (dataView.online && dataView.launcher_update_button.visible)
             return dataView.verifiedVersion ? "업데이트 가능 · v" + dataView.verifiedVersion : "업데이트 가능"
         if (dataView.online && dataView.latestVerified) return "최신 버전 사용 중"
-        if (dataView.online) return "확인 완료 · 제공 버전 미확인"
+        if (dataView.online) return "앱 목록 확인 완료"
         if (dataView.lastCheck === "" && dataView.server_status.text === "오프라인 · 미확인")
             return "업데이트 확인 전"
         return dataView.server_status.text || "업데이트 확인 전"
@@ -74,20 +85,109 @@ Item {
         textFormat: Text.PlainText
     }
 
+    function actionIcon(label) {
+        if (label === "설치") return "download"
+        if (label === "실행" || label === "실행 중") return "play"
+        if (label.indexOf("업데이트") >= 0) return "refresh"
+        return "info"
+    }
+
+    component Glyph: Canvas {
+        id: glyph
+        property string kind: ""
+        property color ink: root.ink
+        implicitWidth: 20
+        implicitHeight: 20
+        onInkChanged: requestPaint()
+        onKindChanged: requestPaint()
+        onPaint: {
+            const ctx = getContext("2d")
+            ctx.reset()
+            ctx.scale(width / 20, height / 20)
+            ctx.strokeStyle = ink
+            ctx.fillStyle = ink
+            ctx.lineWidth = 1.65
+            ctx.lineCap = "round"
+            ctx.lineJoin = "round"
+            ctx.beginPath()
+            switch (kind) {
+            case "refresh":
+                ctx.arc(10, 10, 6.4, 3.45, 5.93)
+                ctx.moveTo(16.6, 3.6); ctx.lineTo(16.6, 7.8); ctx.lineTo(12.3, 7.8)
+                ctx.moveTo(16.1, 12); ctx.arc(10, 10, 6.4, 0.32, 2.8)
+                ctx.moveTo(3.4, 16.4); ctx.lineTo(3.4, 12.2); ctx.lineTo(7.7, 12.2)
+                break
+            case "play":
+                ctx.moveTo(6, 3.8); ctx.lineTo(16, 10); ctx.lineTo(6, 16.2)
+                ctx.closePath(); ctx.fill(); return
+            case "download":
+                ctx.moveTo(10, 3); ctx.lineTo(10, 12)
+                ctx.moveTo(6.4, 8.8); ctx.lineTo(10, 12.4); ctx.lineTo(13.6, 8.8)
+                ctx.moveTo(3, 13); ctx.lineTo(3, 16); ctx.lineTo(17, 16); ctx.lineTo(17, 13)
+                break
+            case "check":
+                ctx.moveTo(4, 10); ctx.lineTo(8, 14); ctx.lineTo(16, 6)
+                break
+            case "close":
+                ctx.moveTo(5, 5); ctx.lineTo(15, 15)
+                ctx.moveTo(15, 5); ctx.lineTo(5, 15)
+                break
+            case "settings":
+                for (let tooth = 0; tooth < 32; ++tooth) {
+                    const angle = tooth * Math.PI / 16
+                    const distance = tooth % 4 === 1 || tooth % 4 === 2 ? 8 : 6
+                    const x = 10 + distance * Math.cos(angle)
+                    const y = 10 + distance * Math.sin(angle)
+                    if (tooth === 0) ctx.moveTo(x, y)
+                    else ctx.lineTo(x, y)
+                }
+                ctx.closePath()
+                ctx.moveTo(12.6, 10); ctx.arc(10, 10, 2.6, 0, Math.PI * 2)
+                break
+            case "up":
+            case "down":
+                const offset = kind === "up" ? 3 : -3
+                ctx.moveTo(5, 10 + offset); ctx.lineTo(10, 10 - offset); ctx.lineTo(15, 10 + offset)
+                break
+            default:
+                ctx.arc(10, 10, 7.4, 0, Math.PI * 2)
+                ctx.moveTo(10, 9.5); ctx.lineTo(10, 13.8)
+                ctx.moveTo(10, 6.6); ctx.lineTo(10, 6.8)
+            }
+            ctx.stroke()
+        }
+    }
+
     component StatusPill: Rectangle {
         property alias text: pillText.text
         property color tone: root.muted
         property color backgroundColor: root.hover
-        implicitWidth: pillText.implicitWidth + 18
+        property string glyph: ""
+        property bool outlined: false
+        implicitWidth: pillRow.implicitWidth + 20
         implicitHeight: Math.max(23, pillText.implicitHeight + 6)
         radius: height / 2
         color: backgroundColor
-        Caption {
-            id: pillText
+        border.width: outlined ? 1 : 0
+        border.color: outlined ? Qt.alpha(tone, 0.45) : "transparent"
+        Row {
+            id: pillRow
             anchors.centerIn: parent
-            font.pixelSize: root.small
-            font.bold: true
-            color: parent.tone
+            spacing: 5
+            Glyph {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 13; height: 13
+                visible: kind !== ""
+                kind: pillRow.parent.glyph
+                ink: pillRow.parent.tone
+            }
+            Caption {
+                id: pillText
+                anchors.verticalCenter: parent.verticalCenter
+                font.pixelSize: root.small
+                font.weight: Font.DemiBold
+                color: pillRow.parent.tone
+            }
         }
     }
 
@@ -97,6 +197,7 @@ Item {
         property bool emphasis: false
         property bool destructive: false
         property bool quiet: false
+        property string glyph: ""
         implicitHeight: root.controlHeight
         implicitWidth: Math.max(78, contentItem.implicitWidth + 28)
         leftPadding: 12
@@ -106,13 +207,35 @@ Item {
         font.bold: emphasis
         hoverEnabled: true
         onClicked: if (command) launcher.act(command)
-        contentItem: Label {
-            text: button.text
-            textFormat: Text.PlainText
-            color: !button.enabled ? root.muted : button.emphasis ? root.primaryText : button.destructive ? root.amber : root.ink
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            font: button.font
+        contentItem: Item {
+            implicitWidth: Math.ceil(actionLabel.implicitWidth) + 3 + (button.glyph ? 25 : 0)
+            implicitHeight: Math.max(20, actionLabel.implicitHeight)
+            Row {
+                anchors.centerIn: parent
+                spacing: 5
+                Glyph {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 20
+                    height: 20
+                    visible: kind !== ""
+                    kind: button.glyph
+                    ink: actionLabel.color
+                }
+                Label {
+                    id: actionLabel
+                    anchors.verticalCenter: parent.verticalCenter
+                    // Fractional DPI can round glyph advances differently from implicitWidth.
+                    width: Math.min(Math.ceil(implicitWidth) + 3,
+                                    Math.max(0, button.availableWidth - (button.glyph ? 25 : 0)))
+                    text: button.text
+                    textFormat: Text.PlainText
+                    color: !button.enabled ? root.muted : button.emphasis ? root.primaryText
+                                            : button.destructive ? root.amber : root.ink
+                    font: button.font
+                    elide: Text.ElideRight
+                    horizontalAlignment: Text.AlignHCenter
+                }
+            }
         }
         background: Rectangle {
             radius: root.radius
@@ -124,6 +247,12 @@ Item {
             border.color: button.activeFocus ? root.accent
                           : button.quiet || button.emphasis ? "transparent" : root.line
             border.width: button.activeFocus ? 2 : 1
+            gradient: button.emphasis && button.enabled ? actionGradient : null
+            Gradient {
+                id: actionGradient
+                GradientStop { position: 0; color: button.down ? root.primaryPressed : button.hovered ? root.primaryHover : root.primaryFill }
+                GradientStop { position: 1; color: root.primaryPressed }
+            }
             Behavior on color { ColorAnimation { duration: 95 } }
         }
     }
@@ -163,12 +292,12 @@ Item {
         }
         Layout.fillWidth: true
         Layout.minimumWidth: 0
-        implicitHeight: 206
+        readonly property bool selected: root.detailOpen && root.dataView.selectedId === modelData.id
+        implicitHeight: root.compact ? 218 : 232
         radius: root.cardRadius
-        color: mouse.hovered ? root.hover : root.card
-        border.width: 1
-        border.color: detailsButton.activeFocus || primary.activeFocus || active
-                      || (detail.visible && root.dataView.selectedId === modelData.id) ? root.accent : root.line
+        color: selected ? root.selectedCard : mouse.hovered ? root.hover : root.card
+        border.width: selected ? 2 : 1
+        border.color: detailsButton.activeFocus || primary.activeFocus || active || selected ? root.accent : root.line
         HoverHandler { id: mouse }
         Behavior on color { ColorAnimation { duration: 110 } }
         MouseArea {
@@ -180,13 +309,13 @@ Item {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: root.gap
-            spacing: root.tightGap
+            spacing: 10
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
                 Rectangle {
-                    Layout.preferredWidth: 43
-                    Layout.preferredHeight: 43
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 54
                     radius: root.radius
                     color: root.accentPad
                     AppIcon { anchors.fill: parent; anchors.margins: 6; appId: card.modelData.id }
@@ -197,19 +326,20 @@ Item {
                     Caption {
                         Layout.fillWidth: true
                         color: root.ink
-                        font.pixelSize: 16
+                        font.pixelSize: 20
                         font.bold: true
                         elide: Text.ElideRight
                         text: card.modelData.title
+                        Accessible.name: text
                     }
                 }
             }
             Caption {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.minimumHeight: 39
+                Layout.minimumHeight: 40
                 Layout.alignment: Qt.AlignTop
-                maximumLineCount: 2
+                maximumLineCount: 3
                 elide: Text.ElideRight
                 wrapMode: Text.Wrap
                 lineHeight: 1.14
@@ -222,17 +352,27 @@ Item {
                     visible: !card.active
                     text: card.statusText
                     tone: root.stateTone(text)
+                    glyph: text === "설치됨" ? "check" : text === "업데이트 가능" ? "refresh"
+                           : text === "미설치" ? "download" : ""
                     backgroundColor: card.statusText === "설치됨" ? root.installedPad
                                      : card.canUpdate && !root.dataView.issues[card.modelData.id] ? root.accentPad
                                      : tone === root.amber ? root.warningPad : root.hover
                 }
+                Rectangle {
+                    visible: !card.active && (card.modelData.version !== "" || card.canDownload)
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: 14
+                    color: root.line
+                }
                 Caption {
                     Layout.fillWidth: true
                     font.pixelSize: root.small
+                    color: root.ink
                     elide: Text.ElideRight
                     text: card.active ? card.statusText
                           : card.canUpdate ? card.modelData.version + " → " + card.modelData.providedVersion
-                          : card.modelData.version || (card.canDownload ? "제공 " + card.modelData.providedVersion : "")
+                          : card.modelData.version ? "v" + card.modelData.version
+                          : card.canDownload ? "최신 버전 " + card.modelData.providedVersion : ""
                 }
             }
             WorkProgress {
@@ -245,8 +385,9 @@ Item {
                     id: primary
                     objectName: "primaryAction"
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 104
-                    Layout.maximumWidth: 156
+                    Layout.preferredWidth: 115
+                    Layout.minimumWidth: 0
+                    glyph: root.actionIcon(text)
                     emphasis: true
                     text: card.running ? "실행 중" : card.modelData.problem ? "확인" : card.modelData.pending ? "복구 확인" : card.canUpdate ? "업데이트"
                           : card.modelData.installed ? "실행" : "설치"
@@ -258,16 +399,13 @@ Item {
                     }
                 }
                 Action {
-                    text: "실행"
-                    visible: card.canUpdate && card.runnable
-                    enabled: !root.working && !card.running
-                    onClicked: launcher.actOnApp(card.modelData.id, "launch")
-                }
-                Item { Layout.fillWidth: true }
-                Action {
                     id: detailsButton
                     objectName: "detailsAction"
                     text: "상세 정보"
+                    glyph: "info"
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 101
+                    Layout.minimumWidth: 0
                     enabled: !root.working || card.active
                     Accessible.name: card.modelData.title + " 상세 정보"
                     onClicked: root.openDetails(card.modelData.id, detailsButton)
@@ -279,12 +417,36 @@ Item {
     function openDetails(appId, origin) {
         if (launcher.selectApp(appId)) {
             root.detailOrigin = origin
-            notesDisclosure.checked = false
-            detail.open()
+            notesExpanded = false
+            detailOpen = true
+            if (dockDetail) {
+                if (dockLoader.item) dockLoader.item.focusClose()
+            } else detail.open()
         }
     }
 
-    Rectangle { anchors.fill: parent; color: root.canvas }
+    function finishDetails() {
+        detailOpen = false
+        const origin = detailOrigin
+        detailOrigin = null
+        if (origin && origin.enabled) origin.forceActiveFocus()
+    }
+
+    function closeDetails() {
+        if (dockDetail) finishDetails()
+        else detail.close()
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: root.canvas
+        gradient: launcher.dark ? workspaceTone : null
+        Gradient {
+            id: workspaceTone
+            GradientStop { position: 0; color: root.canvas }
+            GradientStop { position: 1; color: "#11131f" }
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -293,42 +455,86 @@ Item {
             Layout.fillWidth: true
             implicitHeight: toolbar.implicitHeight + 2 * root.inset
             color: root.sidebar
-            RowLayout {
+            GridLayout {
                 id: toolbar
                 anchors.fill: parent
                 anchors.margins: root.inset
-                spacing: 12
-                Image {
-                    source: launcher.brandIcon
-                    Layout.preferredWidth: 40
-                    Layout.preferredHeight: 40
-                    fillMode: Image.PreserveAspectFit
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 3
-                    Caption {
-                        text: "Southpaw Tools"
-                        color: root.ink
-                        font.bold: true
-                        font.pixelSize: 21
+                columnSpacing: root.compact ? 8 : 18
+                rowSpacing: 10
+                columns: root.wideHeader ? 4 : 2
+                RowLayout {
+                    Layout.row: 0
+                    Layout.column: 0
+                    Layout.fillWidth: !root.wideHeader
+                    spacing: root.compact ? 8 : 12
+                    Image {
+                        source: launcher.brandIcon
+                        Layout.preferredWidth: root.compact ? 34 : 46
+                        Layout.preferredHeight: width
+                        fillMode: Image.PreserveAspectFit
                     }
-                    Flow {
+                    Caption {
+                        visible: root.wideHeader
+                        text: "SOUTHPAW\nGAMES"
+                        color: root.ink
+                        font.pixelSize: 15
+                        font.bold: true
+                        font.letterSpacing: 0.8
+                    }
+                    Rectangle {
+                        visible: root.wideHeader
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 44
+                        color: root.line
+                    }
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 7
-                        StatusPill {
-                            text: "런처 v" + launcher.productVersion
-                            tone: root.accent
-                            backgroundColor: root.accentPad
+                        spacing: 2
+                        Caption {
+                            Layout.fillWidth: true
+                            text: "Southpaw Tools"
+                            color: root.ink
+                            font.bold: true
+                            font.pixelSize: root.compact ? 23 : 31
+                            elide: Text.ElideRight
                         }
                         Caption {
+                            text: "Creative Workspace"
+                            color: root.accent
+                            font.pixelSize: root.compact ? 12 : 14
+                            font.letterSpacing: root.compact ? 0.3 : 0.9
+                        }
+                    }
+                }
+                Flow {
+                    Layout.row: root.wideHeader ? 0 : 1
+                    Layout.column: root.wideHeader ? 1 : 0
+                    Layout.columnSpan: root.wideHeader ? 1 : 2
+                    Layout.fillWidth: true
+                    spacing: 9
+                    StatusPill {
+                        text: "런처 v" + launcher.productVersion
+                        tone: root.accent
+                        backgroundColor: root.accentPad
+                        outlined: true
+                    }
+                    Row {
+                        height: 24
+                        spacing: 6
+                        Glyph {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 16; height: 16
+                            kind: root.dataView.checking ? "refresh" : root.dataView.latestVerified && root.dataView.online ? "check" : "info"
+                            ink: connection.color
+                        }
+                        Caption {
+                            id: connection
                             objectName: "connectionState"
-                            height: Math.max(23, implicitHeight)
-                            verticalAlignment: Text.AlignVCenter
+                            anchors.verticalCenter: parent.verticalCenter
                             font.pixelSize: root.small
                             text: root.connectionText
                             color: root.dataView.checking ? root.accent : root.checkFailed ? root.amber
-                                   : root.dataView.online && root.dataView.latestVerified ? root.green : root.muted
+                                   : root.dataView.online && root.dataView.latestVerified ? root.green : root.ink
                             ToolTip.visible: statusHover.hovered
                             ToolTip.text: root.dataView.server_status.tip
                             HoverHandler { id: statusHover }
@@ -336,72 +542,114 @@ Item {
                     }
                 }
                 Flow {
-                    Layout.preferredWidth: root.compact && root.dataView.launcher_update_button.visible
-                                           ? 145 : implicitWidth
-                    Layout.alignment: Qt.AlignVCenter
-                    layoutDirection: Qt.RightToLeft
+                    Layout.row: 0
+                    Layout.column: root.wideHeader ? 3 : 1
+                    Layout.preferredWidth: implicitWidth
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                     spacing: root.tightGap
-                    Action {
-                        objectName: "settingsAction"
-                        text: "환경 설정"
-                        onClicked: settings.open()
-                    }
                     Action {
                         objectName: "refreshAction"
                         text: root.dataView.refresh_button.text
                         enabled: root.dataView.refresh_button.enabled
                         command: "refresh"
+                        glyph: "refresh"
                     }
                     Action {
-                        objectName: "updateLauncherAction"
-                        text: root.dataView.launcher_update_button.text
-                        visible: root.dataView.launcher_update_button.visible
-                        enabled: root.dataView.launcher_update_button.enabled
-                        command: "launcher"
-                        emphasis: true
+                        objectName: "settingsAction"
+                        text: "환경 설정"
+                        glyph: "settings"
+                        onClicked: settings.open()
                     }
+                }
+                Action {
+                    objectName: "updateLauncherAction"
+                    Layout.row: root.wideHeader ? 0 : 2
+                    Layout.column: root.wideHeader ? 2 : 0
+                    Layout.columnSpan: root.wideHeader ? 1 : 2
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                    text: root.dataView.launcher_update_button.text
+                    visible: root.dataView.launcher_update_button.visible
+                    enabled: root.dataView.launcher_update_button.enabled
+                    command: "launcher"
+                    glyph: "download"
+                    emphasis: true
                 }
             }
         }
         Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: root.line }
 
-        ScrollView {
-            id: library
-            objectName: "library"
+        RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            contentWidth: availableWidth
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-            Item {
-                width: library.availableWidth
-                implicitHeight: workspace.implicitHeight + 2 * root.inset
-                ColumnLayout {
-                    id: workspace
-                    width: Math.min(parent.width - 2 * root.inset, 1240)
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: root.inset
-                    spacing: root.gap
+            spacing: 0
+            ScrollView {
+                id: library
+                objectName: "library"
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentWidth: availableWidth
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                Item {
+                    width: library.availableWidth
+                    implicitHeight: workspace.implicitHeight + 2 * root.inset
                     ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-                        Caption { text: "내 작업 도구"; color: root.ink; font.pixelSize: 28; font.bold: true }
-                        Caption { text: "필요한 제작 도구를 설치하고 실행하세요." }
+                        id: workspace
+                        width: Math.min(parent.width - 2 * root.inset, 1460)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: root.inset
+                        spacing: root.gap
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 13
+                            Rectangle {
+                                Layout.alignment: Qt.AlignTop
+                                Layout.topMargin: 4
+                                Layout.preferredWidth: 5
+                                Layout.preferredHeight: root.compact ? 26 : 33
+                                radius: 2.5
+                                color: root.primaryFill
+                            }
+                            ColumnLayout {
+                                spacing: 5
+                                Caption { text: "내 작업 도구"; color: root.ink; font.pixelSize: root.compact ? 27 : 35; font.bold: true }
+                                Caption { text: "필요한 제작 도구를 설치하고 실행하세요."; font.pixelSize: root.compact ? 14 : 17 }
+                            }
+                        }
+                        GridLayout {
+                            objectName: "toolGrid"
+                            Layout.fillWidth: true
+                            columns: root.width < 660 ? 1
+                                    : Math.max(1, Math.min(3, Math.floor((workspace.width + root.gap)
+                                                                       / (root.cardWidth + root.gap))))
+                            rowSpacing: root.gap
+                            columnSpacing: root.gap
+                            Repeater { model: launcher.rows; delegate: ToolCard {} }
+                        }
+                        Caption {
+                            Layout.fillWidth: true
+                            visible: launcher.rows.length === 0
+                            text: "표시할 프로그램이 없습니다. 업데이트 확인을 눌러 목록을 가져오세요."
+                            wrapMode: Text.WordWrap
+                        }
                     }
-                    GridLayout {
-                        objectName: "toolGrid"
-                        Layout.fillWidth: true
-                        columns: Math.max(1, Math.min(3, Math.floor((workspace.width + root.gap) / (root.cardWidth + root.gap))))
-                        rowSpacing: root.gap
-                        columnSpacing: root.gap
-                        Repeater { model: launcher.rows; delegate: ToolCard {} }
-                    }
-                    Caption {
-                        Layout.fillWidth: true
-                        visible: launcher.rows.length === 0
-                        text: "표시할 프로그램이 없습니다. 업데이트 확인을 눌러 목록을 가져오세요."
-                        wrapMode: Text.WordWrap
-                    }
+                }
+            }
+            Rectangle {
+                objectName: "dockedDetail"
+                visible: root.detailOpen && root.dockDetail
+                Layout.fillHeight: true
+                Layout.preferredWidth: Math.min(470, root.width * 0.335)
+                color: root.softPanel
+                Rectangle { width: 1; height: parent.height; color: root.line }
+                Loader {
+                    id: dockLoader
+                    anchors.fill: parent
+                    active: parent.visible
+                    opacity: active ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: root.transitionMs } }
+                    sourceComponent: detailContent
+                    onLoaded: item.focusClose()
                 }
             }
         }
@@ -411,7 +659,7 @@ Item {
             Layout.fillWidth: true
             visible: root.working || root.dataView.message.text.length > 0
             implicitHeight: banner.implicitHeight + 24
-            color: root.dataView.catalogError ? root.warningPad : root.sidebar
+            color: root.checkFailed ? root.warningPad : root.sidebar
             RowLayout {
                 id: banner
                 anchors.fill: parent
@@ -423,7 +671,7 @@ Item {
                     Caption {
                         Layout.fillWidth: true
                         text: root.dataView.message.text
-                        color: root.dataView.catalogError ? root.amber : root.ink
+                        color: root.checkFailed ? root.amber : root.ink
                         wrapMode: Text.Wrap
                         maximumLineCount: 4
                         elide: Text.ElideRight
@@ -458,17 +706,23 @@ Item {
         focus: true
         interactive: false
         z: 10
-        onOpened: closeDetail.forceActiveFocus()
-        onClosed: {
-            if (root.detailOrigin && root.detailOrigin.enabled) root.detailOrigin.forceActiveFocus()
-            root.detailOrigin = null
-        }
+        onOpened: if (contentItem.item) contentItem.item.focusClose()
+        onClosed: if (!root.dockDetail) root.finishDetails()
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        background: Rectangle { color: root.sidebar; border.color: root.line }
+        background: Rectangle { color: root.softPanel; border.color: root.line }
         enter: Transition { NumberAnimation { property: "position"; duration: root.transitionMs; easing.type: Easing.OutCubic } }
         exit: Transition { NumberAnimation { property: "position"; duration: root.transitionMs; easing.type: Easing.InCubic } }
-        contentItem: Item {
-            Keys.onEscapePressed: detail.close()
+        contentItem: Loader {
+            active: detail.visible
+            sourceComponent: detailContent
+        }
+    }
+
+    Component {
+        id: detailContent
+        Item {
+            function focusClose() { closeDetail.forceActiveFocus() }
+            Keys.onEscapePressed: root.closeDetails()
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: root.inset
@@ -481,8 +735,8 @@ Item {
                         id: closeDetail
                         objectName: "closeDetailAction"
                         text: "닫기"
-                        quiet: true
-                        onClicked: detail.close()
+                        glyph: "close"
+                        onClicked: root.closeDetails()
                     }
                 }
                 ScrollView {
@@ -490,48 +744,60 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     contentWidth: availableWidth
+                    clip: true
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     ColumnLayout {
                         width: detailBody.availableWidth
                         spacing: root.gap
-                        AppIcon {
-                            Layout.preferredWidth: 56
-                            Layout.preferredHeight: 56
-                            appId: root.dataView.selectedId
-                        }
-                        Caption {
-                            objectName: "appTitle"
+                        RowLayout {
                             Layout.fillWidth: true
-                            text: root.dataView.title.text
-                            color: root.ink
-                            font.pixelSize: 27
-                            font.bold: true
-                            wrapMode: Text.Wrap
-                        }
-                        Caption {
-                            Layout.fillWidth: true
-                            text: root.dataView.description.text
-                            wrapMode: Text.Wrap
-                        }
-                        Repeater {
-                            model: [
-                                {label: "설치 상태", value: root.dataView["설치 상태"]},
-                                {label: "설치 버전", value: root.dataView["설치 버전"]},
-                                {label: root.dataView.online ? "제공 버전" : "카탈로그 등록 버전", value: root.dataView["승인 버전"]},
-                                {label: "다운로드", value: root.dataView["다운로드"]}
-                            ]
-                            delegate: RowLayout {
-                                required property var modelData
+                            spacing: 14
+                            Rectangle {
+                                Layout.alignment: Qt.AlignTop
+                                Layout.preferredWidth: 60
+                                Layout.preferredHeight: 60
+                                color: root.accentPad
+                                radius: root.radius
+                                AppIcon { anchors.fill: parent; anchors.margins: 7; appId: root.dataView.selectedId }
+                            }
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                Caption { Layout.preferredWidth: 125; text: modelData.label; wrapMode: Text.Wrap }
+                                spacing: 5
                                 Caption {
+                                    objectName: "appTitle"
                                     Layout.fillWidth: true
-                                    text: modelData.value || "—"
+                                    text: root.dataView.title.text
                                     color: root.ink
+                                    font.pixelSize: 25
                                     font.bold: true
                                     wrapMode: Text.Wrap
                                 }
+                                Caption {
+                                    Layout.fillWidth: true
+                                    text: root.dataView.description.text
+                                    wrapMode: Text.Wrap
+                                }
                             }
+                        }
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: 9
+                            columnSpacing: 14
+                            Caption { text: "설치 상태" }
+                            StatusPill {
+                                text: root.dataView["설치 상태"] || "—"
+                                tone: root.stateTone(text)
+                                backgroundColor: tone === root.green ? root.installedPad
+                                                 : tone === root.amber ? root.warningPad
+                                                 : tone === root.accent ? root.accentPad : root.hover
+                            }
+                            Caption { text: "설치된 버전" }
+                            Caption { Layout.fillWidth: true; text: root.dataView["설치 버전"] || "—"; color: root.ink; font.bold: true }
+                            Caption { text: root.dataView.online ? "최신 버전 (카탈로그)" : "카탈로그 등록 버전" }
+                            Caption { Layout.fillWidth: true; text: root.dataView["승인 버전"] || "—"; color: root.ink; font.bold: true; wrapMode: Text.Wrap }
+                            Caption { text: "다운로드 용량" }
+                            Caption { Layout.fillWidth: true; text: root.dataView["다운로드"] || "—"; color: root.ink; font.bold: true }
                         }
                         Caption {
                             Layout.fillWidth: true
@@ -541,35 +807,85 @@ Item {
                             wrapMode: Text.Wrap
                         }
                         Action {
-                            id: notesDisclosure
+                            objectName: "detailPrimaryAction"
+                            Layout.fillWidth: true
+                            text: root.dataView.primary.text
+                            glyph: root.actionIcon(text)
+                            command: "primary"
+                            enabled: root.dataView.primary.enabled
+                            emphasis: true
+                        }
+                        Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: root.line }
+                        Action {
                             objectName: "notesDisclosure"
-                            text: checked ? "변경 내역 접기" : "변경 내역 보기"
-                            checkable: true
+                            text: "변경 내역"
+                            glyph: root.notesExpanded ? "up" : "down"
+                            quiet: true
+                            onClicked: root.notesExpanded = !root.notesExpanded
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
-                            visible: notesDisclosure.checked
+                            visible: root.notesExpanded || opacity > 0
+                            opacity: root.notesExpanded ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: root.transitionMs } }
                             spacing: root.tightGap
                             Repeater {
-                                model: visible ? root.dataView.noteBlocks : []
-                                delegate: RowLayout {
+                                model: parent.visible ? root.dataView.noteGroups : []
+                                delegate: Rectangle {
+                                    id: releaseGroup
                                     required property var modelData
                                     Layout.fillWidth: true
-                                    spacing: 8
-                                    Caption {
-                                        visible: modelData.bullet
-                                        text: "•"
-                                        color: root.accent
-                                        Layout.alignment: Qt.AlignTop
-                                    }
-                                    Caption {
-                                        Layout.fillWidth: true
-                                        text: modelData.text
-                                        color: modelData.level ? root.ink : root.muted
-                                        font.bold: modelData.level > 0
-                                        font.pixelSize: modelData.level === 1 ? root.heading : root.bodyText
-                                        wrapMode: Text.Wrap
-                                        lineHeight: 1.18
+                                    implicitHeight: releaseBody.implicitHeight + 22
+                                    color: root.card
+                                    radius: root.radius
+                                    border.color: root.line
+                                    ColumnLayout {
+                                        id: releaseBody
+                                        anchors.fill: parent
+                                        anchors.margins: 11
+                                        spacing: 6
+                                        Flow {
+                                            Layout.fillWidth: true
+                                            visible: modelData.version !== ""
+                                            spacing: 8
+                                            StatusPill {
+                                                text: modelData.version
+                                                tone: root.accent
+                                                backgroundColor: root.accentPad
+                                            }
+                                            Caption {
+                                                width: Math.min(implicitWidth, parent.width)
+                                                height: Math.max(23, implicitHeight)
+                                                wrapMode: Text.Wrap
+                                                verticalAlignment: Text.AlignVCenter
+                                                text: modelData.title
+                                                visible: text.length > 0
+                                                color: root.ink
+                                                font.bold: true
+                                            }
+                                        }
+                                        Repeater {
+                                            model: releaseGroup.modelData.blocks
+                                            delegate: RowLayout {
+                                                required property var modelData
+                                                Layout.fillWidth: true
+                                                spacing: 6
+                                                Caption {
+                                                    visible: modelData.bullet
+                                                    text: "•"
+                                                    color: root.accent
+                                                    Layout.alignment: Qt.AlignTop
+                                                }
+                                                Caption {
+                                                    Layout.fillWidth: true
+                                                    text: modelData.text
+                                                    color: modelData.level ? root.ink : root.muted
+                                                    font.bold: modelData.level > 0
+                                                    wrapMode: Text.Wrap
+                                                    lineHeight: 1.16
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -581,23 +897,17 @@ Item {
                     Action {
                         objectName: "managementAction"
                         text: "프로그램 관리"
+                        glyph: "settings"
                         enabled: !root.working
                         onClicked: management.open()
                     }
                     Item { Layout.fillWidth: true }
                     Action {
                         text: "실행"
+                        glyph: "play"
                         command: "launch"
                         visible: root.dataView.launch_current.visible
                         enabled: root.dataView.launch_current.enabled
-                    }
-                    Action {
-                        objectName: "detailPrimaryAction"
-                        Layout.preferredWidth: 124
-                        text: root.dataView.primary.text
-                        command: "primary"
-                        enabled: root.dataView.primary.enabled
-                        emphasis: true
                     }
                 }
             }

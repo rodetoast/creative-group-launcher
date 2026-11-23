@@ -264,3 +264,18 @@ Windows에서 패키징한 실제 EXE의 다크 라이브러리와 시작 창을
 선행 후보와 같은 Bootstrap EXE 및 중첩 ZIP 바이트를 확인했다. 같은 개발 PC에서 캡처 없이 후보를 각각 한 번 재실행했다. 기존 화면 표시/메인 준비는 0.122초/9.402초, 최종 화면은 0.080초/9.264초였다. 캡처를 포함한 최종 다크·라이트 실행의 메인 준비는 각각 10.696초, 9.262초였다. 두 캡처 모두 설정 보존, ready/confirmed, 정상 종료 코드 0을 확인했다. 캡처 없는 단일 재실행의 GUI 작업 집합은 174 MiB에서 211 MiB로 관측됐다.
 
 직접 관련된 `tests.test_quick_ui` 5개가 통과했다. 카드별 설치·실행·업데이트, 승인 인계, 테마, 재조회와 실패 표시, 상세의 Escape 및 변경 내역을 확인했다. 전체 설치·Bootstrap 교체·복구 시험은 기존 검증을 재사용했다.
+
+
+## 승인 시안에 맞춘 QML 0.2.0 화면 (2026-11-23)
+
+기준은 b47bd34와 사용자가 제공한 다크·라이트 시안이다. 브랜드, 런처 버전·조회 상태, 업데이트 확인·환경 설정을 헤더 세 영역에 정렬했다. 카드 타이틀, 아이콘 프레임, 상태 칩과 버전 구분선, 보라색 주요 버튼과 윤곽 버튼을 두 테마에서 공유한다. 업데이트 가능 앱의 현재 버전 실행은 상세 패널 하단에 있다. 런처 최신 버전을 확인하지 못한 경우 앱 목록 조회 결과만 표시한다.
+
+`Launcher.qml`에서 팔레트, 간격(8·16px), 반경(10·13px), 버튼 높이(43px)와 12·14·20·31·35px 글자 위계를 공유한다. Pretendard Variable 1.3.9를 번들로 포함하며 등록 실패 시 Windows 기본 글꼴을 사용한다. 원본 SIL OFL은 `southpaw_tools/assets/fonts/Pretendard-OFL.txt`에 있다. [Pretendard 공식 배포](https://github.com/orioncactus/pretendard/releases/tag/v1.3.9)
+
+카드는 3·2·1열로 배치한다. 1210 논리 픽셀 이상은 우측 도킹, 좁은 창은 같은 내용의 오버레이를 사용한다. 가이드와 주석은 시안 설명이다. 앱 이름·버전·설치 상태·변경 내역은 카탈로그와 설치 기록을 따른다. 변경 내역 버전 칩은 원본 제목에 버전이 있을 때 표시한다. Windows 기본 제목 표시줄로 Snap과 키보드 조작을 유지한다. 제목 표시줄 색상을 앱 테마에 연동할 경우 커스텀 프레임에 앞서 Windows DWM 속성을 별도로 검증할 수 있다.
+
+`python -B -m unittest -v tests.test_quick_ui` 6개 통과. 합성 설치·업데이트·오프라인 실행·제거, 런처 승인 인계, 조회 실패 및 재확인, 테마 보존, 넓은 상세 패널에서 좁은 오버레이 전환 및 Escape/포커스 복원을 확인했다. `C:/Dev/CGL-Mockup-20261123/`의 `verified-catalog-dark.png`·`verified-catalog-light-detail.png`는 보관한 운영 Rod12 서명 원본을 검증한 화면이고, `mockup-compact-200.png`는 200% 좁은 창이다. 100·150·200% 검증에 Windows 전역 배율 변경 없이 격리 Qt 배율을 사용했다. `validated-dark.png`·`validated-light.png`는 시험 서명 프로필에서 실제 패키지로 캡처했다. 해당 실행의 GitHub HTTPS 연결 실패 안내는 서명 스냅샷 검증 결과와 구분한다.
+
+기존 Win32 Splash와 Bootstrap EXE·중첩 ZIP을 바이트 그대로 사용했다. 실제 Windows 패키징 후보 두 실행에서 Splash는 0.087~0.303초, 메인 준비는 9.128~9.758초였다. ready/confirmed, 시작 창 종료, 설정 보존과 종료 코드 0을 확인했다. 기존 9.264초는 같은 PC의 단일 측정이므로 차이를 확정할 수 없다.
+
+관리형 0.2.0 후보는 `C:/Dev/CGL-Mockup-20261123/candidate-validated/creative-group-launcher--rodetoast-launcher-0.2.0.zip`에 있다. 70,464,846바이트(67.2 MiB), SHA-256 `53cbc64b2adc5b7cf8fad837622c135ff8b56fd1d61aa78f1e5528ecf149a35c`. ZIP 항목 337개, 대표 경로 예산, manifest와 보관한 Rod12 서명·자산 해시를 검증했다. 운영 서명과 게시 및 직원 PC 적용은 승인 대기다.

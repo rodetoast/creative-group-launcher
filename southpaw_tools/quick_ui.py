@@ -73,6 +73,19 @@ class Field:
                                "bullet": block.textList() is not None})
             block = block.next()
         self.blocks = blocks
+        groups = []
+        for item in blocks:
+            match = re.search(r"(?<![\w.])v?\d+(?:\.\d+){1,3}(?:[- ]?RC\d+)?\b",
+                              item["text"], flags=re.IGNORECASE) if item["level"] else None
+            if match:
+                version = match.group()
+                title = (item["text"][:match.start()] + item["text"][match.end():]).strip(" −–—-:·[]()")
+                groups.append({"version": version, "title": title, "blocks": []})
+            else:
+                if not groups:
+                    groups.append({"version": "", "title": "", "blocks": []})
+                groups[-1]["blocks"].append(item)
+        self.groups = groups
         self.setText(document.toPlainText())
         self.notify()
 
@@ -124,9 +137,14 @@ class LauncherSurface(QObject):
         self._prompt = {}
         self._reply = None
         self._loop = None
-        families = QFontDatabase.families()
-        self._font = next((name for name in ("Segoe UI Variable", "Segoe UI",
-                                             "Malgun Gothic") if name in families), "sans-serif")
+        font_id = QFontDatabase.addApplicationFont(str(ASSETS / "fonts" / "PretendardVariable.ttf"))
+        bundled_families = QFontDatabase.applicationFontFamilies(font_id) if font_id >= 0 else []
+        if bundled_families:
+            self._font = bundled_families[0]
+        else:
+            families = QFontDatabase.families()
+            self._font = next((name for name in ("Segoe UI Variable", "Segoe UI",
+                                                 "Malgun Gothic") if name in families), "sans-serif")
         self._flush = QTimer(self)
         self._flush.setSingleShot(True)
         self._flush.timeout.connect(self.viewChanged)
@@ -182,7 +200,8 @@ class LauncherSurface(QObject):
                       lastCheck=w._last_catalog_check.get("result", "") if w._last_catalog_check else "",
                       latestVerified=w.launcher_verified_version == __version__,
                       verifiedVersion=w.launcher_target or w.launcher_verified_version or "",
-                      issues=dict(w.app_issues), noteBlocks=getattr(w.notes, "blocks", []))
+                      issues=dict(w.app_issues), noteBlocks=getattr(w.notes, "blocks", []),
+                      noteGroups=getattr(w.notes, "groups", []))
         return result
 
     @Property("QVariantMap", notify=promptChanged)

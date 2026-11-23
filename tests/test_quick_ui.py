@@ -79,6 +79,31 @@ class QuickUiTests(unittest.TestCase):
         QTest.qWait(180)
         self.assertFalse(drawer.property("visible"))
 
+    def test_detail_docks_on_wide_window_and_restores_card_focus(self):
+        window = self.window()
+        window.resize(1510, 840)
+        QTest.qWait(100)
+        scene = window.quick.rootObject()
+        grid = scene.findChild(QQuickItem, "toolGrid")
+        dock = scene.findChild(QQuickItem, "dockedDetail")
+        self.assertEqual(grid.property("columns"), 3)
+        self.click(window, "detailsAction")
+        QTest.qWait(180)
+        self.assertTrue(dock.isVisible())
+        self.assertEqual(grid.property("columns"), 3)
+        self.click(window, "notesDisclosure")
+        self.assertTrue(window.surface.view["noteGroups"])
+        window.resize(620, 540)
+        QTest.qWait(180)
+        drawer = scene.findChild(QObject, "toolDetail")
+        self.assertTrue(drawer.property("visible"))
+        self.assertFalse(dock.isVisible())
+        self.assertEqual(grid.property("columns"), 1)
+        QTest.keyClick(window.quick, Qt.Key.Key_Escape)
+        QTest.qWait(180)
+        self.assertFalse(drawer.property("visible"))
+        self.assertEqual(window.quick.quickWindow().activeFocusItem().objectName(), "detailsAction")
+
     def test_install_update_and_offline_launch_using_primary_control(self):
         source, app = package(self.root / "packages")
         catalog = self.root / "catalog.json"
