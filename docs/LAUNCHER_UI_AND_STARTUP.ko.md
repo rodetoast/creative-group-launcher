@@ -366,3 +366,12 @@ Windows에서 공식 심볼을 넣은 다크 100%, 라이트 150%, 620 논리 �
 기존 운영 Ed25519 키로 `rodetoast-catalog-000015` 후보(순번 15, 저장소 ID 1462539740)를 로컬에 서명했다. 자산 8개의 크기와 SHA-256을 확인했으며 회사 앱 5개 ZIP과 서명 메타데이터는 Rod14와 같다. 현행 공개 Rod14를 조회해 로컬 검증본과 대조했고, 14→15의 서명 수락과 15 수락 이후 14 재수락 차단, Toast9 Bridge의 Rod 바인딩 및 후보 수락을 확인했다. 새 Windows 전체 시험은 수행하지 않았다.
 
 서명 후보 계획과 자산은 개발 PC `C:/Dev/CGL-Rod15-20261123/`에 있다. 기존 직원은 관리형 업데이트를 사용한다. 운영 Latest는 Rod14와 Toast9이며, Rod15 정식 Release 공개 및 Latest 전환은 별도 승인 대기다.
+
+
+## Southpaw Tools 0.2.2 Rod15 운영 공개 (2026-11-23)
+
+승인 기준 `8ee4ef2a9ff668511988ae98f6958d0d260d5a48`과 기존 운영 서명 자산을 사용해 [Rod 카탈로그15 정식 Release](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000015)를 공개했다. 저장소 ID `1462539740`, Release ID `455295447`. Draft와 공개 HTTPS에서 자산 8개를 다시 받아 크기·SHA-256을 대조했고, 운영 Ed25519 서명·순번 15·GUI와 Bootstrap manifest를 검증한 다음 Rod Latest를 15로 지정했다. GUI ZIP은 70,475,753바이트이며 SHA-256은 `a30b7d1c80fde8619ca13b40ccfce260d9ecd2633b855cd533265b5b784483fc`다.
+
+공개 ZIP에서 공식 심볼의 원본 바이트를 확인했다. 제품 아이콘과 Bootstrap 번들·교체 정책은 Rod14와 같은 바이트다. Rod14 신뢰 상태에서 공개 Latest15를 수락하고 이후 순번 14 재수락을 차단했다. Toast9 Bridge가 요구하는 Rod 저장소 ID·Ed25519 키·최소 순번 조건도 통과했다. 0.2.2 EXE의 심볼 표시, ready/confirmed 및 정상 종료는 기존 Windows 검증 기록을 재사용했다. 기존 직원은 바로가기에서 런처 업데이트를 사용한다.
+
+기존 Rod Release와 자산, Toast Latest9, 양 채널 직원용 Setup을 게시 전후 비교했다. 회사 앱 5개 ZIP과 서명 메타데이터는 Rod14와 같다. [공식 심볼 적용 Windows 갤러리](https://github.com/rodetoast/creative-group-launcher/blob/8ee4ef2a9ff668511988ae98f6958d0d260d5a48/docs/ui-reviews/header-branding/README.md)와 [대표 PNG](https://raw.githubusercontent.com/rodetoast/creative-group-launcher/8ee4ef2a9ff668511988ae98f6958d0d260d5a48/docs/ui-reviews/header-branding/after-light-150.png)는 승인 커밋에 유지했다.
