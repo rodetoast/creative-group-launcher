@@ -18,7 +18,14 @@ Item {
     readonly property color muted: launcher.dark ? "#b7b9cb" : "#565a70"
     readonly property color accent: launcher.dark ? "#c5b6ff" : "#5034a4"
     readonly property color accentPad: launcher.dark ? "#302743" : "#e8dfff"
-    readonly property color accentInk: launcher.dark ? "#201633" : "#ffffff"
+    readonly property color primaryFill: launcher.dark ? "#7146bd" : "#7048bc"
+    readonly property color primaryHover: launcher.dark ? "#7b50c9" : "#603aa8"
+    readonly property color primaryPressed: launcher.dark ? "#6039a6" : "#553294"
+    readonly property color primaryText: "#ffffff"
+    readonly property color disabledPrimary: launcher.dark ? "#342d47" : "#ede6f7"
+    readonly property color installedPad: launcher.dark ? "#253b36" : "#ddf1e8"
+    readonly property int cardRadius: 13
+    property Item detailOrigin: null
     readonly property color hover: launcher.dark ? "#292d3e" : "#e2e2ed"
     readonly property color green: launcher.dark ? "#8ed4b4" : "#126044"
     readonly property color amber: launcher.dark ? "#ffd29b" : "#80522c"
@@ -30,18 +37,23 @@ Item {
     readonly property int gap: 16
     readonly property int radius: 10
     readonly property int controlHeight: 40
-    readonly property string productFont: "Malgun Gothic"
+    readonly property string productFont: launcher.uiFont
     readonly property bool compact: width < 820
     readonly property int cardWidth: 300
     readonly property int inset: compact ? 16 : 24
     readonly property int transitionMs: 140
     readonly property bool working: dataView.busy || dataView.bridgeBusy
+    readonly property bool checkFailed: dataView.catalogError || dataView.lastCheck === "failed"
     readonly property string connectionText: {
-        if (dataView.checking) return "업데이트 확인 중"
-        if (dataView.catalogError || dataView.lastCheck === "failed") return dataView.server_status.text
-        if (dataView.online) return dataView.latestVerified ? "최신 런처 사용 중" : "업데이트 확인 완료"
-        if (dataView.lastCheck === "" && dataView.server_status.text === "오프라인 · 미확인") return "아직 확인하지 않음"
-        return dataView.server_status.text
+        if (dataView.checking) return "확인 중…"
+        if (checkFailed) return "업데이트 확인 실패"
+        if (dataView.online && dataView.launcher_update_button.visible)
+            return dataView.verifiedVersion ? "업데이트 가능 · v" + dataView.verifiedVersion : "업데이트 가능"
+        if (dataView.online && dataView.latestVerified) return "최신 버전 사용 중"
+        if (dataView.online) return "확인 완료 · 제공 버전 미확인"
+        if (dataView.lastCheck === "" && dataView.server_status.text === "오프라인 · 미확인")
+            return "업데이트 확인 전"
+        return dataView.server_status.text || "업데이트 확인 전"
     }
 
     function stateTone(state) {
@@ -50,7 +62,7 @@ Item {
         if (state === "업데이트 가능" || state === "이전 버전 사용 중 · 업데이트 가능")
             return accent
         if (state === "복구 필요" || state === "설치 확인 필요"
-                || state === "설치 완료 · 목록 오류(업데이트 차단)")
+                || state === "작업 실패" || state === "설치 완료 · 목록 오류(업데이트 차단)")
             return amber
         return muted
     }
@@ -60,6 +72,23 @@ Item {
         font.family: root.productFont
         font.pixelSize: root.bodyText
         textFormat: Text.PlainText
+    }
+
+    component StatusPill: Rectangle {
+        property alias text: pillText.text
+        property color tone: root.muted
+        property color backgroundColor: root.hover
+        implicitWidth: pillText.implicitWidth + 18
+        implicitHeight: Math.max(23, pillText.implicitHeight + 6)
+        radius: height / 2
+        color: backgroundColor
+        Caption {
+            id: pillText
+            anchors.centerIn: parent
+            font.pixelSize: root.small
+            font.bold: true
+            color: parent.tone
+        }
     }
 
     component Action: Button {
@@ -80,19 +109,20 @@ Item {
         contentItem: Label {
             text: button.text
             textFormat: Text.PlainText
-            color: !button.enabled ? root.muted : button.emphasis ? root.accentInk : button.destructive ? root.amber : root.ink
+            color: !button.enabled ? root.muted : button.emphasis ? root.primaryText : button.destructive ? root.amber : root.ink
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             font: button.font
         }
         background: Rectangle {
             radius: root.radius
-            color: button.enabled && button.emphasis
-                   ? (button.down ? Qt.darker(root.accent, 1.15) : root.accent)
+            color: button.emphasis
+                   ? (!button.enabled ? root.disabledPrimary : button.down ? root.primaryPressed
+                                       : button.hovered ? root.primaryHover : root.primaryFill)
                    : button.enabled && (button.hovered || button.down) ? root.hover
                    : button.quiet ? "transparent" : root.card
             border.color: button.activeFocus ? root.accent
-                          : button.quiet || (button.emphasis && button.enabled) ? "transparent" : root.line
+                          : button.quiet || button.emphasis ? "transparent" : root.line
             border.width: button.activeFocus ? 2 : 1
             Behavior on color { ColorAnimation { duration: 95 } }
         }
@@ -125,6 +155,7 @@ Item {
         readonly property bool runnable: modelData.installed && !root.dataView.testing && !modelData.problem
         readonly property string statusText: {
             if (active) return root.dataView.message.text
+            if (root.dataView.issues[modelData.id]) return "작업 실패"
             if (running) return "실행 중"
             if (modelData.problem || modelData.pending) return "설치 확인 필요"
             if (canUpdate) return "업데이트 가능"
@@ -132,14 +163,20 @@ Item {
         }
         Layout.fillWidth: true
         Layout.minimumWidth: 0
-        implicitHeight: 205
-        radius: root.radius
+        implicitHeight: 206
+        radius: root.cardRadius
         color: mouse.hovered ? root.hover : root.card
         border.width: 1
         border.color: detailsButton.activeFocus || primary.activeFocus || active
                       || (detail.visible && root.dataView.selectedId === modelData.id) ? root.accent : root.line
         HoverHandler { id: mouse }
         Behavior on color { ColorAnimation { duration: 110 } }
+        MouseArea {
+            anchors.fill: parent
+            enabled: !root.working || card.active
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.openDetails(card.modelData.id, detailsButton)
+        }
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: root.gap
@@ -160,17 +197,10 @@ Item {
                     Caption {
                         Layout.fillWidth: true
                         color: root.ink
-                        font.pixelSize: root.heading
+                        font.pixelSize: 16
                         font.bold: true
                         elide: Text.ElideRight
                         text: card.modelData.title
-                    }
-                    Caption {
-                        Layout.fillWidth: true
-                        font.pixelSize: root.small
-                        elide: Text.ElideRight
-                        color: root.stateTone(card.statusText)
-                        text: card.statusText + (card.modelData.version && !card.active ? "  ·  " + card.modelData.version : "")
                     }
                 }
             }
@@ -185,6 +215,26 @@ Item {
                 lineHeight: 1.14
                 text: card.modelData.description
             }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: root.tightGap
+                StatusPill {
+                    visible: !card.active
+                    text: card.statusText
+                    tone: root.stateTone(text)
+                    backgroundColor: card.statusText === "설치됨" ? root.installedPad
+                                     : card.canUpdate && !root.dataView.issues[card.modelData.id] ? root.accentPad
+                                     : tone === root.amber ? root.warningPad : root.hover
+                }
+                Caption {
+                    Layout.fillWidth: true
+                    font.pixelSize: root.small
+                    elide: Text.ElideRight
+                    text: card.active ? card.statusText
+                          : card.canUpdate ? card.modelData.version + " → " + card.modelData.providedVersion
+                          : card.modelData.version || (card.canDownload ? "제공 " + card.modelData.providedVersion : "")
+                }
+            }
             WorkProgress {
                 Layout.fillWidth: true
                 visible: card.active
@@ -194,19 +244,20 @@ Item {
                 Action {
                     id: primary
                     objectName: "primaryAction"
-                    Layout.preferredWidth: 86
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 104
+                    Layout.maximumWidth: 156
                     emphasis: true
                     text: card.running ? "실행 중" : card.modelData.problem ? "확인" : card.modelData.pending ? "복구 확인" : card.canUpdate ? "업데이트"
                           : card.modelData.installed ? "실행" : "설치"
                     enabled: !root.working && !card.running
                              && (card.modelData.problem || card.modelData.pending || card.canDownload || card.runnable)
                     onClicked: {
-                        if (card.modelData.problem) root.openDetails(card.modelData.id)
+                        if (card.modelData.problem) root.openDetails(card.modelData.id, primary)
                         else launcher.actOnApp(card.modelData.id, "primary")
                     }
                 }
                 Action {
-                    quiet: true
                     text: "실행"
                     visible: card.canUpdate && card.runnable
                     enabled: !root.working && !card.running
@@ -216,18 +267,18 @@ Item {
                 Action {
                     id: detailsButton
                     objectName: "detailsAction"
-                    quiet: true
-                    text: "자세히"
+                    text: "상세 정보"
                     enabled: !root.working || card.active
-                    Accessible.name: card.modelData.title + " 자세히"
-                    onClicked: root.openDetails(card.modelData.id)
+                    Accessible.name: card.modelData.title + " 상세 정보"
+                    onClicked: root.openDetails(card.modelData.id, detailsButton)
                 }
             }
         }
     }
 
-    function openDetails(appId) {
+    function openDetails(appId, origin) {
         if (launcher.selectApp(appId)) {
+            root.detailOrigin = origin
             notesDisclosure.checked = false
             detail.open()
         }
@@ -262,33 +313,36 @@ Item {
                         font.bold: true
                         font.pixelSize: 21
                     }
-                    Caption {
+                    Flow {
                         Layout.fillWidth: true
-                        wrapMode: Text.Wrap
-                        font.pixelSize: root.small
-                        text: root.dataView.launcher_versions.text
-                    }
-                    Caption {
-                        objectName: "connectionState"
-                        Layout.fillWidth: true
-                        wrapMode: Text.Wrap
-                        font.pixelSize: root.small
-                        text: root.connectionText
-                        color: root.dataView.checking ? root.accent : root.dataView.online ? root.green
-                               : root.dataView.catalogError || root.dataView.lastCheck === "failed" ? root.amber : root.muted
-                        ToolTip.visible: statusHover.hovered
-                        ToolTip.text: root.dataView.server_status.tip
-                        HoverHandler { id: statusHover }
+                        spacing: 7
+                        StatusPill {
+                            text: "런처 v" + launcher.productVersion
+                            tone: root.accent
+                            backgroundColor: root.accentPad
+                        }
+                        Caption {
+                            objectName: "connectionState"
+                            height: Math.max(23, implicitHeight)
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: root.small
+                            text: root.connectionText
+                            color: root.dataView.checking ? root.accent : root.checkFailed ? root.amber
+                                   : root.dataView.online && root.dataView.latestVerified ? root.green : root.muted
+                            ToolTip.visible: statusHover.hovered
+                            ToolTip.text: root.dataView.server_status.tip
+                            HoverHandler { id: statusHover }
+                        }
                     }
                 }
                 Flow {
-                    Layout.preferredWidth: root.compact ? 140 : implicitWidth
+                    Layout.preferredWidth: root.compact && root.dataView.launcher_update_button.visible
+                                           ? 145 : implicitWidth
                     Layout.alignment: Qt.AlignVCenter
                     layoutDirection: Qt.RightToLeft
                     spacing: root.tightGap
                     Action {
                         objectName: "settingsAction"
-                        quiet: true
                         text: "환경 설정"
                         onClicked: settings.open()
                     }
@@ -398,17 +452,23 @@ Item {
         id: detail
         objectName: "toolDetail"
         edge: Qt.RightEdge
-        width: Math.min(root.width, 440)
+        width: root.width < 700 ? root.width : Math.min(root.width, 448)
         height: root.height
         modal: true
         focus: true
         interactive: false
         z: 10
+        onOpened: closeDetail.forceActiveFocus()
+        onClosed: {
+            if (root.detailOrigin && root.detailOrigin.enabled) root.detailOrigin.forceActiveFocus()
+            root.detailOrigin = null
+        }
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         background: Rectangle { color: root.sidebar; border.color: root.line }
         enter: Transition { NumberAnimation { property: "position"; duration: root.transitionMs; easing.type: Easing.OutCubic } }
         exit: Transition { NumberAnimation { property: "position"; duration: root.transitionMs; easing.type: Easing.InCubic } }
         contentItem: Item {
+            Keys.onEscapePressed: detail.close()
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: root.inset
@@ -417,7 +477,13 @@ Item {
                     Layout.fillWidth: true
                     Caption { text: "프로그램 정보"; color: root.ink; font.pixelSize: root.heading; font.bold: true }
                     Item { Layout.fillWidth: true }
-                    Action { objectName: "closeDetailAction"; text: "닫기"; quiet: true; onClicked: detail.close() }
+                    Action {
+                        id: closeDetail
+                        objectName: "closeDetailAction"
+                        text: "닫기"
+                        quiet: true
+                        onClicked: detail.close()
+                    }
                 }
                 ScrollView {
                     id: detailBody
@@ -451,7 +517,7 @@ Item {
                             model: [
                                 {label: "설치 상태", value: root.dataView["설치 상태"]},
                                 {label: "설치 버전", value: root.dataView["설치 버전"]},
-                                {label: root.dataView.latest_app_label.text, value: root.dataView["승인 버전"]},
+                                {label: root.dataView.online ? "제공 버전" : "카탈로그 등록 버전", value: root.dataView["승인 버전"]},
                                 {label: "다운로드", value: root.dataView["다운로드"]}
                             ]
                             delegate: RowLayout {
@@ -467,20 +533,46 @@ Item {
                                 }
                             }
                         }
+                        Caption {
+                            Layout.fillWidth: true
+                            visible: text.length > 0
+                            text: root.dataView.issues[root.dataView.selectedId] || ""
+                            color: root.amber
+                            wrapMode: Text.Wrap
+                        }
                         Action {
                             id: notesDisclosure
                             objectName: "notesDisclosure"
                             text: checked ? "변경 내역 접기" : "변경 내역 보기"
                             checkable: true
                         }
-                        Caption {
+                        ColumnLayout {
                             Layout.fillWidth: true
                             visible: notesDisclosure.checked
-                            text: root.dataView.notes.text
-                            wrapMode: Text.Wrap
-                            lineHeight: 1.22
-                            leftPadding: 4
-                            rightPadding: 4
+                            spacing: root.tightGap
+                            Repeater {
+                                model: visible ? root.dataView.noteBlocks : []
+                                delegate: RowLayout {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Caption {
+                                        visible: modelData.bullet
+                                        text: "•"
+                                        color: root.accent
+                                        Layout.alignment: Qt.AlignTop
+                                    }
+                                    Caption {
+                                        Layout.fillWidth: true
+                                        text: modelData.text
+                                        color: modelData.level ? root.ink : root.muted
+                                        font.bold: modelData.level > 0
+                                        font.pixelSize: modelData.level === 1 ? root.heading : root.bodyText
+                                        wrapMode: Text.Wrap
+                                        lineHeight: 1.18
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -501,6 +593,7 @@ Item {
                     }
                     Action {
                         objectName: "detailPrimaryAction"
+                        Layout.preferredWidth: 124
                         text: root.dataView.primary.text
                         command: "primary"
                         enabled: root.dataView.primary.enabled

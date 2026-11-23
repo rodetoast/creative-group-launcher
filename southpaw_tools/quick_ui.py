@@ -4,7 +4,7 @@ import re
 import sys
 
 from PySide6.QtCore import QObject, Property, QEventLoop, QSize, Qt, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QIcon, QImage
+from PySide6.QtGui import QFontDatabase, QIcon, QImage
 from PySide6.QtQuick import QQuickImageProvider
 from PySide6.QtQuickWidgets import QQuickWidget
 from PySide6.QtWidgets import QApplication
@@ -64,7 +64,17 @@ class Field:
         document = NotesDocument()
         document.setMarkdown(source, NotesDocument.MarkdownFeature.MarkdownDialectGitHub
                              | NotesDocument.MarkdownFeature.MarkdownNoHTML)
+        blocks = []
+        block = document.begin()
+        while block.isValid():
+            raw = block.text().replace("\ufffc", "").strip()
+            if raw:
+                blocks.append({"text": raw, "level": block.blockFormat().headingLevel(),
+                               "bullet": block.textList() is not None})
+            block = block.next()
+        self.blocks = blocks
         self.setText(document.toPlainText())
+        self.notify()
 
 
 class AppImages(QQuickImageProvider):
@@ -114,6 +124,9 @@ class LauncherSurface(QObject):
         self._prompt = {}
         self._reply = None
         self._loop = None
+        families = QFontDatabase.families()
+        self._font = next((name for name in ("Segoe UI Variable", "Segoe UI",
+                                             "Malgun Gothic") if name in families), "sans-serif")
         self._flush = QTimer(self)
         self._flush.setSingleShot(True)
         self._flush.timeout.connect(self.viewChanged)
@@ -145,6 +158,14 @@ class LauncherSurface(QObject):
     def dark(self):
         return self._dark
 
+    @Property(str, constant=True)
+    def uiFont(self):
+        return self._font
+
+    @Property(str, constant=True)
+    def productVersion(self):
+        return __version__
+
     @Property("QVariantMap", notify=viewChanged)
     def view(self):
         w = self.window
@@ -159,7 +180,9 @@ class LauncherSurface(QObject):
                       activeApp=w.active_app if w.task else "",
                       checking=w.task is not None and w.operation in REFRESH_OPERATIONS,
                       lastCheck=w._last_catalog_check.get("result", "") if w._last_catalog_check else "",
-                      latestVerified=w.launcher_verified_version == __version__)
+                      latestVerified=w.launcher_verified_version == __version__,
+                      verifiedVersion=w.launcher_target or w.launcher_verified_version or "",
+                      issues=dict(w.app_issues), noteBlocks=getattr(w.notes, "blocks", []))
         return result
 
     @Property("QVariantMap", notify=promptChanged)
@@ -179,6 +202,7 @@ class LauncherSurface(QObject):
                 problem = True
             rows.append({"id": app.app_id, "title": app.display_name, "category": app.category,
                          "description": app.description, "version": installed.version if installed else "",
+                         "providedVersion": app.version,
                          "pending": pending, "problem": problem, "update": update, "published": app.published,
                          "installed": installed is not None})
         if rows != self._rows:
@@ -287,6 +311,7 @@ class QuickLauncherWindow(MainWindow):
     def _build(self):
         self.known_progress = False
         self.active_app = ""
+        self.app_issues = {}
         self.surface = LauncherSurface(self)
         for name in self.FIELDS:
             setattr(self, name, Field(self.surface.invalidate, visible=name not in self.HIDDEN_FIELDS))
@@ -351,6 +376,7 @@ class QuickLauncherWindow(MainWindow):
             app = self.selected()
             self.active_app = (app.app_id if app and (": " in operation or operation in
                               {"복구 확인", "버전 전환", "제거"}) else "")
+            self.app_issues.pop(self.active_app, None)
         super()._begin(operation, action, success)
 
     def _progress(self, done, total):
@@ -359,6 +385,8 @@ class QuickLauncherWindow(MainWindow):
         self.surface.invalidate()
 
     def _finished(self):
+        if self.active_app and self.task.error:
+            self.app_issues[self.active_app] = self.task.error
         super()._finished()
         self.surface.sync_rows()
 

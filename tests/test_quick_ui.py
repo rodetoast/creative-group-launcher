@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QUICK_BACKEND", "software")
 
-from PySide6.QtCore import QPointF, QTimer, Qt
+from PySide6.QtCore import QObject, QPointF, QTimer, Qt
 from PySide6.QtQuick import QQuickItem
 from PySide6.QtTest import QTest
 
@@ -72,7 +72,12 @@ class QuickUiTests(unittest.TestCase):
         QTest.qWait(180)
         self.assertEqual(window.surface.view["title"]["text"], window.surface.rows[0]["title"])
         self.click(window, "notesDisclosure")
-        self.click(window, "closeDetailAction")
+        self.assertTrue(window.surface.view["noteBlocks"])
+        drawer = window.quick.rootObject().findChild(QObject, "toolDetail")
+        self.assertTrue(drawer.property("visible"))
+        QTest.keyClick(window.quick, Qt.Key.Key_Escape)
+        QTest.qWait(180)
+        self.assertFalse(drawer.property("visible"))
 
     def test_install_update_and_offline_launch_using_primary_control(self):
         source, app = package(self.root / "packages")
@@ -114,6 +119,8 @@ class QuickUiTests(unittest.TestCase):
 
     def test_refresh_button_recovers_after_failure_and_queries_again(self):
         window = self.window()
+        status = window.quick.rootObject().findChild(QQuickItem, "connectionState")
+        self.assertEqual(status.property("text"), "업데이트 확인 전")
         window.config = {"transport": "lan", "server_url": "http://127.0.0.1:8080"}
         failure = LauncherError("controlled offline failure")
         with patch("southpaw_tools.ui.HttpProvider.health", side_effect=failure) as request:
@@ -123,6 +130,7 @@ class QuickUiTests(unittest.TestCase):
                 test_ui.APPLICATION.processEvents()
                 self.assertTrue(window.surface.view["refresh_button"]["enabled"])
                 self.assertIn(str(failure), window.surface.view["message"]["text"])
+                self.assertEqual(status.property("text"), "업데이트 확인 실패")
         self.assertEqual(request.call_count, 2)
 
     def test_launcher_approval_reaches_existing_bootstrap_handoff(self):
