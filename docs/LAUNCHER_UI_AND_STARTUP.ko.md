@@ -320,3 +320,16 @@ GUI 0.2.0 ZIP은 70,466,143바이트, SHA-256 `dd8196ac5746b286acab9001f8bfa5d63
 미서명 관리형 GUI 후보는 `C:/Dev/CGL-UtilityUX-20261123/candidate-final/creative-group-launcher--rodetoast-launcher-0.2.1.zip`이다. 크기 70,468,020바이트(67.2 MiB), SHA-256 `324dfdf7bb2c4bd7210c0dabe918c6ccbc1125de21e9198980bfc308571b450a`. EXE SHA-256은 `83fe46a0c795021684f8a9723b8b0f975dcde244e101f8c222d38788275e36be`이다. manifest 및 Rod·Bridge 대표 경로를 검증했고 Rod13의 Bootstrap 3세대 번들과 교체 정책을 바이트 그대로 가져왔다. 캡처와 로컬 계획은 같은 후보 작업 경로에 있다.
 
 운영 GUI는 0.2.0이며 Rod Latest13과 Toast Latest9를 유지했다. 패치 후보는 기존 관리형 업데이트와 바로가기 경로를 사용한다. 운영 Ed25519 서명과 신규 Rod 카탈로그 게시, 직원 PC 적용은 승인 대기다.
+
+
+## 0.2.1 운영 서명 후보와 Windows 검토 (2026-11-23)
+
+GUI 소스 `b5368d3a7cce7ecfdf32ef3e558b8c9927083645`와 검토 시작 시점 원격 HEAD `4a8330ec6a722f2a9faa5744c801f4ce57e235bd` 사이의 제품 소스·패키징 변경이 없음을 확인했다. GUI ZIP 70,468,020바이트와 SHA-256 `324dfdf7bb2c4bd7210c0dabe918c6ccbc1125de21e9198980bfc308571b450a`를 재사용했다. 기존 8개 UI 시험 및 마지막 변경 후 직접 관련 3개 확인, Windows 배율 검토를 재사용했다.
+
+`rodetoast-catalog-000014` 후보를 기존 운영 Ed25519 키로 서명했다. 저장소 ID `1462539740`, 순번 14, 회사 앱 5개의 서명 메타데이터와 ZIP은 Rod13과 일치한다. 기존 Bootstrap 번들과 교체 정책은 0.2.0과 동일한 바이트다. ZIP의 manifest·EXE 해시와 QML 파일을 검증했다. 자산 8개 이름·크기·SHA-256과 검증 근거는 개발 PC의 `C:/Dev/CGL-Rod14-20261123/candidate-plan.json`에 있다.
+
+격리 Windows에서 공개 서명 Rod13/GUI 0.2.0을 초기 상태로 두고 같은 관리형 업데이트 거래로 운영 서명 Rod14/GUI 0.2.1을 적용했다. 서명 후보는 로컬 피드로 제공했다. 기존 Bootstrap에서 0.2.1 EXE와 ready/confirmed, 정상 종료, 설정·기존 앱 설치 영수증·작업 파일·Bootstrap 진입점 보존을 확인했다. 순번 14 수락 이후 13 재수락이 차단됐다. 공개 Toast9의 Bridge가 사용하는 Rod 저장소 및 키가 일치하고, Bridge 정책이 서명 후보 14를 수락했다. 실제 운영 Rod14 다운로드는 게시 후 확인할 범위다.
+
+기존 Windows 캡처 5개를 시각적으로 확인했고 PNG에 텍스트나 개인 메타데이터 청크가 없는 것을 확인했다. [GitHub UI 검토 갤러리](ui-reviews/0.2.1/README.md)에 그대로 보존했다.
+
+운영 Latest는 Rod13과 Toast9다. 이번 작업의 운영 변경은 없었다. 정식 공개와 Latest14 전환은 별도 승인 대상이다.

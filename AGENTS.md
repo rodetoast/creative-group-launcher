@@ -187,3 +187,5 @@ Rod 카탈로그12는 로컬 서명 후보이며 운영은 Rod11·Toast9를 유�
 ## Rod 운영과 계정 통합 현행 기준 (2026-11-23)
 
 운영은 Rod 카탈로그13 / GUI 0.2.0, 신규 직원용 Rod Setup 0.1.6.0, 기존 설치용 Toast 카탈로그9 / Bridge 0.1.6이다. GUI 0.2.1은 미서명 로컬 후보다. 직원별 확인 없이 Toast 호환 채널과 기존 설치 링크를 유지한다. 새로운 운영 공개와 Repository Transfer는 각각 사용자 승인 대상이다. [계정 통합 현행 결정](docs/GITHUB_OWNER_COMPATIBILITY.ko.md#계정-통합-현행-결정-2026-11-23)과 [SPENT03 현행 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md#spent03-현행-단일-인계--보관된-toast-rc1-2026-11-23)를 먼저 읽는다.
+
+실제 Windows UI를 검토할 때는 공개 범위를 확인한 대표 캡처를 변경 버전의 `docs/ui-reviews/<version>/`에 보존하고 README에서 화면 상태를 설명한다. 직원 정보, 비공개 자료, 자격증명, 사용자 경로를 공개 이미지에 포함하지 않는다. 보고에 GitHub 갤러리와 커밋 SHA로 고정된 대표 PNG 링크를 함께 남긴다.
