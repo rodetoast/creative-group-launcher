@@ -8,7 +8,9 @@ from time import monotonic
 from .branding import DISPLAY_NAME, ICON_FILENAME
 
 CLASS_NAME = "SouthpawLauncherStartup"
-WIDTH, HEIGHT = 420, 176
+WIDTH, HEIGHT = 396, 156
+INSET, ICON_SIZE = 24, 40
+TRACK_TOP, TRACK_HEIGHT, SWEEP_WIDTH = 124, 4, 78
 WM_PAINT = 0x000F
 WM_ERASEBKGND = 0x0014
 WM_TIMER = 0x0113
@@ -68,8 +70,8 @@ draw_icon = api(user, "DrawIconEx", w.BOOL, w.HDC, c.c_int, c.c_int, w.HICON, c.
                 c.c_int, w.UINT, w.HBRUSH, w.UINT)
 destroy_icon = api(user, "DestroyIcon", w.BOOL, w.HICON)
 
-BG, TRACK, INK, MUTED = map(rgb, ("151822", "2c3042", "f5f3ff", "b7b9cb"))
-ACCENTS = tuple(map(rgb, ("524274", "8469c8", "ad94ff", "d6c8ff", "ad94ff", "8469c8", "524274")))
+# Dark QML palette. Keep the native startup renderer independent of Qt.
+BG, TRACK, INK, MUTED, ACCENT = map(rgb, ("151822", "393e51", "f5f3ff", "b7b9cb", "c5b6ff"))
 
 
 def place_below(main, splash):
@@ -97,7 +99,7 @@ class Card:
         self.glyphs = ()
         self.icon = None
         self.proc = WNDPROC(self.dispatch)
-        self.brushes = {color: brush(color) for color in (BG, TRACK, *set(ACCENTS))}
+        self.brushes = {color: brush(color) for color in (BG, TRACK, ACCENT)}
 
     def close(self):
         for obj in (*self.glyphs, *self.brushes.values()):
@@ -119,10 +121,10 @@ class Card:
             destroy_icon(self.icon)
         self.dpi = dpi
         self.glyphs = tuple(font(-self.scale(size), 0, 0, 0, weight, 0, 0, 0, 1, 0, 0, 5, 0, face)
-                            for size, weight, face in ((12, 700, "Segoe UI"), (23, 700, "Malgun Gothic"),
-                                                       (13, 400, "Malgun Gothic")))
+                            for size, weight, face in ((11, 700, "Segoe UI"), (21, 700, "Malgun Gothic"),
+                                                       (14, 400, "Malgun Gothic")))
         asset = Path(__file__).with_name("assets") / ICON_FILENAME
-        self.icon = load_image(None, str(asset), 1, self.scale(48), self.scale(48), 0x10)
+        self.icon = load_image(None, str(asset), 1, self.scale(ICON_SIZE), self.scale(ICON_SIZE), 0x10)
 
     def render(self, hwnd, dc):
         self.update_dpi(hwnd)
@@ -131,30 +133,29 @@ class Card:
         s = self.scale
         fill(dc, c.byref(bounds), self.brushes[BG])
         if self.icon:
-            draw_icon(dc, s(28), s(27), self.icon, s(48), s(48), 0, None, 3)
+            draw_icon(dc, s(INSET), s(INSET), self.icon, s(ICON_SIZE), s(ICON_SIZE), 0, None, 3)
         background_mode(dc, 1)
         for text, x, top, height, color, glyph in (
-                ("SOUTHPAW GAMES", 91, 23, 20, ACCENTS[3], self.glyphs[0]),
-                ("도구 런처", 91, 43, 37, INK, self.glyphs[1]),
-                ("프로그램을 준비하고 있습니다", 28, 101, 22, MUTED, self.glyphs[2])):
+                ("SOUTHPAW GAMES", 76, 20, 18, ACCENT, self.glyphs[0]),
+                ("도구 런처", 76, 38, 30, INK, self.glyphs[1]),
+                ("프로그램을 준비하고 있습니다", INSET, 88, 24, MUTED, self.glyphs[2])):
             old = select(dc, glyph)
             text_color(dc, color)
-            area = w.RECT(s(x), s(top), bounds.right - s(28), s(top + height))
+            area = w.RECT(s(x), s(top), bounds.right - s(INSET), s(top + height))
             draw_text(dc, text, -1, c.byref(area), 0x824)  # Single line, vertical center, no prefixes.
             select(dc, old)
 
         # An indeterminate sweep traverses the track and gently reverses.
-        phase = (monotonic() - self.started) % 2.8 / 2.8
+        phase = (monotonic() - self.started) % 2.6 / 2.6
         position = (1 - math.cos(phase * math.tau)) / 2
         stock_object = api(gdi, "GetStockObject", w.HANDLE, c.c_int)
         old_pen = select(dc, stock_object(8))  # NULL_PEN
         old_brush = select(dc, self.brushes[TRACK])
-        round_rect(dc, s(28), s(137), bounds.right - s(28), s(143), s(6), s(6))
-        left = 28 + (WIDTH - 56 - 100) * position
-        for i, color in enumerate(ACCENTS):
-            select(dc, self.brushes[color])
-            x = left + i * 12
-            round_rect(dc, s(x), s(137), s(x + 28), s(143), s(6), s(6))
+        top, bottom, curve = s(TRACK_TOP), s(TRACK_TOP + TRACK_HEIGHT), s(TRACK_HEIGHT)
+        round_rect(dc, s(INSET), top, bounds.right - s(INSET), bottom, curve, curve)
+        left = INSET + (WIDTH - 2 * INSET - SWEEP_WIDTH) * position
+        select(dc, self.brushes[ACCENT])
+        round_rect(dc, s(left), top, s(left + SWEEP_WIDTH), bottom, curve, curve)
         select(dc, old_brush)
         select(dc, old_pen)
 

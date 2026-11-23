@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication
 from . import __version__
 from .branding import ICON_FILENAME
 from .common import LauncherError, atomic_json, inside, read_json
-from .ui import ASSETS, MainWindow, NotesDocument, app_icon
+from .ui import ASSETS, REFRESH_OPERATIONS, MainWindow, NotesDocument, app_icon
 
 
 class Field:
@@ -155,7 +155,11 @@ class LauncherSurface(QObject):
                       catalogError=bool(w.catalog_error), hasSelection=app is not None,
                       selectedId=app.app_id if app else "", connectedRepo=w.config.get("github_repository", ""),
                       testing=w.github_test_mode, knownProgress=w.known_progress,
-                      bridgeBusy=getattr(w, "bridge_in_progress", False))
+                      bridgeBusy=getattr(w, "bridge_in_progress", False),
+                      activeApp=w.active_app if w.task else "",
+                      checking=w.task is not None and w.operation in REFRESH_OPERATIONS,
+                      lastCheck=w._last_catalog_check.get("result", "") if w._last_catalog_check else "",
+                      latestVerified=w.launcher_verified_version == __version__)
         return result
 
     @Property("QVariantMap", notify=promptChanged)
@@ -165,16 +169,18 @@ class LauncherSurface(QObject):
     def sync_rows(self):
         rows = []
         for app in self.window.apps:
+            installed = None
+            pending = update = problem = False
             try:
                 installed = self.window.installer.installed(app.app_id)
-                status = ("복구 필요" if self.window.installer.pending_recovery(app.app_id)
-                          else "미설치" if not installed
-                          else "업데이트 가능" if self.window.online and app.is_new_release(installed)
-                          else "설치됨")
+                pending = self.window.installer.pending_recovery(app.app_id)
+                update = bool(installed and app.is_new_release(installed))
             except (LauncherError, OSError):
-                status = "설치 확인 필요"
+                problem = True
             rows.append({"id": app.app_id, "title": app.display_name, "category": app.category,
-                         "state": status})
+                         "description": app.description, "version": installed.version if installed else "",
+                         "pending": pending, "problem": problem, "update": update, "published": app.published,
+                         "installed": installed is not None})
         if rows != self._rows:
             self._rows = rows
             self.rowsChanged.emit()
@@ -192,6 +198,25 @@ class LauncherSurface(QObject):
             self._selected = position
             self.selectionChanged.emit()
         self.window.render()
+
+    @Slot(str, result=bool)
+    def selectApp(self, app_id):
+        if self._loop is not None:
+            return False
+        position = next((index for index, entry in enumerate(self.window.apps)
+                         if entry.app_id == app_id), -1)
+        if position < 0:
+            return False
+        self.select(position)
+        return True
+
+    @Slot(str, str)
+    def actOnApp(self, app_id, command):
+        if (command in {"primary", "launch"} and not self.window.task
+                and not self.window._launcher_handoff
+                and not getattr(self.window, "bridge_in_progress", False)
+                and self.selectApp(app_id)):
+            self.act(command)
 
     @Slot(str)
     def act(self, command):
@@ -261,6 +286,7 @@ class QuickLauncherWindow(MainWindow):
 
     def _build(self):
         self.known_progress = False
+        self.active_app = ""
         self.surface = LauncherSurface(self)
         for name in self.FIELDS:
             setattr(self, name, Field(self.surface.invalidate, visible=name not in self.HIDDEN_FIELDS))
@@ -274,7 +300,7 @@ class QuickLauncherWindow(MainWindow):
         self._first_frame = False
         self._frame_callback = None
         self.resize(1200, 780)
-        self.setMinimumSize(800, 570)
+        self.setMinimumSize(620, 540)
         view = self.quick = QQuickWidget(self)
         view.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
         view.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -322,6 +348,9 @@ class QuickLauncherWindow(MainWindow):
     def _begin(self, operation, action, success):
         if self.task is None:
             self.known_progress = False
+            app = self.selected()
+            self.active_app = (app.app_id if app and (": " in operation or operation in
+                              {"복구 확인", "버전 전환", "제거"}) else "")
         super()._begin(operation, action, success)
 
     def _progress(self, done, total):

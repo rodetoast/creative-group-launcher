@@ -265,6 +265,7 @@ class MainWindow(QMainWindow):
         self.managed_session = managed_session
         self.launcher_candidate = None
         self.launcher_target = None
+        self.launcher_verified_version = None
         self._launcher_handoff = False
         self.github_test_mode = github_test_policy is not None
         if self.github_test_mode:
@@ -739,6 +740,7 @@ class MainWindow(QMainWindow):
             return
         self.launcher_candidate = None
         self.launcher_target = None
+        self.launcher_verified_version = None
         self.launcher_update_button.hide()
         self.launcher_versions.setText(f"런처 설치 버전 v{__version__} · 최신 버전 미확인")
         github = self._github()
@@ -822,6 +824,7 @@ class MainWindow(QMainWindow):
                     latest = f"{destination} · 전환 단계 v{launcher.version}"
                 else:
                     latest = f"런처 최신 버전 v{launcher.version}"
+                    self.launcher_verified_version = launcher.version
                 self.launcher_versions.setText(f"런처 설치 버전 v{__version__} · {latest}")
                 if newer:
                     self.launcher_candidate = launcher

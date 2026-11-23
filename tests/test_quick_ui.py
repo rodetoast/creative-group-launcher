@@ -30,7 +30,17 @@ class QuickUiTests(unittest.TestCase):
         return window
 
     def click(self, window, name):
-        item = window.quick.rootObject().findChild(QQuickItem, name)
+        root = window.quick.rootObject()
+        item = root.findChild(QQuickItem, name)
+        if item is None:
+            # Repeater delegates are visual children of the grid.
+            items = [root]
+            while items:
+                candidate = items.pop(0)
+                if candidate.objectName() == name:
+                    item = candidate
+                    break
+                items.extend(candidate.childItems())
         self.assertIsNotNone(item, name)
         self.assertTrue(item.isVisible() and item.isEnabled(), name)
         point = item.mapToScene(QPointF(item.width() / 2, item.height() / 2)).toPoint()
@@ -44,10 +54,25 @@ class QuickUiTests(unittest.TestCase):
         window.surface.select(2)
         self.assertEqual(window.surface.view["title"]["text"], "AsepriteTagMaster")
         window.resize(800, 570)
+        self.assertEqual(window.quick.rootObject().findChild(QQuickItem, "toolGrid").property("columns"), 2)
         self.click(window, "settingsAction")
         self.click(window, "themeSwitch")
         self.assertFalse(window.surface.dark)
         self.assertFalse(self.window().surface.dark)
+
+    def test_workspace_card_addresses_app_by_id_and_opens_detail(self):
+        window = self.window()
+        row = window.surface.rows[1]
+        with patch.object(window, "primary_action"), patch.object(window, "render") as render:
+            render.side_effect = lambda: window.primary.setEnabled(True)
+            window.surface.actOnApp(row["id"], "primary")
+            window.primary_action.assert_called_once_with()
+            self.assertEqual(window.selected().app_id, row["id"])
+        self.click(window, "detailsAction")
+        QTest.qWait(180)
+        self.assertEqual(window.surface.view["title"]["text"], window.surface.rows[0]["title"])
+        self.click(window, "notesDisclosure")
+        self.click(window, "closeDetailAction")
 
     def test_install_update_and_offline_launch_using_primary_control(self):
         source, app = package(self.root / "packages")
@@ -79,6 +104,8 @@ class QuickUiTests(unittest.TestCase):
         self.processes.running = False
         window.render()
         test_ui.APPLICATION.processEvents()
+        self.click(window, "detailsAction")
+        QTest.qWait(180)
         self.click(window, "managementAction")
         QTimer.singleShot(100, lambda: self.click(window, "confirmAction"))
         self.click(window, "removeAction")
