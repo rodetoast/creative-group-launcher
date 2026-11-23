@@ -279,3 +279,18 @@ Windows에서 패키징한 실제 EXE의 다크 라이브러리와 시작 창을
 기존 Win32 Splash와 Bootstrap EXE·중첩 ZIP을 바이트 그대로 사용했다. 실제 Windows 패키징 후보 두 실행에서 Splash는 0.087~0.303초, 메인 준비는 9.128~9.758초였다. ready/confirmed, 시작 창 종료, 설정 보존과 종료 코드 0을 확인했다. 기존 9.264초는 같은 PC의 단일 측정이므로 차이를 확정할 수 없다.
 
 관리형 0.2.0 후보는 `C:/Dev/CGL-Mockup-20261123/candidate-validated/creative-group-launcher--rodetoast-launcher-0.2.0.zip`에 있다. 70,464,846바이트(67.2 MiB), SHA-256 `53cbc64b2adc5b7cf8fad837622c135ff8b56fd1d61aa78f1e5528ecf149a35c`. ZIP 항목 337개, 대표 경로 예산, manifest와 보관한 Rod12 서명·자산 해시를 검증했다. 운영 서명과 게시 및 직원 PC 적용은 승인 대기다.
+
+
+## QML 0.2.0 정식 배포 후보 및 Rod13 (2026-11-23)
+
+소스 기준 `62b7b88bdf29f5ac62bc72b7af0a862fef1355e3`. 기존 Qt 네이티브 프레임에 Windows SDK `DwmSetWindowAttribute`를 적용한다. 다크 모드는 헤더와 같은 `#1b1e2b`와 밝은 제목 글자를 사용하고, 라이트 모드는 Windows 기본 색을 복원한다. 테마 변경 신호에 연동하며 지원 여부는 HRESULT로 판단한다. 미지원 환경에서는 기본 프레임을 사용한다. 실제 Windows에서 색상 `(27, 30, 43)`과 `(243, 243, 243)`을 캡처했다. 네이티브 스타일, 최대화·최소화·복원·기본 닫기 명령은 확인했다. Snap 팝업, Alt+F4 물리 입력 및 여러 Windows 버전은 별도 실행하지 않았다. [Microsoft Windows SDK DWM 속성](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute)
+
+이전 격리 시험의 HTTPS 실패는 샌드박스 DNS 제한으로 재현됐다. 일반 네트워크에서 공개 API와 카탈로그 자산 HTTPS 응답은 각각 200이었다. 최종 패키징 EXE도 Rod 저장소 ID 1462539740의 공개 Latest12를 기존 인증서, Ed25519, 자산 메타데이터와 순번 검증을 거쳐 표시했다. GUI v0.2.0에서 `운영 버전 v0.1.9`가 표시됐으며 이전 버전 설치 작업은 제공하지 않았다. 수동 재조회가 완료되고 확인 버튼을 다시 사용할 수 있었다. 실패 후 버튼 복구는 UI 시험 6개에 포함된다.
+
+격리 Windows에서 운영 서명된 Rod12와 TileNamer 영수증이 있는 상태로 시작했다. Rod13은 미공개이므로 로컬 피드로 운영 서명 후보를 제공했다. 기존 승인 거래와 실제 EXE health probe로 적용을 커밋했고, 기존 2세대 Bootstrap에서 3세대로 자동 교체한 뒤 ready/confirmed 및 정상 종료를 검증했다. 사용자 파일과 기존 앱 영수증 해시가 유지됐다. 관리형 신뢰 상태는 12→13을 수락하고 이후 12를 거부했다. 앱 목록의 공개 조회는 별도 신뢰 상태에서 Rod12를 검증했다. Toast Bridge 경로는 기존 승인 해시 및 채널 구성과 이전 검증 기록을 재사용했다.
+
+후보 계획과 로컬 자산은 개발 PC `C:/Dev/CGL-Rod13-20261123/`에서 관리한다. `candidate-plan.json`은 소스, 정식 태그 예정 `rodetoast-catalog-000013`, 순번 13, 기존 저장소 ID, 운영 Ed25519 서명과 자산 8개의 크기·SHA-256을 기록한다. 변경 없는 회사 앱 ZIP 5개는 Rod12 바이트를 재사용했다. ZIP 337항목, manifest, EXE와 Pretendard, Bootstrap 번들, 대표 Windows 경로 예산을 검증했다.
+
+최종 ZIP은 `assets/creative-group-launcher--rodetoast-launcher-0.2.0.zip`, 70,466,143바이트(67.2 MiB), SHA-256 `dd8196ac5746b286acab9001f8bfa5d63a8224b0263d750835e32d8be022d7c0`이다. EXE SHA-256은 `5e97717f46a11fe8a9405de9b6a90fb0ec2d90bbfea77c99a2ab42adedd6e48c`다. Windows 캡처 `windows-dark-live-rod12.png`·`windows-light-live-rod12.png`와 `windows-evidence.json`을 같은 디렉터리에 보존했다.
+
+Rod Latest12와 Toast Latest9를 유지했으며 Rod13 태그와 Release가 없는 상태를 조회했다. 이번 범위에서 운영 공개는 수행하지 않았다. 승인 후 `candidate-plan.json`의 8개 자산을 새 태그의 Draft에 올려 일치 여부를 확인하고, 정식 공개 및 Rod Latest13 승격 뒤 공개 HTTPS 경로의 서명·순번·자산 메타데이터를 확인한다. 기존 직원에게는 현재 업데이트 경로를 사용한다.
