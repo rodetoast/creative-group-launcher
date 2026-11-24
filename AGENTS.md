@@ -189,3 +189,10 @@ Rod 카탈로그12는 로컬 서명 후보이며 운영은 Rod11·Toast9를 유�
 운영은 Rod 카탈로그13 / GUI 0.2.0, 신규 직원용 Rod Setup 0.1.6.0, 기존 설치용 Toast 카탈로그9 / Bridge 0.1.6이다. GUI 0.2.1은 미서명 로컬 후보다. 직원별 확인 없이 Toast 호환 채널과 기존 설치 링크를 유지한다. 새로운 운영 공개와 Repository Transfer는 각각 사용자 승인 대상이다. [계정 통합 현행 결정](docs/GITHUB_OWNER_COMPATIBILITY.ko.md#계정-통합-현행-결정-2026-11-23)과 [SPENT03 현행 인계](docs/SPENT03_OWNER_COMPAT_TRIAL.ko.md#spent03-현행-단일-인계--보관된-toast-rc1-2026-11-23)를 먼저 읽는다.
 
 실제 Windows UI를 검토할 때는 공개 범위를 확인한 대표 캡처를 변경 버전의 `docs/ui-reviews/<version>/`에 보존하고 README에서 화면 상태를 설명한다. 직원 정보, 비공개 자료, 자격증명, 사용자 경로를 공개 이미지에 포함하지 않는다. 보고에 GitHub 갤러리와 커밋 SHA로 고정된 대표 PNG 링크를 함께 남긴다.
+
+## Southpaw Games Development Hub (2026-11-24)
+
+- 작업 전 `git status`, 현재 브랜치, HEAD, remote를 확인한다. 기존 프로젝트 규칙과 함께 [중앙 AI 시작 안내](https://github.com/rodetoast/southpaw-development-hub/blob/main/docs/AI_START_HERE.md), 관련 공통 개발·배포 지침, [이 프로젝트의 개발 현황](https://github.com/rodetoast/creative-group-launcher/blob/codex/qml-product-20261120/docs/PROJECT_STATUS.md)을 연다.
+- 허브는 비공개다. 기존 GitHub 인증으로 브라우저나 로컬 허브 clone을 열거나 `gh api -H "Accept: application/vnd.github.raw+json" repos/rodetoast/southpaw-development-hub/contents/docs/AI_START_HERE.md`로 읽는다. URL만으로 원격 문서가 자동 로드되지 않는다. 문서에 접근하지 못하면 확인 범위를 기록하고 미확인 규칙을 추측하지 않는다.
+- 기록과 소스·Git·서명 배포 근거가 다르면 확인된 사실로 해당 기록을 바로잡는다. 지시 간 충돌이 있으면 작업 승인 범위와 우선순위를 확인해 영향을 알린다.
+- 주요 기능·버전·호환성·설계·배포 변경 완료 시 개발 브랜치의 `docs/PROJECT_STATUS.md`에 커밋, 검증·미검증, 배포 상태와 후속 작업을 기록한다. 같은 작업에서 [허브 요약](https://github.com/rodetoast/southpaw-development-hub/blob/main/projects/launcher.md)과 중앙 목록의 관련 부분을 갱신한다. 중앙에 쓰기 권한이 없으면 패치와 미동기화 범위를 남긴다. 개발 문서 push와 운영 공개 승인을 구분한다.
