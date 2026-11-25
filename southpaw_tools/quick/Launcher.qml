@@ -86,7 +86,7 @@ Item {
     }
 
     function stateTone(state) {
-        if (state === "설치됨" || state === "설치 완료" || state === "최신 버전")
+        if (state === "설치됨" || state === "설치 완료" || state === "최신 버전" || state === "실행 중")
             return green
         if (state === "업데이트 가능" || state === "이전 버전 사용 중 · 업데이트 가능")
             return accent
@@ -174,6 +174,17 @@ Item {
                 }
                 ctx.closePath()
                 ctx.moveTo(12.6, 10); ctx.arc(10, 10, 2.6, 0, Math.PI * 2)
+                break
+            case "shortcut":
+                ctx.moveTo(5, 8); ctx.lineTo(5, 16); ctx.lineTo(15, 16); ctx.lineTo(15, 12)
+                ctx.moveTo(8, 12); ctx.lineTo(15, 5)
+                ctx.moveTo(10, 5); ctx.lineTo(15, 5); ctx.lineTo(15, 10)
+                break
+            case "pin":
+                ctx.moveTo(8, 4); ctx.lineTo(14, 4); ctx.lineTo(13, 8)
+                ctx.lineTo(16, 11); ctx.lineTo(6, 11); ctx.lineTo(9, 8)
+                ctx.lineTo(8, 4)
+                ctx.moveTo(11, 11); ctx.lineTo(11, 17)
                 break
             case "up":
             case "down":
@@ -316,6 +327,7 @@ Item {
         readonly property bool active: root.dataView.activeApp === modelData.id
         readonly property bool running: modelData.running && !root.dataView.testing
         readonly property bool canUpdate: modelData.update && root.dataView.online && !root.dataView.catalogError
+        readonly property bool runningUpdate: running && modelData.update && !root.dataView.catalogError
         readonly property bool canDownload: modelData.published && root.dataView.online && !root.dataView.catalogError
         readonly property bool runnable: modelData.installed && !root.dataView.testing && !modelData.problem
         readonly property string statusText: {
@@ -397,8 +409,15 @@ Item {
                                      : card.canUpdate && !root.dataView.issues[card.modelData.id] ? root.accentPad
                                      : tone === root.amber ? root.warningPad : root.hover
                 }
+                StatusPill {
+                    visible: !card.active && card.runningUpdate
+                    text: "업데이트 가능"
+                    tone: root.updateInk
+                    glyph: "refresh"
+                    backgroundColor: root.updateFill
+                }
                 Rectangle {
-                    visible: !card.active && (card.modelData.version !== "" || card.canDownload)
+                    visible: !card.active && !card.runningUpdate && (card.modelData.version !== "" || card.canDownload)
                     Layout.preferredWidth: 1
                     Layout.preferredHeight: 14
                     color: root.line
@@ -408,8 +427,8 @@ Item {
                     font.pixelSize: root.small
                     color: root.ink
                     elide: Text.ElideRight
+                    visible: !card.runningUpdate || card.active
                     text: card.active ? card.statusText
-                          : card.running && card.modelData.update ? "업데이트 대기"
                           : card.canUpdate ? card.modelData.version + " → " + card.modelData.providedVersion
                           : card.modelData.version ? "v" + card.modelData.version
                           : card.canDownload ? "최신 버전 " + card.modelData.providedVersion : ""
@@ -495,6 +514,72 @@ Item {
         gradient: Gradient {
             GradientStop { position: 0; color: launcher.dark ? "#207041b1" : "#14bda3e7" }
             GradientStop { position: 1; color: "transparent" }
+        }
+    }
+
+    Rectangle {
+        id: installToast
+        objectName: "installToast"
+        visible: !!root.dataView.installNotice.id
+        z: 5
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: root.inset
+        anchors.bottomMargin: root.inset + 39
+        width: Math.min(424, parent.width - 2 * root.inset)
+        height: toastContent.implicitHeight + 16
+        radius: root.cardRadius
+        color: root.softPanel
+        border.color: Qt.alpha(root.green, 0.55)
+        MouseArea { anchors.fill: parent; acceptedButtons: Qt.AllButtons }
+
+        ColumnLayout {
+            id: toastContent
+            anchors.fill: parent
+            anchors.margins: 8
+            spacing: 4
+            RowLayout {
+                Layout.fillWidth: true
+                Glyph { Layout.preferredWidth: 16; Layout.preferredHeight: 16; kind: "check"; ink: root.green }
+                Caption {
+                    Layout.fillWidth: true
+                    text: (root.dataView.installNotice.title || "") + " 설치 완료"
+                    color: root.ink
+                    elide: Text.ElideRight
+                    font.bold: true
+                }
+                LauncherButton {
+                    objectName: "dismissInstallToast"
+                    text: "닫기"
+                    glyph: "close"
+                    quiet: true
+                    implicitHeight: 30
+                    onClicked: launcher.dismissInstall()
+                }
+            }
+            Flow {
+                Layout.fillWidth: true
+                spacing: root.tightGap
+                LauncherButton {
+                    text: "실행"
+                    glyph: "play"
+                    emphasis: true
+                    implicitHeight: 32
+                    enabled: !root.working
+                    onClicked: {
+                        launcher.actOnApp(root.dataView.installNotice.id, "launch")
+                        launcher.dismissInstall()
+                    }
+                }
+                LauncherButton {
+                    text: "바탕화면 바로가기"
+                    glyph: "shortcut"
+                    visible: root.dataView.shortcutAvailable
+                    enabled: !root.working
+                    implicitHeight: 32
+                    onClicked: launcher.actOnApp(root.dataView.installNotice.id, "shortcut")
+                }
+            }
         }
     }
 
@@ -707,6 +792,7 @@ Item {
                                 model: ["설치된 도구 우선", "이름순", "최근 업데이트순"]
                                 Accessible.name: "도구 정렬"
                                 currentIndex: launcher.workspaceSort
+                                id: sortControl
                                 enabled: !root.working
                                 implicitWidth: 172
                                 implicitHeight: 35
@@ -718,6 +804,15 @@ Item {
                                 palette.highlight: root.accentPad
                                 palette.highlightedText: root.ink
                                 onActivated: function(index) { launcher.setWorkspace(launcher.workspaceFilter, index) }
+                                indicator: Glyph {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 16
+                                    height: 16
+                                    kind: sortControl.popup.visible ? "up" : "down"
+                                    ink: sortControl.enabled ? root.ink : root.muted
+                                }
                                 contentItem: Caption {
                                     leftPadding: 11
                                     rightPadding: 28
@@ -734,46 +829,6 @@ Item {
                             text: "게시 날짜 미상 항목은 목록 끝에 표시됩니다."
                             Layout.fillWidth: true
                             wrapMode: Text.Wrap
-                        }
-                        Rectangle {
-                            Layout.fillWidth: true
-                            visible: !!root.dataView.installNotice.id
-                            implicitHeight: noticeBody.implicitHeight + 20
-                            radius: root.radius
-                            color: root.installedPad
-                            border.color: root.line
-                            ColumnLayout {
-                                id: noticeBody
-                                anchors.fill: parent
-                                anchors.margins: 10
-                                Caption {
-                                    Layout.fillWidth: true
-                                    color: root.green
-                                    text: (root.dataView.installNotice.title || "") + " 설치가 완료되었습니다."
-                                    wrapMode: Text.Wrap
-                                }
-                                Flow {
-                                    Layout.fillWidth: true
-                                    spacing: root.tightGap
-                                    LauncherButton {
-                                        text: "실행"
-                                        glyph: "play"
-                                        emphasis: true
-                                        enabled: !root.working
-                                        onClicked: {
-                                            launcher.actOnApp(root.dataView.installNotice.id, "launch")
-                                            launcher.dismissInstall()
-                                        }
-                                    }
-                                    LauncherButton {
-                                        text: "바탕화면 바로가기 만들기"
-                                        visible: root.dataView.shortcutAvailable
-                                        enabled: !root.working
-                                        onClicked: launcher.actOnApp(root.dataView.installNotice.id, "shortcut")
-                                    }
-                                    LauncherButton { text: "닫기"; quiet: true; onClicked: launcher.dismissInstall() }
-                                }
-                            }
                         }
                         GridLayout {
                             objectName: "toolGrid"
@@ -964,12 +1019,23 @@ Item {
                             rowSpacing: 9
                             columnSpacing: 14
                             Caption { text: "설치 상태" }
-                            StatusPill {
-                                text: root.dataView["설치 상태"] || "—"
-                                tone: root.stateTone(text)
-                                backgroundColor: tone === root.green ? root.installedPad
-                                                 : tone === root.amber ? root.warningPad
-                                                 : tone === root.accent ? root.accentPad : root.hover
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: 5
+                                StatusPill {
+                                    text: root.dataView.selectedRunning ? "실행 중" : root.dataView["설치 상태"] || "—"
+                                    tone: root.stateTone(text)
+                                    backgroundColor: tone === root.green ? root.installedPad
+                                                     : tone === root.amber ? root.warningPad
+                                                     : tone === root.accent ? root.accentPad : root.hover
+                                }
+                                StatusPill {
+                                    visible: root.dataView.selectedRunning && root.dataView.selectedUpdate
+                                    text: "업데이트 가능"
+                                    tone: root.updateInk
+                                    glyph: "refresh"
+                                    backgroundColor: root.updateFill
+                                }
                             }
                             Caption { text: "설치된 버전" }
                             Caption { Layout.fillWidth: true; text: root.dataView["설치 버전"] || "—"; color: root.ink; font.bold: true }
@@ -1007,22 +1073,31 @@ Item {
                                 enabled: !root.working && root.dataView.folder_button.enabled
                             }
                             Caption { text: "바로가기"; color: root.ink; font.bold: true }
-                            LauncherButton {
+                            Flow {
                                 Layout.fillWidth: true
-                                text: "바탕화면 바로가기 만들기"
+                                spacing: root.tightGap
                                 visible: root.dataView.shortcutAvailable
-                                enabled: !root.working
-                                command: "shortcut"
-                            }
-                            LauncherButton {
-                                text: "작업 표시줄 고정 방법"
-                                visible: root.dataView.shortcutAvailable
-                                command: "pinHelp"
+                                LauncherButton {
+                                    objectName: "desktopShortcutAction"
+                                    text: "바탕화면 바로가기"
+                                    glyph: "shortcut"
+                                    implicitHeight: 36
+                                    enabled: !root.working
+                                    command: "shortcut"
+                                }
+                                LauncherButton {
+                                    objectName: "pinHelpAction"
+                                    text: "고정 방법"
+                                    glyph: "pin"
+                                    implicitHeight: 36
+                                    command: "pinHelp"
+                                }
                             }
                             Caption {
                                 Layout.fillWidth: true
-                                visible: !root.dataView.shortcutAvailable
-                                text: "도구 바로가기는 지원 Bootstrap으로 시작한 경우 만들 수 있습니다."
+                                text: root.dataView.shortcutAvailable
+                                      ? "런처 창을 열지 않고 설치된 버전을 실행할 수 있습니다."
+                                      : "도구 바로가기는 지원 Bootstrap으로 시작한 경우 만들 수 있습니다."
                                 wrapMode: Text.Wrap
                             }
                         }
@@ -1178,7 +1253,7 @@ Item {
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    visible: root.dataView.launch_current.visible
+                    visible: root.dataView.launch_current.visible && !root.dataView.selectedRunning
                     Item { Layout.fillWidth: true }
                     LauncherButton {
                         id: currentLaunch

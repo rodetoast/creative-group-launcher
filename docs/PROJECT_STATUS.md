@@ -32,6 +32,7 @@
 - 외부 도구 실행을 설치 경로로 감지하고 Windows가 허용할 때 기존 창으로 이동합니다. 설치 완료 안내 또는 상세 패널에서 새 Bootstrap의 버전 독립 바로가기를 만들 수 있습니다.
 - Bootstrap 잠금 진입 순서를 수정해 확인된 중복 실행을 정상 안내로 처리합니다.
 - 개발 PC의 소스 검증과 Windows Qt 화면을 확보했습니다. 서명된 패키징 Bootstrap을 통한 다섯 도구별 전환과 작업 표시줄 그룹화는 검증 대기입니다.
+- 후속 마감에서는 정렬 화살표 대비, 설치 완료 소형 안내, 이중 상태 칩, 아이콘 액션 행과 실제 EXE 기반 안정 ICO 경로를 반영했습니다. [후속 UI 갤러리](ui-reviews/workspace-followup-20261125/README.md) · [독립 Windows 시험 인계](WORKSPACE_WINDOWS_HANDOFF.ko.md)
 
 ## 패키징과 다음 단계
 

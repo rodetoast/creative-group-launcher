@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import sys
 
-from PySide6.QtCore import QObject, Property, QEventLoop, QSize, Qt, QTimer, QUrl, Signal, Slot
+from PySide6.QtCore import QBuffer, QIODevice, QObject, Property, QEventLoop, QSize, Qt, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QFontDatabase, QIcon, QImage
 from PySide6.QtQuick import QQuickImageProvider
 from PySide6.QtQuickWidgets import QQuickWidget
@@ -13,8 +13,37 @@ from PySide6.QtWidgets import QApplication
 
 from . import __version__
 from .branding import ICON_FILENAME
-from .common import LauncherError, atomic_json, inside, read_json
+from .common import LauncherError, app_lock, atomic_bytes, atomic_json, inside, read_json
 from .ui import ASSETS, REFRESH_OPERATIONS, MainWindow, NotesDocument, app_icon
+
+
+def _shortcut_icon(executable, path):
+    """Copy the verified PE's icon into the stable per-user shortcut directory."""
+    if sys.platform != "win32":
+        return None
+    import ctypes
+    from ctypes import wintypes
+
+    extract = ctypes.WinDLL("shell32").ExtractIconExW
+    extract.argtypes = (wintypes.LPCWSTR, ctypes.c_int, ctypes.POINTER(wintypes.HICON),
+                        ctypes.POINTER(wintypes.HICON), wintypes.UINT)
+    extract.restype = wintypes.UINT
+    handle = wintypes.HICON()
+    if extract(str(executable), 0, ctypes.byref(handle), None, 1) != 1 or not handle:
+        return None
+    try:
+        image = QImage.fromHICON(handle.value)
+        buffer = QBuffer()
+        if image.isNull() or not buffer.open(QIODevice.OpenModeFlag.WriteOnly) or not image.save(buffer, "ICO"):
+            return None
+        data = bytes(buffer.data())
+        if not path.is_file() or path.read_bytes() != data:
+            atomic_bytes(path, data)
+        return path
+    finally:
+        destroy = ctypes.WinDLL("user32").DestroyIcon
+        destroy.argtypes = (wintypes.HICON,)
+        destroy(handle)
 
 
 def _set_windows_caption(hwnd, dark):
@@ -289,7 +318,9 @@ class LauncherSurface(QObject):
                       latestVerified=w.launcher_verified_version == __version__,
                       verifiedVersion=w.launcher_target or w.launcher_verified_version or "",
                       selectedVisible=any(row["id"] == app.app_id for row in self._rows) if app else False,
-                      selectedRunning=bool(app and app.app_id in w.running_tools),
+                      selectedRunning=bool(app and not w.github_test_mode and app.app_id in w.running_tools),
+                      selectedUpdate=not w.catalog_error and any(
+                          row["id"] == app.app_id and row["update"] for row in self._all_rows) if app else False,
                       installNotice=dict(w.install_notice),
                       shortcutAvailable=bool(w.tool_entry and not w.github_test_mode),
                       issues=dict(w.app_issues), noteBlocks=getattr(w.notes, "blocks", []),
@@ -596,21 +627,29 @@ class QuickLauncherWindow(MainWindow):
         if not app or not self.tool_entry or self.github_test_mode or self._launcher_handoff or self.task:
             return
         try:
-            current = self.installer.installed(app.app_id)
-            if not current:
-                return
-            self.installer.resolve_launch(current)
             from .tool_shortcuts import create_desktop_shortcut
 
-            created = create_desktop_shortcut(self.tool_entry, app.app_id, app.display_name)
-            self.message.setText("바탕화면에 바로가기를 만들었습니다." if created else "같은 바로가기가 이미 있습니다.")
+            with app_lock(self.paths.lock(app.app_id)):
+                current = self.installer.installed(app.app_id)
+                if not current:
+                    return
+                if self.installer.pending_recovery(app.app_id):
+                    raise LauncherError("설치 복구를 마친 뒤 바로가기를 만들어 주세요.")
+                executable, _ = self.installer.resolve_verified_launch(current)
+                icon = _shortcut_icon(executable, inside(self.paths.root, f"shortcut-icons/{app.app_id}.ico"))
+                created = create_desktop_shortcut(self.tool_entry, app.app_id, app.display_name, icon=icon)
+            if created:
+                self.message.setText("바탕화면에 바로가기를 만들었습니다." if icon else
+                                     "바로가기를 만들었습니다. 이 버전에서는 도구 아이콘을 가져오지 못했습니다.")
+            else:
+                self.message.setText("같은 바로가기가 이미 있습니다.")
         except (LauncherError, OSError) as exc:
             self.message.setText(str(exc))
 
     def pin_help(self):
         self.surface.ask("작업 표시줄 고정 방법",
-                         "바탕화면에 만든 Southpaw 바로가기에서 ‘작업 표시줄에 고정’을 선택할 수 있는 경우 사용하세요. "
-                         "실행 중인 도구 EXE를 직접 고정하면 버전 교체 후에도 기존 버전을 가리킬 수 있습니다.",
+                         "바탕화면 바로가기는 설치된 버전을 실행합니다. 바로가기 메뉴에 ‘작업 표시줄에 고정’이 표시되면 사용할 수 있습니다. "
+                         "실행 중인 도구 아이콘을 직접 고정하면 이전 버전을 가리킬 수 있습니다.",
                          information=True)
 
     def _populate(self, selected_id=None):

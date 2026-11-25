@@ -29,11 +29,7 @@ def launch_tool(home, channel, app_id):
     return None
 
 
-def create_desktop_shortcut(bootstrap, app_id, display_name):
-    return _create_shortcut(bootstrap, app_id, display_name)
-
-
-def _create_shortcut(bootstrap, app_id, display_name, desktop=None):
+def create_desktop_shortcut(bootstrap, app_id, display_name, *, icon=None, desktop=None):
     identifier(app_id)
     bootstrap = Path(bootstrap).resolve()
     if os.name != "nt" or not bootstrap.is_file():
@@ -43,6 +39,7 @@ def _create_shortcut(bootstrap, app_id, display_name, desktop=None):
     env = {**os.environ, "SOUTHPAW_LINK_TARGET": str(bootstrap),
            "SOUTHPAW_LINK_ARGS": f"--launch-tool {app_id}",
            "SOUTHPAW_LINK_NAME": f"{title} (Southpaw).lnk",
+           "SOUTHPAW_LINK_ICON": str(icon) if icon is not None else "",
            "SOUTHPAW_LINK_FOLDER": str(desktop) if desktop is not None else ""}
     script = r"""
 $ErrorActionPreference = 'Stop'
@@ -65,6 +62,7 @@ try {
     $link.TargetPath = $target
     $link.Arguments = $argsText
     $link.WorkingDirectory = [IO.Path]::GetDirectoryName($target)
+    if ($env:SOUTHPAW_LINK_ICON) { $link.IconLocation = $env:SOUTHPAW_LINK_ICON + ',0' }
     $link.Save()
     [IO.File]::Move($temp, $path)
     'created'

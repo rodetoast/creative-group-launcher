@@ -1,6 +1,7 @@
 """Windows shortcut and taskbar identity for the stable Bootstrap entry point."""
 import ctypes
 from ctypes import wintypes
+import logging
 from pathlib import Path
 import subprocess
 import uuid
@@ -153,7 +154,7 @@ def configure_launcher_window(pid, bootstrap, data_root):
         ole.CoUninitialize()
 
 def activate_window(record):
-    """Restore the verified process's visible window; respect Windows foreground limits."""
+    """Restore a verified window and confirm its process actually took focus."""
     from .windows_process import still_same
 
     user = ctypes.WinDLL("user32", use_last_error=True)
@@ -161,31 +162,48 @@ def activate_window(record):
     user.IsWindowVisible.argtypes = [wintypes.HWND]
     user.GetWindow.argtypes = [wintypes.HWND, wintypes.UINT]
     user.GetWindow.restype = wintypes.HWND
+    user.GetLastActivePopup.argtypes = [wintypes.HWND]
+    user.GetLastActivePopup.restype = wintypes.HWND
     user.IsIconic.argtypes = [wintypes.HWND]
     user.ShowWindowAsync.argtypes = [wintypes.HWND, ctypes.c_int]
     user.SetForegroundWindow.argtypes = [wintypes.HWND]
     user.GetForegroundWindow.restype = wintypes.HWND
+
+    def owns(hwnd):
+        if not hwnd:
+            return False
+        pid = wintypes.DWORD()
+        user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        return pid.value == record["pid"]
+
+    if not still_same(record):
+        return False
+    if owns(user.GetForegroundWindow()):
+        return True
+
     windows = []
     callback = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
 
     @callback
     def collect(hwnd, _):
-        pid = wintypes.DWORD()
-        user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-        if pid.value == record["pid"] and user.IsWindowVisible(hwnd) and not user.GetWindow(hwnd, 4):
+        if owns(hwnd) and user.IsWindowVisible(hwnd) and not user.GetWindow(hwnd, 4):
             windows.append(hwnd)
         return True
 
     user.EnumWindows.argtypes = [callback, wintypes.LPARAM]
     user.EnumWindows(collect, 0)
+    logger = logging.getLogger(__name__)
+    if not windows:
+        logger.debug("Window activation: no visible top-level window for verified process")
     for hwnd in windows:
-        pid = wintypes.DWORD()
-        user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-        if pid.value != record["pid"] or not still_same(record):
+        if not owns(hwnd) or not still_same(record):
             continue
         if user.IsIconic(hwnd):
             user.ShowWindowAsync(hwnd, 9)
-        user.SetForegroundWindow(hwnd)
-        if user.GetForegroundWindow() == hwnd:
+        popup = user.GetLastActivePopup(hwnd)
+        target = popup if owns(popup) and user.IsWindowVisible(popup) else hwnd
+        accepted = bool(user.SetForegroundWindow(target))
+        if owns(user.GetForegroundWindow()) and still_same(record):
             return True
+        logger.debug("Window activation not confirmed (SetForegroundWindow returned %s)", accepted)
     return False

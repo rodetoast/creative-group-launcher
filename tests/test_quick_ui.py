@@ -94,6 +94,23 @@ class QuickUiTests(unittest.TestCase):
             self.assertEqual((restored.surface.workspaceFilter, restored.surface.workspaceSort), (2, 1))
         self.assertIsNone(window.surface.release_stamp("2026-11-24T06:00:00"))
 
+    def test_install_toast_does_not_move_library_and_can_be_dismissed(self):
+        window = self.window()
+        root = window.quick.rootObject()
+        grid = root.findChild(QQuickItem, "toolGrid")
+        before = grid.mapToScene(QPointF())
+        app = window.apps[0]
+        window.install_notice = {"id": app.app_id, "title": app.display_name}
+        window.surface.invalidate()
+        QTest.qWait(20)
+        notice = root.findChild(QQuickItem, "installToast")
+        self.assertTrue(notice.isVisible())
+        self.assertEqual(grid.mapToScene(QPointF()), before)
+        self.click(window, "dismissInstallToast")
+        QTest.qWait(20)
+        self.assertFalse(notice.isVisible())
+        self.assertEqual(grid.mapToScene(QPointF()), before)
+
     def test_settings_dismissal_consumes_click_and_returns_focus(self):
         window = self.window()
         root = window.quick.rootObject()

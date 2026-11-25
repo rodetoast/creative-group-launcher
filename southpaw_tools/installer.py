@@ -166,6 +166,11 @@ class Installer:
                 raise LauncherError(f"설치 리소스가 없습니다: {required}")
         return exe, cwd
 
+    def resolve_verified_launch(self, app: AppRelease) -> tuple[Path, Path]:
+        if self._retained_receipt(app.app_id, app.release_id)[0] != app:
+            raise LauncherError("활성 릴리스와 검증된 설치 기록이 일치하지 않습니다.")
+        return self.resolve_launch(app)
+
     def is_running(self, app_id: str) -> bool:
         return self.processes.is_running(self.paths.app(app_id))
 
@@ -200,9 +205,7 @@ class Installer:
                 raise LauncherError("설치된 프로그램이 없습니다.")
             if self.is_running(app_id):
                 raise LauncherError("이미 실행 중입니다.")
-            if verify_receipt and self._retained_receipt(app_id, app.release_id)[0] != app:
-                raise LauncherError("활성 릴리스와 검증된 설치 기록이 일치하지 않습니다.")
-            exe, cwd = self.resolve_launch(app)
+            exe, cwd = (self.resolve_verified_launch(app) if verify_receipt else self.resolve_launch(app))
             return self.processes.start(exe, cwd)
 
     def install(self, app: AppRelease, provider: Provider, progress=lambda done, total: None,
