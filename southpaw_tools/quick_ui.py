@@ -1,4 +1,6 @@
 """Qt Quick presentation of the existing launcher workflow."""
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from pathlib import Path
 import re
 import sys
@@ -146,6 +148,7 @@ class LauncherSurface(QObject):
     viewChanged = Signal()
     selectionChanged = Signal()
     appearanceChanged = Signal()
+    workspaceChanged = Signal()
     promptChanged = Signal()
 
     ACTIONS = {
@@ -156,6 +159,9 @@ class LauncherSurface(QObject):
         "remove": ("remove", "remove_button"),
         "versions": ("choose_version", "versions_button"),
         "folder": ("open_folder", "folder_button"),
+        "shortcut": ("create_shortcut", None),
+        "activate": ("activate_selected", None),
+        "pinHelp": ("pin_help", None),
         "configure": ("configure", "connection_button"),
         "cancel": ("cancel_task", "cancel_button"),
         "details": ("show_details", None),
@@ -165,6 +171,10 @@ class LauncherSurface(QObject):
         super().__init__(window)
         self.window = window
         self._rows = []
+        self._all_rows = []
+        self._workspace_filter = 0
+        self._workspace_sort = 0
+        self._preferences = {}
         self._selected = -1
         self._prompt = {}
         self._reply = None
@@ -184,9 +194,53 @@ class LauncherSurface(QObject):
         try:
             self._prefs = inside(window.paths.root, "ui-preferences.json")
             if self._prefs.is_file() and self._prefs.stat().st_size < 2048:
-                self._dark = read_json(self._prefs).get("theme") != "light"
+                self._preferences = read_json(self._prefs)
+                self._dark = self._preferences.get("theme") != "light"
+                self._workspace_filter = self._load_choice("workspace_filter")
+                self._workspace_sort = self._load_choice("workspace_sort")
         except (LauncherError, OSError, AttributeError):
             self._prefs = None
+
+    def _load_choice(self, name):
+        value = self._preferences.get(name, 0)
+        return value if type(value) is int and value in range(3) else 0
+
+    def _save_preferences(self, **changes):
+        if self._prefs is None:
+            raise LauncherError("환경 설정 경로를 사용할 수 없습니다.")
+        updated = {**self._preferences, **changes}
+        atomic_json(self._prefs, updated)
+        self._preferences = updated
+
+    @Property(int, notify=workspaceChanged)
+    def workspaceFilter(self):
+        return self._workspace_filter
+
+    @Property(int, notify=workspaceChanged)
+    def workspaceSort(self):
+        return self._workspace_sort
+
+    @Property("QVariantList", notify=workspaceChanged)
+    def workspaceCounts(self):
+        return [len(self._all_rows), sum(row["installed"] for row in self._all_rows),
+                sum(row["update"] for row in self._all_rows)]
+
+    @Property(bool, notify=workspaceChanged)
+    def missingReleaseDates(self):
+        return any(row["publishedAt"] is None for row in self._rows)
+
+    @Slot(int, int)
+    def setWorkspace(self, choice, sort):
+        if choice not in range(3) or sort not in range(3):
+            return
+        try:
+            self._save_preferences(workspace_filter=choice, workspace_sort=sort)
+        except (LauncherError, OSError):
+            self.window.message.setText("목록 설정을 저장하지 못했습니다.")
+            return
+        self._workspace_filter, self._workspace_sort = choice, sort
+        self._display_rows()
+        self.invalidate()
 
     def invalidate(self):
         if not self._flush.isActive():
@@ -223,7 +277,7 @@ class LauncherSurface(QObject):
         result = {name: dict(getattr(w, name).data) for name in w.FIELDS}
         result.update({name: field.text() for name, field in w.info.items()})
         app = w.selected()
-        selected_installed = any(row["id"] == app.app_id and row["installed"] for row in self._rows) if app else False
+        selected_installed = any(row["id"] == app.app_id and row["installed"] for row in self._all_rows) if app else False
         result.update(selectedInstalled=selected_installed, online=w.online, busy=w.task is not None or w._launcher_handoff,
                       catalogError=bool(w.catalog_error), hasSelection=app is not None,
                       selectedId=app.app_id if app else "", connectedRepo=w.config.get("github_repository", ""),
@@ -234,6 +288,10 @@ class LauncherSurface(QObject):
                       lastCheck=w._last_catalog_check.get("result", "") if w._last_catalog_check else "",
                       latestVerified=w.launcher_verified_version == __version__,
                       verifiedVersion=w.launcher_target or w.launcher_verified_version or "",
+                      selectedVisible=any(row["id"] == app.app_id for row in self._rows) if app else False,
+                      selectedRunning=bool(app and app.app_id in w.running_tools),
+                      installNotice=dict(w.install_notice),
+                      shortcutAvailable=bool(w.tool_entry and not w.github_test_mode),
                       issues=dict(w.app_issues), noteBlocks=getattr(w.notes, "blocks", []),
                       noteGroups=getattr(w.notes, "groups", []))
         return result
@@ -256,20 +314,44 @@ class LauncherSurface(QObject):
             rows.append({"id": app.app_id, "title": app.display_name, "category": app.category,
                          "description": app.description, "version": installed.version if installed else "",
                          "providedVersion": app.version,
+                         "publishedAt": (self.release_stamp(app.published_at) if app.published and
+                                         app.app_id in self.window.verified_catalog_app_ids else None),
+                         "running": app.app_id in self.window.running_tools,
                          "pending": pending, "problem": problem, "update": update, "published": app.published,
                          "installed": installed is not None})
+        self._all_rows = rows
+        self._display_rows()
+
+    @staticmethod
+    def release_stamp(value):
+        try:
+            stamp = datetime.fromisoformat(value)
+            return stamp.timestamp() if stamp.utcoffset() is not None else None
+        except (TypeError, ValueError, OverflowError, OSError):
+            return None
+
+    def _display_rows(self):
+        field = {1: "installed", 2: "update"}.get(self._workspace_filter)
+        rows = [row for row in self._all_rows if field is None or row[field]]
+        if self._workspace_sort == 0:
+            rows.sort(key=lambda row: not row["installed"])
+        elif self._workspace_sort == 1:
+            rows.sort(key=lambda row: row["title"].casefold())
+        else:
+            rows.sort(key=lambda row: (row["publishedAt"] is None, -(row["publishedAt"] or 0)))
         if rows != self._rows:
             self._rows = rows
             self.rowsChanged.emit()
+        self.workspaceChanged.emit()
 
     def populate(self, selected_id):
         self.sync_rows()
-        position = next((i for i, row in enumerate(self._rows) if row["id"] == selected_id), 0)
-        self.select(position if self._rows else -1)
+        position = next((i for i, app in enumerate(self.window.apps) if app.app_id == selected_id), 0)
+        self.select(position if self.window.apps else -1)
 
     @Slot(int)
     def select(self, position):
-        if self._loop is not None or not -1 <= position < len(self._rows):
+        if self._loop is not None or not -1 <= position < len(self.window.apps):
             return
         if position != self._selected:
             self._selected = position
@@ -289,7 +371,7 @@ class LauncherSurface(QObject):
 
     @Slot(str, str)
     def actOnApp(self, app_id, command):
-        if (command in {"primary", "launch"} and not self.window.task
+        if (command in {"primary", "launch", "activate", "shortcut"} and not self.window.task
                 and not self.window._launcher_handoff
                 and not getattr(self.window, "bridge_in_progress", False)
                 and self.selectApp(app_id)):
@@ -329,14 +411,17 @@ class LauncherSurface(QObject):
         if self._dark == dark:
             return
         try:
-            if self._prefs is None:
-                raise LauncherError("테마 설정 경로를 사용할 수 없습니다.")
-            atomic_json(self._prefs, {"theme": "dark" if dark else "light"})
+            self._save_preferences(theme="dark" if dark else "light")
         except (LauncherError, OSError):
             self.window.message.setText("테마를 저장하지 못했습니다. 환경 설정 파일을 확인해 주세요.")
             return
         self._dark = dark
         self.appearanceChanged.emit()
+
+    @Slot()
+    def dismissInstall(self):
+        self.window.install_notice = {}
+        self.invalidate()
 
     def ask(self, title, text, choices=(), *, information=False):
         if self._loop is not None:
@@ -376,7 +461,26 @@ class QuickLauncherWindow(MainWindow):
     )
     HIDDEN_FIELDS = {"launcher_update_button", "cancel_button", "launch_current", "progress"}
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.timer.timeout.disconnect(self.render)
+        self.timer.timeout.connect(self._scan_tools)
+        self._scan_tools()
+
     def _build(self):
+        self.running_tools = set()
+        self.install_notice = {}
+        self._scan = None
+        self._process_pool = ThreadPoolExecutor(max_workers=1)
+        self._process_poll = QTimer(self, interval=100)
+        self._process_poll.timeout.connect(self._collect_scan)
+        session = self.managed_session
+        self.tool_entry = None
+        if (session and session.mode == "normal" and session.context.get("tool_shortcuts") is True):
+            home = session.legacy_home or session.updater.home
+            candidate = inside(home.parent, "CGLBootstrap.exe")
+            if candidate.is_file():
+                self.tool_entry = candidate
         self.known_progress = False
         self.active_app = ""
         self.app_issues = {}
@@ -433,6 +537,82 @@ class QuickLauncherWindow(MainWindow):
             if self._frame_callback:
                 self._frame_callback()
 
+    def _scan_tools(self):
+        snapshot = getattr(self.installer.processes, "running_images", None)
+        if snapshot is not None and self._scan is None:
+            roots = {app.app_id: self.paths.app(app.app_id) for app in self.apps}
+            self._scan = self._process_pool.submit(
+                lambda: {app_id for image in snapshot().values()
+                         for app_id, path in roots.items() if image.is_relative_to(path)})
+            self._process_poll.start()
+
+    def _collect_scan(self):
+        if not self._scan.done():
+            return
+        self._process_poll.stop()
+        scan, self._scan = self._scan, None
+        try:
+            running = scan.result()
+        except (LauncherError, OSError):
+            return  # Preserve last known state; engine mutation paths recheck the OS.
+        if running != self.running_tools:
+            self.running_tools = running
+            self.surface.sync_rows()
+        self.render()
+
+    def _app_running(self, app_id):
+        return app_id in self.running_tools
+
+    def activate_selected(self):
+        app = self.selected()
+        if (app and not self.github_test_mode and self.task is None and not self._launcher_handoff):
+            try:
+                if not self.installer.is_running(app.app_id):
+                    self.launch()
+                    self._scan_tools()
+                    return
+                if self.installer.processes.activate(self.paths.app(app.app_id)):
+                    self.message.setText("열린 창으로 이동했습니다.")
+                else:
+                    self.message.setText("이미 실행 중입니다. 작업 표시줄에서 확인해 주세요.")
+            except (LauncherError, OSError) as exc:
+                self.message.setText(str(exc))
+
+    def launch(self):
+        app = self.selected()
+        if app and not self.github_test_mode:
+            try:
+                if self.installer.is_running(app.app_id):
+                    self.activate_selected()
+                    return
+            except (LauncherError, OSError) as exc:
+                self.message.setText(str(exc))
+                return
+        super().launch()
+        self._scan_tools()
+
+    def create_shortcut(self):
+        app = self.selected()
+        if not app or not self.tool_entry or self.github_test_mode or self._launcher_handoff or self.task:
+            return
+        try:
+            current = self.installer.installed(app.app_id)
+            if not current:
+                return
+            self.installer.resolve_launch(current)
+            from .tool_shortcuts import create_desktop_shortcut
+
+            created = create_desktop_shortcut(self.tool_entry, app.app_id, app.display_name)
+            self.message.setText("바탕화면에 바로가기를 만들었습니다." if created else "같은 바로가기가 이미 있습니다.")
+        except (LauncherError, OSError) as exc:
+            self.message.setText(str(exc))
+
+    def pin_help(self):
+        self.surface.ask("작업 표시줄 고정 방법",
+                         "바탕화면에 만든 Southpaw 바로가기에서 ‘작업 표시줄에 고정’을 선택할 수 있는 경우 사용하세요. "
+                         "실행 중인 도구 EXE를 직접 고정하면 버전 교체 후에도 기존 버전을 가리킬 수 있습니다.",
+                         information=True)
+
     def _populate(self, selected_id=None):
         self.surface.populate(selected_id)
 
@@ -445,6 +625,10 @@ class QuickLauncherWindow(MainWindow):
 
     def render(self, *_):
         super().render()
+        app = self.selected()
+        if app and app.app_id in self.running_tools and not self.github_test_mode:
+            self.primary.setText("열린 창으로 이동")
+            self.primary.setEnabled(not self.task and not self._launcher_handoff)
         self.surface.invalidate()
 
     def _begin(self, operation, action, success):
@@ -462,8 +646,11 @@ class QuickLauncherWindow(MainWindow):
         self.surface.invalidate()
 
     def _finished(self):
+        result = self.task.result
         if self.active_app and self.task.error:
             self.app_issues[self.active_app] = self.task.error
+        elif self.operation.startswith("설치: ") and result and not self.github_test_mode:
+            self.install_notice = {"id": result.app_id, "title": result.display_name}
         super()._finished()
         self.surface.sync_rows()
 
@@ -492,3 +679,7 @@ class QuickLauncherWindow(MainWindow):
             event.ignore()
         else:
             super().closeEvent(event)
+            if event.isAccepted():
+                self.timer.stop()
+                self._process_poll.stop()
+                self._process_pool.shutdown(wait=False, cancel_futures=True)

@@ -151,3 +151,41 @@ def configure_launcher_window(pid, bootstrap, data_root):
             user.SendMessageW(hwnd, 0x80, 1, _window_icon)
     finally:
         ole.CoUninitialize()
+
+def activate_window(record):
+    """Restore the verified process's visible window; respect Windows foreground limits."""
+    from .windows_process import still_same
+
+    user = ctypes.WinDLL("user32", use_last_error=True)
+    user.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user.IsWindowVisible.argtypes = [wintypes.HWND]
+    user.GetWindow.argtypes = [wintypes.HWND, wintypes.UINT]
+    user.GetWindow.restype = wintypes.HWND
+    user.IsIconic.argtypes = [wintypes.HWND]
+    user.ShowWindowAsync.argtypes = [wintypes.HWND, ctypes.c_int]
+    user.SetForegroundWindow.argtypes = [wintypes.HWND]
+    user.GetForegroundWindow.restype = wintypes.HWND
+    windows = []
+    callback = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+    @callback
+    def collect(hwnd, _):
+        pid = wintypes.DWORD()
+        user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if pid.value == record["pid"] and user.IsWindowVisible(hwnd) and not user.GetWindow(hwnd, 4):
+            windows.append(hwnd)
+        return True
+
+    user.EnumWindows.argtypes = [callback, wintypes.LPARAM]
+    user.EnumWindows(collect, 0)
+    for hwnd in windows:
+        pid = wintypes.DWORD()
+        user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if pid.value != record["pid"] or not still_same(record):
+            continue
+        if user.IsIconic(hwnd):
+            user.ShowWindowAsync(hwnd, 9)
+        user.SetForegroundWindow(hwnd)
+        if user.GetForegroundWindow() == hwnd:
+            return True
+    return False

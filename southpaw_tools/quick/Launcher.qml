@@ -10,6 +10,18 @@ Item {
     height: 780
 
     readonly property var dataView: launcher.view
+    onDataViewChanged: if (detailOpen && !dataView.selectedVisible) Qt.callLater(root.closeFilteredDetails)
+    function closeFilteredDetails() {
+        if (detailOpen && !dataView.selectedVisible) closeDetails()
+    }
+    readonly property color windowTop: launcher.dark ? "#191b28" : "#f7f6fc"
+    readonly property color windowBottom: launcher.dark ? "#11131c" : "#e9eaf3"
+    readonly property color surfaceTop: launcher.dark ? "#cc2b2e3e" : "#faffffff"
+    readonly property color surfaceBottom: launcher.dark ? "#dd1e212e" : "#eaf5f3fb"
+    readonly property color installFill: launcher.dark ? "#303545" : "#ffffff"
+    readonly property color updateFill: launcher.dark ? "#274b60" : "#ddeff7"
+    readonly property color installInk: launcher.dark ? "#d9ddea" : "#343746"
+    readonly property color updateInk: launcher.dark ? "#d3efff" : "#204657"
     // Shared visual vocabulary for the library, detail view and dialogs.
     readonly property color canvas: launcher.dark ? "#151822" : "#f4f4f8"
     readonly property color sidebar: launcher.dark ? "#1b1e2b" : "#f1eff8"
@@ -91,7 +103,12 @@ Item {
         textFormat: Text.PlainText
     }
 
+    function actionTone(label) {
+        return label === "설치" ? "install" : label === "업데이트" ? "update" : ""
+    }
+
     function actionIcon(label) {
+        if (label === "열린 창으로 이동") return "window"
         if (label === "설치") return "download"
         if (label === "실행" || label === "실행 중") return "play"
         if (label.indexOf("업데이트") >= 0) return "refresh"
@@ -113,6 +130,14 @@ Item {
             ctx.strokeStyle = ink
             ctx.fillStyle = ink
             ctx.lineWidth = 1.65
+            if (kind === "window") {
+                ctx.strokeRect(3, 4, 14, 12)
+                ctx.beginPath()
+                ctx.moveTo(3, 8)
+                ctx.lineTo(17, 8)
+                ctx.stroke()
+                return
+            }
             ctx.lineCap = "round"
             ctx.lineJoin = "round"
             ctx.beginPath()
@@ -201,6 +226,7 @@ Item {
         id: button
         property string command: ""
         property bool emphasis: false
+        property string toneKind: ""
         property bool destructive: false
         property bool selected: false
         property bool quiet: false
@@ -236,7 +262,9 @@ Item {
                                     Math.max(0, button.availableWidth - (button.glyph ? 25 : 0)))
                     text: button.text
                     textFormat: Text.PlainText
-                    color: !button.enabled ? root.muted : button.emphasis ? root.primaryText
+                    color: !button.enabled ? root.muted : button.toneKind === "install" ? root.installInk
+                                            : button.toneKind === "update" ? root.updateInk
+                                            : button.emphasis ? root.primaryText
                                             : button.destructive ? root.danger
                                             : button.selected ? root.accent : root.ink
                     font: button.font
@@ -247,7 +275,11 @@ Item {
         }
         background: Rectangle {
             radius: root.radius
-            color: button.emphasis
+            color: button.enabled && button.toneKind
+                   ? (button.hovered || button.down
+                      ? Qt.lighter(button.toneKind === "install" ? root.installFill : root.updateFill, 1.14)
+                      : button.toneKind === "install" ? root.installFill : root.updateFill)
+                   : button.emphasis
                    ? (!button.enabled ? root.disabledPrimary : button.down ? root.primaryPressed
                                        : button.hovered ? root.primaryHover : root.primaryFill)
                    : button.enabled && (button.hovered || button.down)
@@ -255,15 +287,9 @@ Item {
                    : button.selected ? root.accentPad
                    : button.quiet ? "transparent" : root.card
             border.color: button.activeFocus || button.selected ? root.accent
-                          : button.quiet || button.emphasis ? "transparent"
+                          : button.quiet || (button.emphasis && !button.toneKind) ? "transparent"
                           : button.destructive && button.enabled ? root.dangerLine : root.line
             border.width: button.activeFocus ? 2 : 1
-            gradient: button.emphasis && button.enabled ? actionGradient : null
-            Gradient {
-                id: actionGradient
-                GradientStop { position: 0; color: button.down ? root.primaryPressed : button.hovered ? root.primaryHover : root.primaryFill }
-                GradientStop { position: 1; color: root.primaryPressed }
-            }
             Behavior on color { ColorAnimation { duration: 95 } }
         }
     }
@@ -288,8 +314,7 @@ Item {
         id: card
         required property var modelData
         readonly property bool active: root.dataView.activeApp === modelData.id
-        readonly property bool running: root.dataView.selectedId === modelData.id
-                                        && root.dataView["설치 상태"] === "실행 중 · 업데이트 보류"
+        readonly property bool running: modelData.running && !root.dataView.testing
         readonly property bool canUpdate: modelData.update && root.dataView.online && !root.dataView.catalogError
         readonly property bool canDownload: modelData.published && root.dataView.online && !root.dataView.catalogError
         readonly property bool runnable: modelData.installed && !root.dataView.testing && !modelData.problem
@@ -306,11 +331,14 @@ Item {
         readonly property bool selected: root.detailOpen && root.dataView.selectedId === modelData.id
         implicitHeight: root.compact ? 218 : 232
         radius: root.cardRadius
-        color: selected ? root.selectedCard : mouse.hovered ? root.hover : root.card
+        gradient: Gradient {
+            GradientStop { position: 0; color: card.selected ? (launcher.dark ? "#bf403056" : "#fff0e8ff")
+                                                             : mouse.hovered ? root.hover : root.surfaceTop }
+            GradientStop { position: 1; color: card.selected ? root.selectedCard : root.surfaceBottom }
+        }
         border.width: selected ? 2 : 1
         border.color: detailsButton.activeFocus || primary.activeFocus || active || selected ? root.accent : root.line
         HoverHandler { id: mouse }
-        Behavior on color { ColorAnimation { duration: 110 } }
         MouseArea {
             anchors.fill: parent
             enabled: !root.working || card.active
@@ -362,10 +390,10 @@ Item {
                 StatusPill {
                     visible: !card.active
                     text: card.statusText
-                    tone: root.stateTone(text)
+                    tone: card.running ? root.green : root.stateTone(text)
                     glyph: text === "설치됨" ? "check" : text === "업데이트 가능" ? "refresh"
                            : text === "미설치" ? "download" : ""
-                    backgroundColor: card.statusText === "설치됨" ? root.installedPad
+                    backgroundColor: card.running || card.statusText === "설치됨" ? root.installedPad
                                      : card.canUpdate && !root.dataView.issues[card.modelData.id] ? root.accentPad
                                      : tone === root.amber ? root.warningPad : root.hover
                 }
@@ -381,6 +409,7 @@ Item {
                     color: root.ink
                     elide: Text.ElideRight
                     text: card.active ? card.statusText
+                          : card.running && card.modelData.update ? "업데이트 대기"
                           : card.canUpdate ? card.modelData.version + " → " + card.modelData.providedVersion
                           : card.modelData.version ? "v" + card.modelData.version
                           : card.canDownload ? "최신 버전 " + card.modelData.providedVersion : ""
@@ -400,12 +429,14 @@ Item {
                     Layout.minimumWidth: 0
                     glyph: root.actionIcon(text)
                     emphasis: true
-                    text: card.running ? "실행 중" : card.modelData.problem ? "확인" : card.modelData.pending ? "복구 확인" : card.canUpdate ? "업데이트"
+                    toneKind: root.actionTone(text)
+                    text: card.running ? "열린 창으로 이동" : card.modelData.problem ? "확인" : card.modelData.pending ? "복구 확인" : card.canUpdate ? "업데이트"
                           : card.modelData.installed ? "실행" : "설치"
-                    enabled: !root.working && !card.running
-                             && (card.modelData.problem || card.modelData.pending || card.canDownload || card.runnable)
+                    enabled: !root.working
+                             && (card.running || card.modelData.problem || card.modelData.pending || card.canDownload || card.runnable)
                     onClicked: {
-                        if (card.modelData.problem) root.openDetails(card.modelData.id, primary)
+                        if (card.running) launcher.actOnApp(card.modelData.id, "activate")
+                        else if (card.modelData.problem) root.openDetails(card.modelData.id, primary)
                         else launcher.actOnApp(card.modelData.id, "primary")
                     }
                 }
@@ -451,12 +482,19 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: root.canvas
-        gradient: launcher.dark ? workspaceTone : null
-        Gradient {
-            id: workspaceTone
-            GradientStop { position: 0; color: root.canvas }
-            GradientStop { position: 1; color: "#11131f" }
+        gradient: Gradient {
+            GradientStop { position: 0; color: root.windowTop }
+            GradientStop { position: 0.6; color: launcher.dark ? "#141620" : "#f1eff8" }
+            GradientStop { position: 1; color: root.windowBottom }
+        }
+    }
+    Rectangle {
+        anchors.top: parent.top
+        width: parent.width
+        height: parent.height * 0.52
+        gradient: Gradient {
+            GradientStop { position: 0; color: launcher.dark ? "#207041b1" : "#14bda3e7" }
+            GradientStop { position: 1; color: "transparent" }
         }
     }
 
@@ -466,7 +504,10 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: toolbar.implicitHeight + 2 * root.inset
-            color: root.sidebar
+            gradient: Gradient {
+                GradientStop { position: 0; color: launcher.dark ? "#b8252637" : "#eaffffff" }
+                GradientStop { position: 1; color: launcher.dark ? "#6e1e1e2d" : "#a8f2eefb" }
+            }
             GridLayout {
                 id: toolbar
                 anchors.fill: parent
@@ -641,6 +682,99 @@ Item {
                                 Caption { text: "필요한 제작 도구를 설치하고 실행하세요."; font.pixelSize: root.compact ? 14 : 17 }
                             }
                         }
+                        Flow {
+                            objectName: "workspaceToolbar"
+                            Layout.fillWidth: true
+                            spacing: root.tightGap
+                            Row {
+                                spacing: 3
+                                Repeater {
+                                    model: ["전체", "설치됨", "업데이트 가능"]
+                                    delegate: LauncherButton {
+                                        required property int index
+                                        required property string modelData
+                                        text: modelData + " " + (launcher.workspaceCounts[index] || 0)
+                                        selected: index === launcher.workspaceFilter
+                                        quiet: !selected
+                                        implicitHeight: 35
+                                        enabled: !root.working
+                                        onClicked: launcher.setWorkspace(index, launcher.workspaceSort)
+                                    }
+                                }
+                            }
+                            ComboBox {
+                                objectName: "workspaceSort"
+                                model: ["설치된 도구 우선", "이름순", "최근 업데이트순"]
+                                Accessible.name: "도구 정렬"
+                                currentIndex: launcher.workspaceSort
+                                enabled: !root.working
+                                implicitWidth: 172
+                                implicitHeight: 35
+                                font.family: root.productFont
+                                palette.text: root.ink
+                                palette.base: root.card
+                                palette.button: root.card
+                                palette.buttonText: root.ink
+                                palette.highlight: root.accentPad
+                                palette.highlightedText: root.ink
+                                onActivated: function(index) { launcher.setWorkspace(launcher.workspaceFilter, index) }
+                                contentItem: Caption {
+                                    leftPadding: 11
+                                    rightPadding: 28
+                                    text: parent.displayText
+                                    color: root.ink
+                                    verticalAlignment: Text.AlignVCenter
+                                    elide: Text.ElideRight
+                                }
+                                background: Rectangle { color: root.card; border.color: parent.activeFocus ? root.accent : root.line; radius: 8 }
+                            }
+                        }
+                        Caption {
+                            visible: launcher.workspaceSort === 2 && launcher.missingReleaseDates
+                            text: "게시 날짜 미상 항목은 목록 끝에 표시됩니다."
+                            Layout.fillWidth: true
+                            wrapMode: Text.Wrap
+                        }
+                        Rectangle {
+                            Layout.fillWidth: true
+                            visible: !!root.dataView.installNotice.id
+                            implicitHeight: noticeBody.implicitHeight + 20
+                            radius: root.radius
+                            color: root.installedPad
+                            border.color: root.line
+                            ColumnLayout {
+                                id: noticeBody
+                                anchors.fill: parent
+                                anchors.margins: 10
+                                Caption {
+                                    Layout.fillWidth: true
+                                    color: root.green
+                                    text: (root.dataView.installNotice.title || "") + " 설치가 완료되었습니다."
+                                    wrapMode: Text.Wrap
+                                }
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: root.tightGap
+                                    LauncherButton {
+                                        text: "실행"
+                                        glyph: "play"
+                                        emphasis: true
+                                        enabled: !root.working
+                                        onClicked: {
+                                            launcher.actOnApp(root.dataView.installNotice.id, "launch")
+                                            launcher.dismissInstall()
+                                        }
+                                    }
+                                    LauncherButton {
+                                        text: "바탕화면 바로가기 만들기"
+                                        visible: root.dataView.shortcutAvailable
+                                        enabled: !root.working
+                                        onClicked: launcher.actOnApp(root.dataView.installNotice.id, "shortcut")
+                                    }
+                                    LauncherButton { text: "닫기"; quiet: true; onClicked: launcher.dismissInstall() }
+                                }
+                            }
+                        }
                         GridLayout {
                             objectName: "toolGrid"
                             Layout.fillWidth: true
@@ -654,7 +788,9 @@ Item {
                         Caption {
                             Layout.fillWidth: true
                             visible: launcher.rows.length === 0
-                            text: "표시할 프로그램이 없습니다. 업데이트 확인을 눌러 목록을 가져오세요."
+                            text: launcher.workspaceFilter === 1 ? "설치된 도구가 없습니다."
+                                  : launcher.workspaceFilter === 2 ? "업데이트 가능한 도구가 없습니다."
+                                  : "표시할 프로그램이 없습니다. 업데이트 확인을 눌러 목록을 가져오세요."
                             wrapMode: Text.WordWrap
                         }
                     }
@@ -665,7 +801,10 @@ Item {
                 visible: root.detailOpen && root.dockDetail
                 Layout.fillHeight: true
                 Layout.preferredWidth: Math.min(470, root.width * 0.335)
-                color: root.softPanel
+                gradient: Gradient {
+                    GradientStop { position: 0; color: root.surfaceTop }
+                    GradientStop { position: 1; color: root.surfaceBottom }
+                }
                 Rectangle { width: 1; height: parent.height; color: root.line }
                 Loader {
                     id: dockLoader
@@ -734,7 +873,17 @@ Item {
         onOpened: if (contentItem.item) contentItem.item.focusClose()
         onClosed: if (!root.dockDetail) root.finishDetails()
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        background: Rectangle { color: root.softPanel; border.color: root.line }
+        background: Rectangle {
+            color: root.windowBottom
+            border.color: root.line
+            Rectangle {
+                anchors.fill: parent
+                gradient: Gradient {
+                    GradientStop { position: 0; color: root.surfaceTop }
+                    GradientStop { position: 1; color: root.surfaceBottom }
+                }
+            }
+        }
         enter: Transition { NumberAnimation { property: "position"; duration: root.transitionMs; easing.type: Easing.OutCubic } }
         exit: Transition { NumberAnimation { property: "position"; duration: root.transitionMs; easing.type: Easing.InCubic } }
         contentItem: Loader {
@@ -841,9 +990,41 @@ Item {
                             Layout.fillWidth: true
                             text: root.dataView.primary.text
                             glyph: root.actionIcon(text)
-                            command: "primary"
+                            command: root.dataView.selectedRunning && !root.dataView.testing ? "activate" : "primary"
+                            toneKind: root.actionTone(text)
                             enabled: root.dataView.primary.enabled
                             emphasis: true
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: root.dataView.selectedInstalled
+                            Caption { text: "앱 사용"; color: root.ink; font.bold: true }
+                            LauncherButton {
+                                Layout.fillWidth: true
+                                objectName: "folderAction"
+                                text: "설치 위치 열기"
+                                command: "folder"
+                                enabled: !root.working && root.dataView.folder_button.enabled
+                            }
+                            Caption { text: "바로가기"; color: root.ink; font.bold: true }
+                            LauncherButton {
+                                Layout.fillWidth: true
+                                text: "바탕화면 바로가기 만들기"
+                                visible: root.dataView.shortcutAvailable
+                                enabled: !root.working
+                                command: "shortcut"
+                            }
+                            LauncherButton {
+                                text: "작업 표시줄 고정 방법"
+                                visible: root.dataView.shortcutAvailable
+                                command: "pinHelp"
+                            }
+                            Caption {
+                                Layout.fillWidth: true
+                                visible: !root.dataView.shortcutAvailable
+                                text: "도구 바로가기는 지원 Bootstrap으로 시작한 경우 만들 수 있습니다."
+                                wrapMode: Text.Wrap
+                            }
                         }
                         Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: root.line }
                         RowLayout {
@@ -965,12 +1146,6 @@ Item {
                                 RowLayout {
                                     Layout.fillWidth: true
                                     spacing: root.tightGap
-                                    LauncherButton {
-                                        objectName: "folderAction"
-                                        text: "설치 위치 열기"
-                                        command: "folder"
-                                        enabled: !root.working && root.dataView.folder_button.enabled
-                                    }
                                     LauncherButton {
                                         objectName: "versionsAction"
                                         text: "설치된 버전 선택"

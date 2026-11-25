@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack
 from contextlib import contextmanager
 import json
 from pathlib import Path
@@ -11,7 +12,7 @@ import sys
 import time
 import uuid
 
-from .common import LauncherError, app_lock, atomic_json, digest, inside, read_json
+from .common import LauncherError, LockBusy, app_lock, atomic_json, digest, identifier, inside, read_json
 from .runtime_protocol import PURPOSE
 from .self_update import PROJECT, SelfUpdater
 from .windows_process import identity, still_same
@@ -107,6 +108,7 @@ class Session:
                       'update_transaction':transaction if mode=='health' else None}
         if updater.channel:
             self.context['managed'] = True
+            self.context['tool_shortcuts'] = True
             if startup_splash:
                 self.context['startup_splash'] = True
         call('session_context_write', atomic_json, self.folder/'context.json', self.context,
@@ -200,11 +202,14 @@ class Session:
 
 
 class Bootstrap:
-    def __init__(self,home, *, channel=None, splash=None):
+    def __init__(self,home, *, channel=None, splash=None, initialize=None):
         self.splash = splash
-        self.updater=WindowsUpdater(home, channel=channel)
+        self.channel = channel
+        self.initialize = initialize
+        self.updater = None if initialize else WindowsUpdater(home, channel=channel)
+        self.home = self.updater.home if self.updater else Path(home).resolve()
         self.events=[]
-        self.log=inside(self.updater.home,f'bootstrap-runs/{uuid.uuid4().hex}.json')
+        self.log=inside(self.home,f'bootstrap-runs/{uuid.uuid4().hex}.json')
 
     def event(self,phase,**fields):
         self.events.append({'phase':phase,**fields})
@@ -229,14 +234,48 @@ class Bootstrap:
             except subprocess.TimeoutExpired as exc:
                 raise LauncherError('업데이트 작업자가 아직 실행 중입니다. 강제 종료/중복 적용하지 않고 기록을 보존합니다.') from exc
 
-    def run(self,*,transaction=None,stop_after_ready=False,scenario='ok',probe_scenario='ok',stop_file=None,on_confirmed=None):
+    def show_existing(self):
+        notice = "런처가 실행 중이거나 준비 중입니다."
+        try:
+            name = read_json(inside(self.home, "bootstrap-window.json"))["session"]
+            folder = inside(self.home, f"sessions/{identifier(name, 'session')}")
+            context = read_json(inside(folder, "context.json"))
+            record = read_json(inside(folder, "process.json"))
+            image = Path(record["image"]).resolve()
+            if (context["session"] == name and context["mode"] == "normal"
+                    and Path(context["home"]).resolve() == self.home
+                    and image == Path(context["executable"]).resolve()
+                    and image.is_relative_to(inside(self.home, "store"))):
+                validate_ack(read_json(inside(folder, "confirmed.json")), context, record["pid"], "confirmed")
+                from .windows_shell import activate_window
+
+                if activate_window(record):
+                    notice = "열린 런처 창으로 이동했습니다."
+        except (LauncherError, OSError, TypeError, ValueError, KeyError):
+            # Window activation is best effort; the held OS lock is authoritative.
+            pass
+        if self.splash:
+            self.splash.notify(notice)
+        return {"already_running": True, "message": notice}
+
+    def run(self,*,transaction=None,stop_after_ready=False,scenario='ok',probe_scenario='ok',stop_file=None,
+            on_confirmed=None):
         u=self.updater
         if stop_file is not None:
             stop_file=Path(stop_file).resolve()
-            if not stop_file.is_relative_to(inside(u.home,'control')) or stop_file.exists():
+            if not stop_file.is_relative_to(inside(self.home,'control')) or stop_file.exists():
                 raise LauncherError('새 시험 종료 제어 파일은 launcher-home/control 아래여야 합니다.')
-        with app_lock(inside(u.home,'locks/bootstrap.lock')):
+        with ExitStack() as lease:
             try:
+                lease.enter_context(app_lock(inside(self.home,'locks/bootstrap.lock')))
+            except LockBusy:
+                if self.channel and on_confirmed is None:
+                    return self.show_existing()
+                raise
+            try:
+                if self.initialize:
+                    call('managed_initialize', self.initialize, api='managed_update.initialize')
+                    self.updater = u = WindowsUpdater(self.home, channel=self.channel)
                 self.event('recovering')
                 call('recovery', u.recover, api='SelfUpdater.recover')
                 launched=[]
@@ -272,6 +311,11 @@ class Bootstrap:
                     launched.append(current.release_id)
                     try:
                         self.event('running',release_id=current.release_id,pid=session.process.pid)
+                        if u.channel:
+                            try:
+                                atomic_json(inside(u.home, "bootstrap-window.json"), {"session": session.context["session"]})
+                            except (LauncherError, OSError):
+                                pass  # Presentation hint only; never block a verified GUI.
                         if on_confirmed:
                             on_confirmed(session)
                     except Exception:
@@ -344,7 +388,7 @@ class Bootstrap:
                     return {'launched':launched,'worker_exit':worker_exit,'current':u.current().release_id,
                             'product_exe_executed':False}
             except Exception as exc:
-                diagnostic = report(exc, home=u.home, data=getattr(u, 'data_root', None))
+                diagnostic = report(exc, home=self.home, data=getattr(u, 'data_root', None))
                 try:
                     self.event('failed',error_type=type(exc).__name__,error=error_summary(exc), diagnostics=diagnostic)
                 except Exception as log_error:
@@ -359,6 +403,7 @@ def main(argv=None, *, splash=None, managed_home=None, on_confirmed=None, on_ini
     parser.add_argument('--managed',action='store_true')
     parser.add_argument('--data-dir',type=Path)
     parser.add_argument('--transaction')
+    parser.add_argument('--launch-tool')
     parser.add_argument('--scenario',choices=['ok','wrong-nonce','timeout','immediate-exit'],default='ok')
     parser.add_argument('--stop-after-ready',action='store_true')
     parser.add_argument('--probe-scenario',choices=['ok','wrong-nonce','timeout','immediate-exit'],default='ok')
@@ -366,6 +411,7 @@ def main(argv=None, *, splash=None, managed_home=None, on_confirmed=None, on_ini
     args=parser.parse_args(argv)
     try:
         channel = None
+        prepare = None
         managed = args.managed or args.home is None
         if managed:
             from .managed_update import channel_policy, initialize, default_data_root
@@ -379,6 +425,18 @@ def main(argv=None, *, splash=None, managed_home=None, on_confirmed=None, on_ini
             if args.home is not None and args.home.resolve() != home:
                 raise LauncherError('Bootstrap 옆 런처 프로그램 경로만 사용할 수 있습니다.')
             args.home = home
+            if args.launch_tool:
+                if (args.role != 'run' or on_confirmed is not None or args.data_dir is not None
+                        or args.transaction or args.stop_after_ready or args.stop_file or args.probe_scenario != 'ok'):
+                    raise LauncherError("도구 바로가기에는 별도 실행 옵션을 지정할 수 없습니다.")
+                from .tool_shortcuts import launch_tool
+
+                notice = launch_tool(home, channel, args.launch_tool)
+                if notice and sys.platform == 'win32':
+                    from .startup_splash import StartupSplash
+                    with StartupSplash() as toast:
+                        toast.notify(notice)
+                return 0
             if args.role == 'run':
                 if args.transaction or args.stop_after_ready or args.stop_file or args.probe_scenario != 'ok':
                     raise LauncherError('관리형 GUI에서만 업데이트를 요청할 수 있습니다.')
@@ -397,13 +455,15 @@ def main(argv=None, *, splash=None, managed_home=None, on_confirmed=None, on_ini
                 if (canonical_channel(channel) and data.resolve() == AppPaths.default().root.resolve()
                         and legacy_binding(home, data.resolve()) is None):
                     raise LauncherError("신규 채널은 기존 직원 데이터 경로를 사용할 수 없습니다.")
-                initialize(home, data, folder / 'seed', channel)
+                prepare = lambda: initialize(home, data, folder / 'seed', channel)
+        elif args.launch_tool:
+            raise LauncherError('도구 바로가기에는 관리형 Bootstrap이 필요합니다.')
         if args.role=='worker':
             result=WindowsUpdater(args.home, channel=channel).apply(args.transaction,probe_result=args.scenario,
                                                                   timeout=20 if channel else 3)
             value={'release_id':result.release_id,'worker':True}
         else:
-            value=Bootstrap(args.home, channel=channel, splash=splash).run(transaction=args.transaction,stop_after_ready=args.stop_after_ready,
+            value=Bootstrap(args.home, channel=channel, splash=splash, initialize=prepare).run(transaction=args.transaction,stop_after_ready=args.stop_after_ready,
                 scenario=args.scenario,probe_scenario=args.probe_scenario,stop_file=args.stop_file,on_confirmed=on_confirmed)
         print(json.dumps(value))
         return 0 if value.get('worker_exit') in {None,0} else 2

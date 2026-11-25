@@ -1,4 +1,5 @@
 """Exercise the actual Quick controls against the existing Python workflow."""
+from dataclasses import replace
 import os
 import unittest
 from unittest.mock import patch
@@ -70,6 +71,28 @@ class QuickUiTests(unittest.TestCase):
         self.click(window, "lightThemeAction")
         self.assertFalse(window.surface.dark)
         self.assertFalse(self.window().surface.dark)
+
+    def test_workspace_filters_and_published_date_sort_persist(self):
+        window = self.window()
+        first, second, third = window.apps[:3]
+        window.apps[:3] = [
+            replace(first, published=True, published_at=""),
+            replace(second, published=True, published_at="2026-11-24T12:00:00+09:00"),
+            replace(third, published=True, published_at="2026-11-24T07:00:00+00:00"),
+        ]
+        window.verified_catalog_app_ids = {first.app_id, second.app_id, third.app_id}
+        installed = {first.app_id: replace(first, release_id="older-fixture"), second.app_id: second}
+        with patch.object(self.engine, "installed", side_effect=installed.get):
+            window.surface.sync_rows()
+            self.assertEqual(window.surface.workspaceCounts, [5, 2, 1])
+            window.surface.setWorkspace(1, 2)
+            self.assertEqual([row["id"] for row in window.surface.rows], [second.app_id, first.app_id])
+            self.assertTrue(window.surface.missingReleaseDates)
+            window.surface.setWorkspace(2, 1)
+            self.assertEqual([row["id"] for row in window.surface.rows], [first.app_id])
+            restored = self.window()
+            self.assertEqual((restored.surface.workspaceFilter, restored.surface.workspaceSort), (2, 1))
+        self.assertIsNone(window.surface.release_stamp("2026-11-24T06:00:00"))
 
     def test_settings_dismissal_consumes_click_and_returns_focus(self):
         window = self.window()

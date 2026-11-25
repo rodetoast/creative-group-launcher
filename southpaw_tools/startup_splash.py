@@ -26,6 +26,7 @@ class StartupSplash:
         self._shown = Event()
         self._thread = None
         self._window = None
+        self.notice = None
 
     def __enter__(self):
         self.show()
@@ -49,6 +50,11 @@ class StartupSplash:
             self._thread.join(1)
             if not self._thread.is_alive():
                 self._thread = None
+
+    def notify(self, text):
+        if sys.platform == "win32":
+            self.notice = text
+            self._stop.wait(1.7)
 
     def keep_above(self, main_window):
         """Put the launcher below the splash without joining their input queues."""
@@ -85,7 +91,7 @@ def frozen_bootstrap(project, *, upgrade_entry=False):
             print(f"Bootstrap 교체 작업 종료: {error_summary(exc)}", file=sys.stderr)
             return 1
     show = (sys.platform == "win32" and "worker" not in sys.argv[1:]
-            and not {"--help", "-h"}.intersection(sys.argv[1:]))
+            and not {"--help", "-h", "--launch-tool"}.intersection(sys.argv[1:]))
     while True:
         with (StartupSplash() if show else nullcontext()) as splash:
             from . import self_update

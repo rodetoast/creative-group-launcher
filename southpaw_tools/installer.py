@@ -191,7 +191,7 @@ class Installer:
             self._recover(app_id)
             return self.installed(app_id)
 
-    def launch(self, app_id: str):
+    def launch(self, app_id: str, *, verify_receipt=False):
         with app_lock(self.paths.lock(app_id)):
             self.warnings.clear()
             self._recover(app_id)
@@ -200,6 +200,8 @@ class Installer:
                 raise LauncherError("설치된 프로그램이 없습니다.")
             if self.is_running(app_id):
                 raise LauncherError("이미 실행 중입니다.")
+            if verify_receipt and self._retained_receipt(app_id, app.release_id)[0] != app:
+                raise LauncherError("활성 릴리스와 검증된 설치 기록이 일치하지 않습니다.")
             exe, cwd = self.resolve_launch(app)
             return self.processes.start(exe, cwd)
 

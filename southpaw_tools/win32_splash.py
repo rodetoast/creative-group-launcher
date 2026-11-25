@@ -93,7 +93,8 @@ def parent_splash(pid):
 
 
 class Card:
-    def __init__(self):
+    def __init__(self, splash):
+        self.splash = splash
         self.started = monotonic()
         self.dpi = 0
         self.glyphs = ()
@@ -138,12 +139,15 @@ class Card:
         for text, x, top, height, color, glyph in (
                 ("SOUTHPAW GAMES", 76, 20, 18, ACCENT, self.glyphs[0]),
                 ("도구 런처", 76, 38, 30, INK, self.glyphs[1]),
-                ("프로그램을 준비하고 있습니다", INSET, 88, 24, MUTED, self.glyphs[2])):
+                (self.splash.notice or "프로그램을 준비하고 있습니다", INSET, 88, 24, MUTED, self.glyphs[2])):
             old = select(dc, glyph)
             text_color(dc, color)
             area = w.RECT(s(x), s(top), bounds.right - s(INSET), s(top + height))
             draw_text(dc, text, -1, c.byref(area), 0x824)  # Single line, vertical center, no prefixes.
             select(dc, old)
+
+        if self.splash.notice:
+            return
 
         # An indeterminate sweep traverses the track and gently reverses.
         phase = (monotonic() - self.started) % 2.6 / 2.6
@@ -224,7 +228,7 @@ def run(splash):
     monitor_info = api(user, "GetMonitorInfoW", w.BOOL, w.HMONITOR, c.POINTER(Monitor))
     peek = api(user, "PeekMessageW", w.BOOL, c.POINTER(w.MSG), w.HWND, w.UINT, w.UINT, w.UINT)
     dispatch = api(user, "DispatchMessageW", w.LPARAM, c.POINTER(w.MSG))
-    card = Card()
+    card = Card(splash)
     clazz = WindowClass(proc=card.proc, instance=instance, name=CLASS_NAME)
     window = None
     registered = register(c.byref(clazz))

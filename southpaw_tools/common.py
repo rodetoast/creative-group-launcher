@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import errno
 import os
 import re
 import shutil
@@ -150,6 +151,10 @@ def remove_transaction(root: Path, path: Path) -> None:
     shutil.rmtree(checked)
 
 
+class LockBusy(LauncherError):
+    """The operating system reported a lock conflict."""
+
+
 @contextmanager
 def app_lock(path: Path):
     """OS-held lock: a crashed client cannot leave a permanent busy marker."""
@@ -175,7 +180,10 @@ def app_lock(path: Path):
                      target=path, api='fcntl.flock')
             locked = True
         except OSError as exc:
-            raise LauncherError("다른 런처에서 이 프로그램을 관리 중입니다.") from exc
+            if (getattr(exc, "winerror", None) == 33
+                    or getattr(exc, "winerror", None) is None and exc.errno in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}):
+                raise LockBusy("다른 런처에서 이 프로그램을 관리 중입니다.") from exc
+            raise
         yield
     except Exception as exc:
         original = exc

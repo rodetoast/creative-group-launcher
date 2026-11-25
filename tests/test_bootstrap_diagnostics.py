@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 from southpaw_tools.bootstrap import Bootstrap, WindowsUpdater, Session
 from southpaw_tools import windows_process as wp
 from southpaw_tools.bootstrap_diagnostics import call, operation, report, secondary, error_summary
-from southpaw_tools.common import LauncherError, app_lock, atomic_json, read_json
+from southpaw_tools.common import LauncherError, LockBusy, app_lock, atomic_json, read_json
 from tests.support import temporary
 
 
@@ -22,8 +22,9 @@ class BootstrapDiagnosticTests(unittest.TestCase):
         self.home=Path(tmp.name)
 
     def bootstrap(self, recover=None):
-        b=Bootstrap.__new__(Bootstrap)
-        b.events=[]; b.log=self.home/'bootstrap-runs/test.json'
+        b=Bootstrap(self.home, channel=True, initialize=lambda: None)
+        b.initialize=None
+        b.log=self.home/'bootstrap-runs/test.json'
         b.updater=SimpleNamespace(home=self.home,data_root=self.home/'data',channel=True,
                                   recover=recover or Mock(),_lock=nullcontext,
                                   current=Mock(return_value=SimpleNamespace(release_id='r1')))
@@ -224,12 +225,34 @@ class BootstrapDiagnosticTests(unittest.TestCase):
     def test_normal_managed_run_preserves_events_and_return_value(self):
         b=self.bootstrap(); fake=Mock()
         fake.process.pid=999; fake.process.wait.return_value=0
+        fake.context={'session':'s1'}
         with patch('southpaw_tools.bootstrap.app_lock',return_value=nullcontext()),patch('southpaw_tools.bootstrap.Session',return_value=fake):
             result=b.run()
         self.assertEqual(result,{'launched':['r1'],'worker_exit':None,'current':'r1','product_exe_executed':True})
         self.assertEqual([e['phase'] for e in b.events],['recovering','starting','running','closed'])
         fake.start.assert_called_once(); fake.confirm.assert_called_once()
         self.assertNotIn('diagnostics',read_json(b.log)['events'][-1])
+
+    def test_managed_duplicate_checks_bootstrap_lock_before_initialization(self):
+        from southpaw_tools.managed_update import initialize
+
+        layout = self.home / "layout.json"
+        data = self.home.parent / (self.home.name + "-data")
+        updater = SimpleNamespace(data_root=data, _lock=nullcontext,
+                                  _runtime_lock=lambda: app_lock(self.home / "locks/running.lock"))
+        with app_lock(self.home / "locks/running.lock"):
+            with patch("southpaw_tools.managed_update.SelfUpdater", return_value=updater):
+                with self.assertRaises(LockBusy):
+                    initialize(self.home, data, self.home, {"policy": {}})
+            self.assertTrue(layout.exists())
+
+        prepare = Mock(side_effect=AssertionError("duplicate must not initialize"))
+        bootstrap = Bootstrap(self.home, channel=True, initialize=prepare)
+        with app_lock(self.home / "locks/bootstrap.lock"):
+            result = bootstrap.run()
+        self.assertTrue(result["already_running"])
+        prepare.assert_not_called()
+        self.assertEqual(bootstrap.events, [])
 
     def test_report_does_not_access_filesystem(self):
         with patch.object(Path,'resolve',side_effect=AssertionError('filesystem access')):

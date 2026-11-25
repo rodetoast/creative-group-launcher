@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
         if self.github_test_mode:
             self.installer = Installer(self.paths, _TestNoLaunchProcesses(self.installer.processes))
         self.apps = load_catalog(catalog_path)
+        self.verified_catalog_app_ids = set()
         self.online = False
         self.health = {}
         self.provider = None
@@ -313,6 +314,7 @@ class MainWindow(QMainWindow):
             cached = self.catalog_verifier.cached()
             if cached is not None:
                 self.apps = cached
+                self.verified_catalog_app_ids = {app.app_id for app in cached}
         except LauncherError as exc:
             self._load_warning = str(exc)
         if github_repository is not None:
@@ -590,7 +592,7 @@ class MainWindow(QMainWindow):
         try:
             pending = self.installer.pending_recovery(app.app_id)
             installed = self.installer.installed(app.app_id)
-            running = bool(installed) and self.installer.is_running(app.app_id)
+            running = bool(installed) and self._app_running(app.app_id)
             if installed:
                 pinned = self.installer.selection_pinned(app.app_id)
                 self.installer.resolve_launch(installed)
@@ -607,7 +609,8 @@ class MainWindow(QMainWindow):
         can_install = self.online and app.published and not catalog_error
         repair = bool(installed and error)
         can_repair = can_install and bool(update or app == installed)
-        status = "실행 중 · 업데이트 보류" if running else "복구 필요" if error or pending else "설치 완료 · 목록 오류(업데이트 차단)" if installed and catalog_error else "업데이트 가능" if update else "설치 완료" if installed else "미설치"
+        running_status = "실행 중 · 업데이트 보류" if update else "실행 중"
+        status = running_status if running else "복구 필요" if error or pending else "설치 완료 · 목록 오류(업데이트 차단)" if installed and catalog_error else "업데이트 가능" if update else "설치 완료" if installed else "미설치"
         if self._github() and not (running or error or pending or catalog_error):
             if busy and self.operation in REFRESH_OPERATIONS:
                 status = "업데이트 확인 중"
@@ -638,6 +641,9 @@ class MainWindow(QMainWindow):
             self.message.setText(f"목록 오류 — 설치/업데이트 차단, 로컬 실행 가능: {catalog_error}")
         elif not app.published and not installed and not busy:
             self.message.setText(app.availability_reason or "배포 패키지 미확인")
+
+    def _app_running(self, app_id):
+        return self.installer.is_running(app_id)
 
     def _show_app_icon(self, app):
         self.hero_icon.setPixmap(app_icon(app, 72).pixmap(72, 72))
@@ -813,6 +819,7 @@ class MainWindow(QMainWindow):
                 if installed and app.published:
                     app.is_new_release(installed)
             self.health, self.apps, self.provider, self.online = health, apps, provider, True
+            self.verified_catalog_app_ids = {app.app_id for app in apps}
             self.catalog_state, self.catalog_error = "전자서명·순번 검증 성공", ""
             self._merge_installed()
             self.message.setText("")

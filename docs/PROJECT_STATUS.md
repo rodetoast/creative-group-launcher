@@ -1,6 +1,6 @@
 # Southpaw 도구 런처 개발 현황
 
-확인일 2026-11-24 · 기본 브랜치 `main` · [개발 브랜치](https://github.com/rodetoast/creative-group-launcher/tree/codex/qml-product-20261120) · [조사 기준 소스 커밋](https://github.com/rodetoast/creative-group-launcher/commit/c1d39e1552456ca2b443287ea0ddc70544d21004)
+확인일 2026-11-25 · 기본 브랜치 `main` · [개발 브랜치](https://github.com/rodetoast/creative-group-launcher/tree/codex/workspace-refinement-20261125) · [이전 운영 조사 기준 소스 커밋](https://github.com/rodetoast/creative-group-launcher/commit/c1d39e1552456ca2b443287ea0ddc70544d21004)
 
 사내 직원이 제작 도구를 설치·실행·업데이트하는 통합 런처입니다.
 
@@ -24,10 +24,19 @@
 
 이번 확인에서는 원격 Git과 공개 서명 카탈로그를 대조했습니다. 기능 시험과 패키징은 기존 보고서의 범위를 따릅니다.
 
+## 작업 공간 후속 개발 (2026-11-25)
+
+[설계·검증 기록](WORKSPACE_REFINEMENT.ko.md) · [Windows UI 검토 갤러리](ui-reviews/workspace-refinement-20261125/README.md)
+
+- 전체·설치됨·업데이트 가능 필터와 목록 정렬을 저장합니다. 최근 업데이트순은 검증된 카탈로그의 개별 게시일을 사용합니다.
+- 외부 도구 실행을 설치 경로로 감지하고 Windows가 허용할 때 기존 창으로 이동합니다. 설치 완료 안내 또는 상세 패널에서 새 Bootstrap의 버전 독립 바로가기를 만들 수 있습니다.
+- Bootstrap 잠금 진입 순서를 수정해 확인된 중복 실행을 정상 안내로 처리합니다.
+- 개발 PC의 소스 검증과 Windows Qt 화면을 확보했습니다. 서명된 패키징 Bootstrap을 통한 다섯 도구별 전환과 작업 표시줄 그룹화는 검증 대기입니다.
+
 ## 패키징과 다음 단계
 
 Windows PyInstaller 관리형 GUI 빌드 및 launcher-package.json. Setup은 별도 산출물입니다. [공통 배포 절차](https://github.com/rodetoast/southpaw-development-hub/blob/main/docs/RELEASE_GUIDE.md)
 
-**다음 단계** 새 개발 과제가 정해지면 기존 직원의 업데이트 버튼과 시작·복구 계약을 유지합니다.
+**다음 단계** 다음 배포 후보가 승인되면 격리 Windows 환경에서 패키징된 GUI와 새 Bootstrap으로 중복 실행, 실제 도구 창 전환과 바로가기의 릴리스 전환을 확인합니다.
 
 [README.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/README.md) · [docs/ARCHITECTURE.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/ARCHITECTURE.md) · [docs/LAUNCHER_UI_AND_STARTUP.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/LAUNCHER_UI_AND_STARTUP.ko.md) · [docs/GITHUB_OWNER_COMPATIBILITY.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/GITHUB_OWNER_COMPATIBILITY.ko.md) · [개발 허브 요약](https://github.com/rodetoast/southpaw-development-hub/blob/main/projects/launcher.md)
