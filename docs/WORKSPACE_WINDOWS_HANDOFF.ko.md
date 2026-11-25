@@ -1,6 +1,6 @@
 # 작업 공간 관리형 바로가기 Windows 시험 인계
 
-2026-11-25 · [Southpaw Tools Launcher](https://github.com/rodetoast/creative-group-launcher) · `codex/workspace-refinement-20261125` · 이 문서를 포함한 커밋을 시험 후보의 기준으로 기록합니다.
+2026-11-25 · [Southpaw Tools Launcher](https://github.com/rodetoast/creative-group-launcher) · `codex/workspace-refinement-20261125` · 시험 바이너리 기준 커밋은 72d7926325b82cd82612e29714371a4b2514e38b입니다.
 
 ## 시험 목표와 환경
 
@@ -11,7 +11,7 @@
 - 새 QML GUI 관리형 ZIP과 새 CGLBootstrap.exe의 전체 런타임. 현재 진입점에 대한 검증이 목적이므로 기존 자동 교체 경로와 시험용 교체 영수증은 이미 확보한 격리 절차를 사용합니다. 새 Setup은 필요하지 않습니다.
 - 시험 공개키만 포함하는 로컬 서명 카탈로그와 도구 릴리스 두 개. 임시 시험 키와 격리된 프로그램·데이터 루트를 사용합니다. 한 도구의 구·신 릴리스 모두 확보되어 있으면 외부 호스트가 필요 없는 승인 Windows 도구를 사용합니다. 아니면 화면을 여는 독립 PE fixture 두 개에 서로 다른 릴리스 ID를 사용하고, 결과를 실제 회사 앱 실행과 구분합니다.
 - 소스 커밋, 시험 서명 정책 식별자, ZIP과 EXE의 SHA-256, 크기, 카탈로그 순번을 후보 계획에 기록합니다. GUI 묶음에서 ICO 읽기·쓰기 플러그인도 확인합니다. 기존 [빌드 도구](../tools/build_windows.py)와 [Bootstrap 교체·격리 검증 기록](LAUNCHER_UI_AND_STARTUP.ko.md)을 사용합니다. Bootstrap에는 Qt가 필요하지 않습니다.
-- 후보가 완성되면 승인된 인증 전용 Draft로 전달하고 수신한 묶음을 해시 대조합니다. 운영 서명, 신규 공개 Release, Latest 변경이 필요하지 않습니다. 현재 단계에서는 파일 제작과 전송을 시작하지 않았습니다.
+- 후보가 완성되면 승인된 인증 전용 Draft로 전달하고 수신한 묶음을 해시 대조합니다. 운영 서명, 신규 공개 Release, Latest 변경이 필요하지 않습니다.
 
 ## 대표 실행 시나리오
 
@@ -23,3 +23,29 @@
 ## 결과
 
 격리 작업 루트에 후보 해시, 링크 속성 및 대상 PID, 전경 판정, 작업 표시줄 캡처를 남깁니다. 결과는 패키징된 실행, 합성 도구, 실제 도구, 미검증으로 구분합니다. 회사 앱 다섯 개와 전체 업데이트·복구 시험을 반복할 필요는 없습니다.
+
+## 이번 시험 후보와 검증 범위
+
+공식 Rod Setup 0.1.6.0의 구 Bootstrap EXE와 운영 0.2.2 GUI EXE 원본을 재사용했습니다. 격리 사본의 공개 신뢰 자료를 시험 공개키로 바꿨으며, GUI manifest를 다시 계산했습니다. 운영 서명키를 사용하지 않았습니다. 새 GUI의 0.2.3 표기는 시험 식별용입니다. 수정한 신뢰 자료와 시험 버전은 시험 빌드 폴더에만 있습니다.
+
+공개 배포 이력에서 외부 호스트 없이 실행할 수 있는 동일 도구의 서로 다른 승인 ZIP 두 개를 확보하지 못했습니다. 묶음은 별도 호스트가 필요 없는 합성 WinForms 도구 v1/v2를 사용합니다. 회사 도구의 독립 실행·업데이트 성공 근거로 사용하지 않습니다.
+
+| 항목 | 확인한 값 |
+| --- | --- |
+| 격리 카탈로그 순번 | 115 → 116 → 117 |
+| 공식 구 Bootstrap EXE SHA-256 | 152a02ce9f36f65df534da711a626474a9cc2116a5736adbfc601b33898a0a09 |
+| 시험 GUI 0.2.3 ZIP SHA-256 | d62df3b306e660feec09a761bc5d8df8071f9957f6912b28593d9e1a3438c6a1 |
+| 새 시험 Bootstrap EXE SHA-256 | 4481a50e16ed9a1a53d613b7200c054b2c62ad9061f92d1737547b154ecf1ff8 |
+| 운송 ZIP 크기 / SHA-256 | 153,770,115바이트 / d9fd6c0f8fe8e9ea54cea7aa94adf0ad1a717848789a521074a082cad46e6279 |
+
+개발 PC에서는 실제 구 Bootstrap worker가 시험 서명으로 GUI 0.2.2 → 0.2.3 적용을 committed 처리했고 합성 설정을 보존했습니다. 새 Bootstrap 교체와 바탕화면·작업 표시줄 조작은 독립 Windows 시험에서 수행합니다. 묶음의 READ_ME.ko.md에 실제 단계가 있으며 run_trial.py는 고정한 소스 커밋과 기존 오프라인 공급자 방식을 사용합니다.
+
+이 후보는 기존 .bootstrap-v3가 없는 구 Rod 진입점에서 **첫 v3 교체**를 시험합니다. v3가 이미 적용된 직원 설치는 현재 시작 구성의 일회성 조건으로 같은 v3를 다시 적용할 수 없습니다. 이 경우의 후속 갱신은 별도 교체 세대 검토가 필요합니다. 이번 후보에 그 변경을 넣지 않았습니다.
+
+## 테스트 PC 다운로드
+
+[인증 전용 Draft](https://github.com/rodetoast/creative-group-trial-releases/releases/tag/untagged-392cab5e9b71dd81f230) · ID 457937990 · 시험 공개 Latest는 trial-catalog-000011입니다. 인증 재다운로드로 ZIP과 해시 파일을 확인했으며 비인증 API는 404를 반환했습니다.
+
+    gh release download workspace-shell-72d7926-transport-20261125 --repo rodetoast/creative-group-trial-releases --dir <새 폴더> --pattern "Southpaw-workspace-shell-trial-72d7926.zip*"
+
+기존 쓰기 권한 계정으로 호스트에서 받습니다. 파일 무결성을 확인한 뒤 격리 게스트에서 묶음의 READ_ME.ko.md 순서로 시험합니다. Rod15 및 Toast9는 그대로입니다.

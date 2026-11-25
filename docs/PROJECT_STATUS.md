@@ -33,6 +33,7 @@
 - Bootstrap 잠금 진입 순서를 수정해 확인된 중복 실행을 정상 안내로 처리합니다.
 - 개발 PC의 소스 검증과 Windows Qt 화면을 확보했습니다. 서명된 패키징 Bootstrap을 통한 다섯 도구별 전환과 작업 표시줄 그룹화는 검증 대기입니다.
 - 후속 마감에서는 정렬 화살표 대비, 설치 완료 소형 안내, 이중 상태 칩, 아이콘 액션 행과 실제 EXE 기반 안정 ICO 경로를 반영했습니다. [후속 UI 갤러리](ui-reviews/workspace-followup-20261125/README.md) · [독립 Windows 시험 인계](WORKSPACE_WINDOWS_HANDOFF.ko.md)
+- 격리 Windows 시험용 GUI·Bootstrap 및 합성 도구 v1/v2를 작성하고 시험 저장소 인증 전용 Draft로 운송했습니다. 개발 PC에서 실제 구 Bootstrap worker의 0.2.2 → 시험 0.2.3 커밋을 확인했습니다. 새 Bootstrap 첫 v3 자동 교체와 작업 표시줄 검증은 별도 PC에서 진행합니다.
 
 ## 패키징과 다음 단계
 
