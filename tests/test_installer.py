@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import threading
 import unittest
@@ -11,7 +12,7 @@ from southpaw_tools.common import Cancelled, LauncherError, app_lock, digest
 from southpaw_tools.installer import Installer
 from southpaw_tools.paths import AppPaths
 from southpaw_tools.processes import Processes
-from tests.support import FakeProcesses, LocalProvider, package, temporary
+from tests.support import FakeProcesses, LocalProvider, TestSigner, package, temporary
 
 
 class InstallerTests(unittest.TestCase):
@@ -35,6 +36,34 @@ class InstallerTests(unittest.TestCase):
         restarted = Installer(self.paths, self.processes)
         self.assertEqual(restarted.launch("dummy"), "dummy-process")
         self.assertEqual(self.processes.calls, [(exe, cwd)])
+
+    def test_shortcut_launch_tracks_active_release_and_requires_signed_proof(self):
+        signer = TestSigner(self.root)
+        verifier = signer.verifier(self.paths.root / "catalog-trust.json")
+        self.engine.catalog_verifier = verifier
+        source2, release2 = package(self.root / "packages", "r2", version="2.0.0")
+        resolved = []
+        for sequence, source, app in ((1, self.source, self.app), (2, source2, release2)):
+            raw, signature = signer.pair([app], sequence)
+            verifier.accept(raw, json.dumps(signature).encode())
+            provider = LocalProvider(source)
+            provider.verifier = verifier
+            self.engine.install(app, provider)
+            # A new engine instance models opening the same app ID without a GUI.
+            independent = Installer(self.paths, self.processes)
+            independent.catalog_verifier = verifier
+            independent.launch("dummy", verify_receipt=True)
+            exe, cwd = independent.resolve_launch(app)
+            resolved.append(exe)
+            self.assertEqual(self.processes.calls[-1], (exe, cwd))
+            self.processes.running = False
+
+        self.assertNotEqual(*resolved)
+        proof = self.paths.release("dummy", release2.release_id) / "catalog-proof.json"
+        proof.unlink()
+        with self.assertRaises(LauncherError):
+            independent.launch("dummy", verify_receipt=True)
+        self.assertEqual(len(self.processes.calls), 2)
 
     def test_running_program_blocks_update_uninstall_and_duplicate_launch(self):
         self.install()
