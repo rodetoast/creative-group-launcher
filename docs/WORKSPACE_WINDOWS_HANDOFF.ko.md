@@ -1,5 +1,7 @@
 # 작업 공간 관리형 바로가기 Windows 시험 인계
 
+이 문서의 Draft는 최초 v3 시험 보관본입니다. 운영 v3에서 새 바로가기 지원 Bootstrap으로 넘어가는 최신 검증은 [v4 교체 기록](BOOTSTRAP_V4_0.2.3.ko.md)을 읽습니다.
+
 2026-11-25 · [Southpaw Tools Launcher](https://github.com/rodetoast/creative-group-launcher) · `codex/workspace-refinement-20261125` · 시험 바이너리 기준 커밋은 72d7926325b82cd82612e29714371a4b2514e38b입니다.
 
 ## 시험 목표와 환경

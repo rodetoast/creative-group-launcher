@@ -35,10 +35,14 @@
 - 후속 마감에서는 정렬 화살표 대비, 설치 완료 소형 안내, 이중 상태 칩, 아이콘 액션 행과 실제 EXE 기반 안정 ICO 경로를 반영했습니다. [후속 UI 갤러리](ui-reviews/workspace-followup-20261125/README.md) · [독립 Windows 시험 인계](WORKSPACE_WINDOWS_HANDOFF.ko.md)
 - 격리 Windows 시험용 GUI·Bootstrap 및 합성 도구 v1/v2를 작성하고 시험 저장소 인증 전용 Draft로 운송했습니다. 개발 PC에서 실제 구 Bootstrap worker의 0.2.2 → 시험 0.2.3 커밋을 확인했습니다. 새 Bootstrap 첫 v3 자동 교체와 작업 표시줄 검증은 별도 PC에서 진행합니다.
 
+## Bootstrap v4 교체 (2026-11-26)
+
+[구현·시험과 미검증 범위](BOOTSTRAP_V4_0.2.3.ko.md). 기존 배포 v3를 교체할 수 있게 v4를 별도 작업 경로로 추가했습니다. 첫 v3 시험 묶음은 보관했습니다. 운영은 GUI 0.2.2 / Rod15와 Toast9입니다.
+
 ## 패키징과 다음 단계
 
 Windows PyInstaller 관리형 GUI 빌드 및 launcher-package.json. Setup은 별도 산출물입니다. [공통 배포 절차](https://github.com/rodetoast/southpaw-development-hub/blob/main/docs/RELEASE_GUIDE.md)
 
-**다음 단계** 다음 배포 후보가 승인되면 격리 Windows 환경에서 패키징된 GUI와 새 Bootstrap으로 중복 실행, 실제 도구 창 전환과 바로가기의 릴리스 전환을 확인합니다.
+**다음 단계** 다음 운영 후보 준비 시 시험 서명 후보와 실제 운영 서명 후보를 구분하고, 공식 기존 v3에 대한 교체 명세와 현행 채널을 검토합니다.
 
 [README.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/README.md) · [docs/ARCHITECTURE.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/ARCHITECTURE.md) · [docs/LAUNCHER_UI_AND_STARTUP.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/LAUNCHER_UI_AND_STARTUP.ko.md) · [docs/GITHUB_OWNER_COMPATIBILITY.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/GITHUB_OWNER_COMPATIBILITY.ko.md) · [개발 허브 요약](https://github.com/rodetoast/southpaw-development-hub/blob/main/projects/launcher.md)
