@@ -37,12 +37,12 @@
 
 ## Bootstrap v4 교체 (2026-11-26)
 
-[구현·시험과 미검증 범위](BOOTSTRAP_V4_0.2.3.ko.md). 기존 배포 v3를 교체할 수 있게 v4를 별도 작업 경로로 추가했습니다. 첫 v3 시험 묶음은 보관했습니다. 운영은 GUI 0.2.2 / Rod15와 Toast9입니다.
+[구현·시험과 미검증 범위](BOOTSTRAP_V4_0.2.3.ko.md). 기존 배포 v3를 교체할 수 있게 v4를 별도 작업 경로로 추가했습니다. 첫 v3 시험 묶음은 보관했습니다. 운영은 GUI 0.2.2 / Rod15와 Toast9입니다. 로컬 Rod16 운영 서명 후보는 GUI 0.2.3이며, 격리된 Rod 직접 설치 및 재구성한 Toast Bridge 경로에서 v4와 실제 Pivot Fixer 바로가기를 확인했습니다. 정식 공개는 승인 대기입니다.
 
 ## 패키징과 다음 단계
 
 Windows PyInstaller 관리형 GUI 빌드 및 launcher-package.json. Setup은 별도 산출물입니다. [공통 배포 절차](https://github.com/rodetoast/southpaw-development-hub/blob/main/docs/RELEASE_GUIDE.md)
 
-**다음 단계** 다음 운영 후보 준비 시 시험 서명 후보와 실제 운영 서명 후보를 구분하고, 공식 기존 v3에 대한 교체 명세와 현행 채널을 검토합니다.
+**다음 단계** 사용자 승인 후 이 기록의 서명 후보로 Rod16을 게시하고 공개 자산·Latest를 검증합니다.
 
 [README.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/README.md) · [docs/ARCHITECTURE.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/ARCHITECTURE.md) · [docs/LAUNCHER_UI_AND_STARTUP.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/LAUNCHER_UI_AND_STARTUP.ko.md) · [docs/GITHUB_OWNER_COMPATIBILITY.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/GITHUB_OWNER_COMPATIBILITY.ko.md) · [개발 허브 요약](https://github.com/rodetoast/southpaw-development-hub/blob/main/projects/launcher.md)
