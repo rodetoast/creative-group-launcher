@@ -48,4 +48,14 @@
 - **Rod 직접 설치**에서 실제 운영 v3 EXE와 Rod15 GUI를 격리 복제했습니다. 실제 구 Bootstrap worker가 서명된 GUI 0.2.3을 적용했고, 동일한 진입점에서 v4가 ready/confirmed 및 committed에 도달했습니다. 구세대 기록, 설치 기록 및 시험 설정을 포함한 기준 파일 187개의 해시가 유지됐습니다.
 - **Toast Bridge 구조**를 Toast9 서명 Bridge 패키지의 바이트로 복원했습니다. 과거 v3 완료 기록의 테스트 토폴로지만 Bridge로 맞춰 바깥 진입점과 내부 Rod 홈을 검증했습니다. v4 committed와 정상 종료를 확인했으며, Toast 포인터·신뢰 상태 및 원래 하위 Rod 런타임을 포함한 기준 파일 337개가 유지됐습니다. 기존 Toast 설치에서 공개 채널을 따라 최초 Bridge에 진입하는 조작은 이번에 반복하지 않았습니다.
 - **실제 운영 Pivot Fixer 0.3.3**을 관리형 설치한 상태에서 런처 업데이트를 적용했습니다. 설치 포인터와 영수증을 보존했고, 런처 GUI 종료 뒤 Windows Shell에서 시험 폴더의 .lnk를 사용해 서명 증거와 고정 ICO를 사용하는 실제 프로그램 창을 열었습니다. 호스트 연동은 실행하지 않았습니다.
-- 새 운영 후보의 진입점 실패 복구는 같은 EXE의 이전 시험 서명 기반 복원 결과를 재사용했습니다. 실제 직원 바탕화면·전경 전환·작업 표시줄 그룹화와 공개 HTTPS 업데이트 버튼은 미검증입니다. 운영 서명 후보는 로컬에 있으며 공개 및 Latest 갱신 전 사용자 승인 대상입니다.
+- 새 운영 후보의 진입점 실패 복구는 같은 EXE의 이전 시험 서명 기반 복원 결과를 재사용했습니다. 실제 직원 바탕화면·전경 전환·작업 표시줄 그룹화와 공개 HTTPS 업데이트 버튼은 미검증입니다. 이 Windows 시험은 공개 전 운영 서명 후보를 대상으로 수행했습니다.
+
+## 정식 운영 배포 Rod16 (2026-11-26)
+
+사용자 승인으로 [rodetoast-catalog-000016](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000016)을 공개하고 Rod Latest16으로 지정했습니다. 저장소 ID 1462539740, Release ID 458864111, 순번 16입니다. 승인 후보 계획 SHA-256은 8650493a9da12fb97bed5cd8962929ba6abe7e1741a7d813392df4b7da8b2051입니다.
+
+- Draft와 공개 HTTPS에서 자산 8개를 각각 다시 다운로드하여 크기와 SHA-256, 운영 Ed25519 서명, GUI manifest 및 v4 중첩 ZIP의 전체 해시, 공식 초기·v2·v3 진입점 허용 목록과 Rod 신뢰 정책을 확인했습니다. 회사 도구 카탈로그 항목 5개와 ZIP 해시는 Rod15와 일치했습니다.
+- Rod15 신뢰 상태로 초기화한 기존 업데이트 Provider에서 공개 Rod16을 조회하고 수락했습니다. Toast9 Bridge의 Rod 신뢰 정책과 최소 순번으로도 수락했으며 16 → 15 롤백은 차단됐습니다. 실제 Windows 교체·복원과 Pivot Fixer 링크 검증은 위에 기록한 기존 결과를 재사용했습니다. 정식 공개 자산을 직원 PC에서 적용하는 시험은 수행하지 않았습니다.
+- 기존 Rod Release와 직원용 Setup 두 종류, Toast Latest9, 시험 Latest11 및 자산의 게시 전후 상태가 일치했습니다. 직원 PC나 설치 데이터에는 변경을 가하지 않았습니다.
+
+[관리형 GUI 0.2.3 ZIP](https://github.com/rodetoast/creative-group-releases/releases/download/rodetoast-catalog-000016/creative-group-launcher--rodetoast-launcher-0.2.3.zip)

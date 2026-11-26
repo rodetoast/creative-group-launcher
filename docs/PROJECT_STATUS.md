@@ -1,6 +1,6 @@
 # Southpaw 도구 런처 개발 현황
 
-확인일 2026-11-25 · 기본 브랜치 `main` · [개발 브랜치](https://github.com/rodetoast/creative-group-launcher/tree/codex/workspace-refinement-20261125) · [이전 운영 조사 기준 소스 커밋](https://github.com/rodetoast/creative-group-launcher/commit/c1d39e1552456ca2b443287ea0ddc70544d21004)
+확인일 2026-11-26 · 기본 브랜치 `main` · [개발 브랜치](https://github.com/rodetoast/creative-group-launcher/tree/codex/workspace-refinement-20261125) · [이전 운영 조사 기준 소스 커밋](https://github.com/rodetoast/creative-group-launcher/commit/c1d39e1552456ca2b443287ea0ddc70544d21004)
 
 사내 직원이 제작 도구를 설치·실행·업데이트하는 통합 런처입니다.
 
@@ -10,7 +10,7 @@
 
 ## 배포 상태
 
-**0.2.2** · `rodetoast-launcher-0.2.2` · `creative-group-launcher--rodetoast-launcher-0.2.2.zip` (onedir) · 실행 파일 `CreativeGroupLauncher.exe`. [Rod 운영 카탈로그](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000015)
+**0.2.3 / Bootstrap v4** · `rodetoast-launcher-0.2.3` · `creative-group-launcher--rodetoast-launcher-0.2.3.zip` (onedir) · 실행 파일 `CreativeGroupLauncher.exe`. [Rod 운영 카탈로그](https://github.com/rodetoast/creative-group-releases/releases/tag/rodetoast-catalog-000016)
 
 신규 직원은 [Rod Setup 0.1.6.0](https://github.com/rodetoast/creative-group-releases/releases/tag/employee-setup-0.1.6.0)을 사용합니다. 기존 직원은 바로가기와 업데이트 버튼을 사용합니다. [Toast9](https://github.com/toast-source/creative-group-releases/releases/tag/production-catalog-000009)의 Bridge 0.1.6이 기존 설치의 Rod 진입 경로입니다.
 
@@ -18,7 +18,7 @@
 
 ## 개발과 검증
 
-0.2.2 운영. 프로그램 관리와 설정 개선 다음에 헤더 공식 회사 심볼을 적용했습니다.
+GUI 0.2.3 / Rod Latest16 운영. 작업 공간과 안정 도구 바로가기, 기존 v3의 v4 자동 교체 및 중복 실행 안내를 제공했습니다.
 
 **알려진 제약과 미검증** 과거 Bootstrap WinError 5의 정확한 원인은 미확정입니다. Windows 설치 목록 비노출은 기존 보고서의 제약입니다. 직원별 업데이트 완료는 미확인입니다.
 
@@ -33,16 +33,16 @@
 - Bootstrap 잠금 진입 순서를 수정해 확인된 중복 실행을 정상 안내로 처리합니다.
 - 개발 PC의 소스 검증과 Windows Qt 화면을 확보했습니다. 서명된 패키징 Bootstrap을 통한 다섯 도구별 전환과 작업 표시줄 그룹화는 검증 대기입니다.
 - 후속 마감에서는 정렬 화살표 대비, 설치 완료 소형 안내, 이중 상태 칩, 아이콘 액션 행과 실제 EXE 기반 안정 ICO 경로를 반영했습니다. [후속 UI 갤러리](ui-reviews/workspace-followup-20261125/README.md) · [독립 Windows 시험 인계](WORKSPACE_WINDOWS_HANDOFF.ko.md)
-- 격리 Windows 시험용 GUI·Bootstrap 및 합성 도구 v1/v2를 작성하고 시험 저장소 인증 전용 Draft로 운송했습니다. 개발 PC에서 실제 구 Bootstrap worker의 0.2.2 → 시험 0.2.3 커밋을 확인했습니다. 새 Bootstrap 첫 v3 자동 교체와 작업 표시줄 검증은 별도 PC에서 진행합니다.
+- 격리 Windows 시험용 GUI·Bootstrap 및 합성 도구 v1/v2를 작성하고 시험 저장소 인증 전용 Draft로 운송했습니다. 개발 PC에서 실제 구 Bootstrap worker의 0.2.2 → 시험 0.2.3 커밋을 확인했습니다. 첫 v3 교체용 Draft는 과거 시험 아카이브로 보관합니다.
 
 ## Bootstrap v4 교체 (2026-11-26)
 
-[구현·시험과 미검증 범위](BOOTSTRAP_V4_0.2.3.ko.md). 기존 배포 v3를 교체할 수 있게 v4를 별도 작업 경로로 추가했습니다. 첫 v3 시험 묶음은 보관했습니다. 운영은 GUI 0.2.2 / Rod15와 Toast9입니다. 로컬 Rod16 운영 서명 후보는 GUI 0.2.3이며, 격리된 Rod 직접 설치 및 재구성한 Toast Bridge 경로에서 v4와 실제 Pivot Fixer 바로가기를 확인했습니다. 정식 공개는 승인 대기입니다.
+[구현·시험과 미검증 범위](BOOTSTRAP_V4_0.2.3.ko.md). 기존 배포 v3를 교체할 수 있게 v4를 별도 작업 경로로 추가했습니다. 첫 v3 시험 묶음은 보관했습니다. 격리된 Rod 직접 설치 및 재구성한 Toast Bridge 경로에서 v4와 실제 Pivot Fixer 바로가기를 확인했습니다. 운영은 GUI 0.2.3 / Rod Latest16과 Toast Latest9입니다. 공개 HTTPS 자산과 두 채널의 조회 정책을 확인했고, 개별 직원 PC 적용과 작업 표시줄 그룹화는 미확인입니다.
 
 ## 패키징과 다음 단계
 
 Windows PyInstaller 관리형 GUI 빌드 및 launcher-package.json. Setup은 별도 산출물입니다. [공통 배포 절차](https://github.com/rodetoast/southpaw-development-hub/blob/main/docs/RELEASE_GUIDE.md)
 
-**다음 단계** 사용자 승인 후 이 기록의 서명 후보로 Rod16을 게시하고 공개 자산·Latest를 검증합니다.
+**다음 단계** 기존 직원은 현재 바로가기에서 업데이트 버튼을 사용합니다. 현장 오류가 들어오면 진입점 해시와 교체 기록을 보존해 분석합니다.
 
 [README.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/README.md) · [docs/ARCHITECTURE.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/ARCHITECTURE.md) · [docs/LAUNCHER_UI_AND_STARTUP.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/LAUNCHER_UI_AND_STARTUP.ko.md) · [docs/GITHUB_OWNER_COMPATIBILITY.ko.md](https://github.com/rodetoast/creative-group-launcher/blob/c1d39e1552456ca2b443287ea0ddc70544d21004/docs/GITHUB_OWNER_COMPATIBILITY.ko.md) · [개발 허브 요약](https://github.com/rodetoast/southpaw-development-hub/blob/main/projects/launcher.md)
