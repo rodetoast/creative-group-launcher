@@ -27,11 +27,11 @@ class BootstrapUpgradeTests(unittest.TestCase):
         atomic_json(self.stage / "transaction.json", self.state)
 
     def test_restore_keeps_legacy_runtime_and_rod_store_intact(self):
-        runtime = self.root / "_cgl_b2"
+        runtime = self.root / "_cgl_b3"
         runtime.mkdir()
         (runtime / "library.dll").write_bytes(b"keep")
-        previous_state = self.root / ".bootstrap-v2" / "transaction.json"
-        atomic_json(previous_state, {"generation": 2, "phase": "committed"})
+        previous_state = self.root / ".bootstrap-v3" / "transaction.json"
+        atomic_json(previous_state, {"generation": 3, "phase": "committed", "nonce": "v" * 32})
         before = previous_state.read_bytes()
         home = upgrade._home(self.root, "bridge")
         home.mkdir(parents=True)
@@ -42,6 +42,18 @@ class BootstrapUpgradeTests(unittest.TestCase):
         self.assertEqual(previous_state.read_bytes(), before)
         self.assertEqual((home / "current.json").read_bytes(), b"keep")
         self.assertEqual(read_json(self.stage / "transaction.json")["phase"], "restored")
+
+    def test_previous_upgrade_must_be_terminal_without_altering_its_record(self):
+        path = self.root / ".bootstrap-v3" / "transaction.json"
+        self.assertTrue(upgrade._previous_upgrades_finished(self.root))
+        for phase in ("staged", "waiting", "switching", "committed", "restored", "failed_before_swap"):
+            state = {"generation": 3, "nonce": "f" * 32, "phase": phase}
+            atomic_json(path, state)
+            self.assertEqual(upgrade._previous_upgrades_finished(self.root), phase in upgrade.TERMINAL)
+            self.assertEqual(read_json(path), state)
+        atomic_json(path, {"generation": 4, "nonce": "f" * 32, "phase": "committed"})
+        with self.assertRaises(LauncherError):
+            upgrade._previous_upgrades_finished(self.root)
 
     def test_restore_rejects_corrupt_backup_and_unknown_entry(self):
         self.backup.write_bytes(b"tampered")
@@ -114,6 +126,9 @@ class BootstrapUpgradeTests(unittest.TestCase):
         boot.updater = SimpleNamespace(home=self.root, channel={"repository": "fixture"},
                                       current=lambda: app, recover=lambda: None, _lock=nullcontext)
         boot.splash = None
+        boot.home = self.root
+        boot.channel = boot.updater.channel
+        boot.initialize = None
 
         def event(phase, **_):
             if phase == "running":

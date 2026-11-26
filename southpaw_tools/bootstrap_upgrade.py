@@ -17,11 +17,12 @@ from .windows_process import identity, parent_pid, still_same
 
 ENTRY = "CGLBootstrap.exe"
 # Keep the previous entry's runtime and transaction intact for restoration.
-GENERATION = 3
-RUNTIME = "_cgl_b3"
-STAGE = ".bootstrap-v3"
+GENERATION = 4
+RUNTIME = f"_cgl_b{GENERATION}"
+STAGE = f".bootstrap-v{GENERATION}"
+PREVIOUS_GENERATIONS = (2, 3)
 SPEC = "bootstrap-upgrade.json"
-PACKAGE = "bootstrap-v3.zip"
+PACKAGE = f"bootstrap-v{GENERATION}.zip"
 APP_ID = "creative-group-launcher"
 TERMINAL = {"committed", "failed_before_swap", "restored"}
 
@@ -92,13 +93,22 @@ def _lineage(root):
     raise LauncherError("실행 중인 기존 Bootstrap을 확인할 수 없습니다.")
 
 
-def _state(stage):
+def _state(stage, generation=GENERATION):
     state = read_json(inside(stage, "transaction.json"))
-    if (state.get("generation") != GENERATION or not isinstance(state.get("nonce"), str)
+    if (state.get("generation") != generation or not isinstance(state.get("nonce"), str)
             or len(state["nonce"]) != 32 or state.get("phase") not in
             TERMINAL | {"staged", "waiting", "switching"}):
         raise LauncherError("Bootstrap 교체 기록 형식 오류")
     return state
+
+
+
+def _previous_upgrades_finished(root):
+    for previous in PREVIOUS_GENERATIONS:
+        stage = inside(root, f".bootstrap-v{previous}")
+        if stage.exists() and _state(stage, previous)["phase"] not in TERMINAL:
+            return False
+    return True
 
 
 def _phase(stage, state, phase, **details):
@@ -159,7 +169,8 @@ def begin(session, cancel):
         return False
     root, kind = _entry_root(session.updater)
     stage = inside(root, STAGE)
-    if stage.exists() or not _approved(session, kind == "bridge"):
+    if (stage.exists() or not _previous_upgrades_finished(root)
+            or not _approved(session, kind == "bridge")):
         return False
     _, current, verified, spec = _signed_candidate(session.updater.home, session.channel)
     if current != session.current or verified != payload:
@@ -296,6 +307,8 @@ def worker(*, restore=False):
             _wait_processes(state["chain"])
             waited = True
             with _exclusive(root, updater):
+                if not _previous_upgrades_finished(root):
+                    raise LauncherError("이전 Bootstrap 교체가 아직 진행 중입니다.")
                 approval = read_json(inside(stage, "apply.json"))
                 if approval != {"nonce": state["nonce"], "gui": state["chain"][0]} or updater.current() != release:
                     raise LauncherError("실행 중 시작 구성 교체 승인이 취소되었거나 릴리스가 바뀌었습니다.")
